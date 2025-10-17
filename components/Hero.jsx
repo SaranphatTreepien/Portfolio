@@ -6,7 +6,7 @@ import { Link as ScrollLink } from "react-scroll";
 // components
 import RotatingShape from "./RotatingShape";
 import Header from "./Header";
-import Stats from "./Stats/Stats";
+import Stats from "./Stats/Stats"; // นำเข้า Stats component
 const Hero = () => {
   return (
     <section
@@ -44,21 +44,20 @@ const Hero = () => {
             />
           </h1>
           <p className="lead max-w-[476px] md-7">
-            Delivering powerful, custom Websites that blend aesthetics with
-            performance
+              I am passionate about exploring data, networks, AI, and AIoT 
           </p>
-          <ScrollLink to="contact" smooth>
+          <ScrollLink to="Contact" smooth>
             <button className="btn btn-accent mt-8">Contact Me</button>
           </ScrollLink>
           {/* stats */}
-          <Stats />
+          {/* <Stats /> */}
         </div>
         {/* image */}
         <div className="hidden xl:flex w-[55vw] h-[800px] absolute top-0 right-0 bg-accent">
           {/*   //! สามารถแก้ layout image ได้ที่นี่*/}
           <div className="absolute w-[558px] h-[500px] bottom-0 z-40 left-[6.5vw]">
             <Image
-              src="/assets/hero/dev2.png" //! เปลี่ยนรูปภาพ Avatar ได้ที่นี่
+              src="/assets/hero/dev3.png" //! เปลี่ยนรูปภาพ Avatar ได้ที่นี่
               fill
               quality="100"
               priority

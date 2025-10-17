@@ -19,7 +19,7 @@ const About = () => {
               min-h-[480px] flex items-center justify-center"
               >
                 <Image
-                  src="/assets/about/img2.png"
+                  src="/assets/about/dev3.png"
                   width={350}
                   height={478}
                   quality={100}
@@ -28,7 +28,7 @@ const About = () => {
                 />
               </div>
               {/* rotating sharp */}
-              <div className="absolute top-2/4 -right-[65px] flex items-center justify-center">
+              {/* <div className="absolute top-2/4 -right-[65px] flex items-center justify-center">
                 <motion.div
                   animate={{
                     rotate: [0, 360],
@@ -53,7 +53,7 @@ const About = () => {
                     Experience
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
           {/* text */}
@@ -63,26 +63,25 @@ const About = () => {
           >
             <div>
               <AnimatedText text="My Name is Max" textStyles="h2 mb-2" />
-              <p className="text-lg">Computer Engineering </p>
+              <p className="text-lg">B.Eng., Computer Engineering</p>
             </div>
             <p className="max-w-[680px] mx-auto xl:mx-0 mb-2">
-              I create visually stuning and functional Websites using modern
-              frontend techonologies and design I create visually stuning and
-              functional Websites using modern frontend techonologies and design
+               I am passionate about working with networks because managing servers and connecting devices such as switches, routers, and APs gives me satisfaction and motivates me to improve. I have learned programming to control network devices and understand how systems communicate. I also have experience using AI with cameras to detect objects, vehicles, and people, applying it for PPE and construction safety. In addition, I have explored IoT protocols such as I2C, RS232, and RS485, using MQTT and HTTP, as well as assembling and working with hardware chips. I enjoy working with data by cleaning, analyzing, 
+             and performing basic risk assessments, combining it with AI and IoT projects to create practical and intelligent solutions
             </p>
             {/* info items */}
             <div className="flex flex-col lg:flex-row gap-8 
             xl:gap-12 max-w-max mx-auto xl:mx-0 items-center">
               {/* item 1 */}
-              <div className="max-w-max">
+              {/* <div className="max-w-max">
                 <div className="uppercase font-bold text-primary">Age</div>
                 <p  className="whitespace-nowrap">25 Years</p>
-              </div>
+              </div> */}
                {/* item 2 */}
-              <div className="max-w-max">
+              {/* <div className="max-w-max">
                 <div className="uppercase font-bold text-primary">Born In</div>
                 <p>Rayong,BangKok</p>
-              </div>
+              </div> */}
                 {/* item 3 */}
               <div className="max-w-max">
                 <div className="uppercase font-bold text-primary">Phone</div>

@@ -24,15 +24,14 @@ const Home = () => {
     <>
       <Hero />
       <FixedMenu />
-      <Services />
-      <About />
-      <Journey />
+      {/* <Services /> */}
       <Work />
-      <Testimonial />
+      <Journey />
+      <About />
+      {/* <Testimonial /> */}
       <Contact />
       <Footer />
       {/* temporary div  */}
-      
       {/* <div className="h-[3000px]"></div> */}
     </>
   );

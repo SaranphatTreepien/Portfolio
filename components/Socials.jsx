@@ -10,19 +10,19 @@ import { RiInstagramFill } from "react-icons/ri";
 const socials = [
   {
     icon: <RiInstagramFill />,
-    path: "",
+    path: "https://www.instagram.com/saranphattree_/",
   },
   {
     icon: <FaFacebookF />,
-    path: "",
+    path: "https://web.facebook.com/Saranphat7S/",
   },
   {
     icon: <FaGithub />,
-    path: "",
+    path: "https://github.com/SaranphatTreepien",
   },
   {
     icon: <FaLinkedinIn />,
-    path: "",
+    path: "https://www.linkedin.com/in/saranphat-treepien-4284402b2?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app",
   },
 ];
 
