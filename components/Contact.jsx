@@ -1,12 +1,12 @@
 import { useState, useEffect, use } from "react";
 // from spree
-import { useForm, ValidationError } from "@formspree/react";
+import { useForm, ValidationError } from '@formspree/react';
 import AnimatedText from "./AnimatedText";
 import Image from "next/image";
 import { FaCheckCircle } from "react-icons/fa";
 
 const Contact = () => {
-  const [state, handleSubmit] = useForm("mkgnnoya");
+  const [state, handleSubmit] = useForm("xpwybjvr");
   // state for from inputs
   const [formData, setFormData] = useState({
     firstname: "",
@@ -22,9 +22,16 @@ const Contact = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
+ 
   // clear the from after
   useEffect(() => {
+ if (state.succeeded) {
+    console.log("✅ Form submitted successfully!");
+  } else if (state.errors && state.errors.length > 0) {
+    console.log("❌ Form submission errors:", state.errors);
+  }
+
+
     setShowIcon(true);
     // clear for input
     setFormData({
@@ -115,7 +122,7 @@ const Contact = () => {
                 </label>
                 <input
                   onChange={handleChange}
-                  type="text"
+                  type="email"
                   id="email"
                   name="email"
                   value={formData.email}
