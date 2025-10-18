@@ -1,13 +1,11 @@
-import { useState, useEffect, use } from "react";
-// from spree
-import { useForm, ValidationError } from '@formspree/react';
+import { useState } from "react";
+import emailjs from "emailjs-com";
 import AnimatedText from "./AnimatedText";
 import Image from "next/image";
 import { FaCheckCircle } from "react-icons/fa";
 
+
 const Contact = () => {
-  const [state, handleSubmit] = useForm("xpwybjvr");
-  // state for from inputs
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -15,46 +13,78 @@ const Contact = () => {
     phone: "",
     message: "",
   });
-
+const [showNotification, setShowNotification] = useState(false);
   const [showIcon, setShowIcon] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+
   // handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
- 
-  // clear the from after
-  useEffect(() => {
- if (state.succeeded) {
-    console.log("✅ Form submitted successfully!");
-  } else if (state.errors && state.errors.length > 0) {
-    console.log("❌ Form submission errors:", state.errors);
-  }
 
-
-    setShowIcon(true);
-    // clear for input
-    setFormData({
-      firstname: "",
-      lastname: "",
-      email: "",
-      phone: "",
-      message: "",
-    });
-
-    //hide the icon and revert button text after 3 seconds
-    const timer = setTimeout(() => {
-      setShowIcon(false);
-    }, 3000);
-
-    // cleanup the timer
-    return () => clearTimeout(timer);
-  }, [state.succeeded]);
-
-  //handle form submisstion
+  // handle form submission
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    handleSubmit(e);
+    setIsSending(true);
+
+    // ส่งอีเมลไปหาคุณ (เจ้าของเว็บไซต์)
+    emailjs
+      .send(
+        "service_dgj4ayv", // Service ID ของคุณ
+        "template_ili86ci", // Template สำหรับคุณ
+        {
+          firstname: formData.firstname,
+          lastname: formData.lastname,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+          time: new Date().toLocaleString("th-TH"), // วันที่เวลาไทย
+        },
+        "jUeofg9Z-GDt6SElF" // Public Key
+      )
+      .then(
+        (result) => {
+          console.log("✅ Email sent successfully!", result.text);
+          // แสดง Notification
+          setShowNotification(true);
+
+          // ซ่อน Notification หลัง 3 วินาที
+          setTimeout(() => setShowNotification(false), 3000);
+
+          setShowIcon(true);
+          setFormData({
+            firstname: "",
+            lastname: "",
+            email: "",
+            phone: "",
+            message: "",
+          });
+
+          // ส่ง Auto-Reply ไปยังผู้ส่ง
+          emailjs
+            .send(
+              "service_dgj4ayv", // Service ID เดิม
+              "template_b97wpbe", // Template Auto-Reply
+              {
+                name: formData.firstname, // ชื่อลูกค้า
+                title: formData.message, // ข้อความที่ลูกค้าส่ง
+                email: formData.email, // อีเมลผู้ส่ง
+              },
+              "jUeofg9Z-GDt6SElF" // Public Key เดิม
+            )
+            .then((res) => console.log("✅ Auto-reply sent!", res.text))
+            .catch((err) => console.error("❌ Auto-reply failed:", err.text));
+
+          setTimeout(() => setShowIcon(false), 3000);
+        },
+        (error) => {
+          console.error("❌ Failed to send email:", error.text);
+        }
+      )
+      .finally(() => {
+        setIsSending(false);
+      });
   };
 
   return (
@@ -66,25 +96,18 @@ const Contact = () => {
               text="Let's Work Together"
               textStyles="h2 mb-12 text-center xl:text-left"
             />
-            {/* form  */}
             <form
               onSubmit={handleFormSubmit}
               className="flex flex-col gap-6 w-full max-w-[480px]"
             >
-              {/* firstname & lastName firlds  */}
               <div className="flex gap-8">
-                {/* first name  */}
                 <div className="flex-1">
-                  <label
-                    htmlFor="firstname"
-                    className="block mb-2 text-sm font-medium text-primary"
-                  >
+                  <label className="block mb-2 text-sm font-medium text-primary">
                     First Name <span className="text-accent">*</span>
                   </label>
                   <input
                     onChange={handleChange}
                     type="text"
-                    id="firstname"
                     name="firstname"
                     value={formData.firstname}
                     className="input"
@@ -92,18 +115,13 @@ const Contact = () => {
                     required
                   />
                 </div>
-                {/* Last name  */}
                 <div className="flex-1">
-                  <label
-                    htmlFor="lastname"
-                    className=" block mb-2 text-sm font-medium text-primary"
-                  >
+                  <label className="block mb-2 text-sm font-medium text-primary">
                     Last Name <span className="text-accent">*</span>
                   </label>
                   <input
                     onChange={handleChange}
                     type="text"
-                    id="lastname"
                     name="lastname"
                     value={formData.lastname}
                     className="input"
@@ -112,42 +130,29 @@ const Contact = () => {
                   />
                 </div>
               </div>
-              {/* Email field  */}
+
               <div>
-                <label
-                  htmlFor="email"
-                  className=" block mb-2 text-sm font-medium text-primary"
-                >
+                <label className="block mb-2 text-sm font-medium text-primary">
                   Email <span className="text-accent">*</span>
                 </label>
                 <input
                   onChange={handleChange}
                   type="email"
-                  id="email"
                   name="email"
                   value={formData.email}
                   className="input"
                   placeholder="youremail@email.com"
                   required
                 />
-                <ValidationError
-                  prefix="Email"
-                  field="email"
-                  errors={state.errors}
-                />
               </div>
-              {/* Phone field  */}
+
               <div>
-                <label
-                  htmlFor="phone"
-                  className=" block mb-2 text-sm font-medium text-primary"
-                >
+                <label className="block mb-2 text-sm font-medium text-primary">
                   Phone Number <span className="text-accent">*</span>
                 </label>
                 <input
                   onChange={handleChange}
                   type="text"
-                  id="Phone"
                   name="phone"
                   value={formData.phone}
                   className="input"
@@ -155,17 +160,13 @@ const Contact = () => {
                   required
                 />
               </div>
-              {/* message field  */}
+
               <div>
-                <label
-                  htmlFor="email"
-                  className=" block mb-2 text-sm font-medium text-primary"
-                >
+                <label className="block mb-2 text-sm font-medium text-primary">
                   Message <span className="text-accent">*</span>
                 </label>
                 <textarea
                   onChange={handleChange}
-                  id="message"
                   name="message"
                   value={formData.message}
                   className="textarea"
@@ -173,44 +174,36 @@ const Contact = () => {
                   rows="5"
                   required
                 />
-                <ValidationError
-                  prefix="Message"
-                  field="message"
-                  errors={state.errors}
-                />
               </div>
-              {/* submit button  */}
+
               <button
                 type="submit"
-                disabled={state.submitting}
+                disabled={isSending}
                 className="btn btn-accent flex items-center justify-center gap-2"
               >
-                {state.submitting ? (
+                {isSending ? (
                   <span>Sending...</span>
                 ) : (
                   <>
-                    {/*show icon with opacity transition */}
                     <FaCheckCircle
                       className={`absolute text-white text-lg transition-opacity
                       duration-500 ease-in-out ${
                         showIcon ? "opacity-100" : "opacity-0"
-                      } `}
+                      }`}
                     />
-                    {/*button text */}
                     <span
                       className={`transition-opacity duration-500
-                    ease-in-out ${showIcon ? "opcaity-0" : "opacity-100"}`}
+                    ease-in-out ${showIcon ? "opacity-0" : "opacity-100"}`}
                     >
-                      Send messsage
+                      Send message
                     </span>
                   </>
                 )}
               </button>
             </form>
           </div>
-          {/* image  */}
-          <div className="hidden xl:flex relative
-          w-[577px] h-[664px] rounded-lg overflow-hidden">
+
+          <div className="hidden xl:flex relative w-[577px] h-[664px] rounded-lg overflow-hidden">
             <Image
               src="/assets/contact/img.png"
               className="object-cover"
@@ -221,6 +214,12 @@ const Contact = () => {
           </div>
         </div>
       </div>
+      {/* ← ใส่ Notification ตรงนี้ */}
+      {showNotification && (
+        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg flex items-center gap-2">
+          <FaCheckCircle /> Your message has been sent successfully!
+        </div>
+      )}
     </section>
   );
 };

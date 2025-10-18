@@ -16,12 +16,7 @@ const links = [
   {
     name: "Contact",
   },
-  {
-    name: "RESUME",
-  },
-  {
-    name: "CV",
-  },
+  
 ];
 const Nav = ({ containerStyles, listStyles, linkStyles,spy }) => {
   return (
