@@ -22,7 +22,7 @@ const About = () => {
                   src="/assets/about/dev3.png"
                   width={350}
                   height={478}
-                  quality={100}
+                  quality={100} 
                   priority
                   alt=""
                 />

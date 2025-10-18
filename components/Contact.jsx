@@ -1,19 +1,20 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import emailjs from "emailjs-com";
 import AnimatedText from "./AnimatedText";
 import Image from "next/image";
 import { FaCheckCircle } from "react-icons/fa";
 
-
 const Contact = () => {
+  const formRef = useRef(); // 👈 อ้างอิงฟอร์ม
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
     email: "",
     phone: "",
     message: "",
+    file: null, // เพิ่มไฟล์
   });
-const [showNotification, setShowNotification] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
   const [showIcon, setShowIcon] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
@@ -40,6 +41,7 @@ const [showNotification, setShowNotification] = useState(false);
           phone: formData.phone,
           message: formData.message,
           time: new Date().toLocaleString("th-TH"), // วันที่เวลาไทย
+          attachment: formData.file, // 👈 ส่งไฟล์ base64 ไปด้วย
         },
         "jUeofg9Z-GDt6SElF" // Public Key
       )
@@ -48,10 +50,8 @@ const [showNotification, setShowNotification] = useState(false);
           console.log("✅ Email sent successfully!", result.text);
           // แสดง Notification
           setShowNotification(true);
-
           // ซ่อน Notification หลัง 3 วินาที
           setTimeout(() => setShowNotification(false), 3000);
-
           setShowIcon(true);
           setFormData({
             firstname: "",
@@ -59,8 +59,8 @@ const [showNotification, setShowNotification] = useState(false);
             email: "",
             phone: "",
             message: "",
+            file: null,
           });
-
           // ส่ง Auto-Reply ไปยังผู้ส่ง
           emailjs
             .send(
@@ -97,6 +97,7 @@ const [showNotification, setShowNotification] = useState(false);
               textStyles="h2 mb-12 text-center xl:text-left"
             />
             <form
+              ref={formRef} // 👈 เพิ่ม ref
               onSubmit={handleFormSubmit}
               className="flex flex-col gap-6 w-full max-w-[480px]"
             >
@@ -175,6 +176,18 @@ const [showNotification, setShowNotification] = useState(false);
                   required
                 />
               </div>
+              {/* ...input fields เดิม */}
+              {/* <div>
+                <label className="block mb-2 text-sm font-medium text-primary">
+                  File Attachment
+                </label>
+                <input
+                  type="file"
+                  name="file"
+                  onChange={handleChange}
+                  className="input"
+                />
+              </div> */}
 
               <button
                 type="submit"
