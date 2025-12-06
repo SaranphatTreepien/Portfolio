@@ -3,9 +3,10 @@ import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi"; 
 import { Badge } from "../ui/badge";
 
-const WorkItem = ({ href, category, img, title }) => {
+const WorkItem = ({ slug, href, category, img, title }) => {
+
   return (
-    <Link href="/" className="group">
+    <Link href={`/work/${slug}`} className="group">
       <div   className="text-white w-full h-[300px] p-8 rounded-[30px] flex items-center 
      justify-center mb-6 relative overflow-hidden bg-[#f4f4f4]"   >
         <Badge className="bg-primary text-base z-40

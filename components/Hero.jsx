@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { TypeAnimation } from "react-type-animation";
 import { Link as ScrollLink } from "react-scroll";
-
+import Link from "next/link";
 // components
 import RotatingShape from "./RotatingShape";
 import Header from "./Header";
@@ -46,9 +46,21 @@ const Hero = () => {
           <p className="lead max-w-[476px] md-7">
               I am passionate about exploring data, networks, AI, and AIoT 
           </p>
-          <ScrollLink to="Contact" smooth>
-            <button className="btn btn-accent mt-8">Contact Me</button>
-          </ScrollLink>
+   <div className="flex gap-4 mt-8"> {/* gap-4 ให้ระยะห่างสวยงาม */}
+  <ScrollLink to="Contact" smooth>
+    <button className="btn btn-accent">Contact Me</button>
+  </ScrollLink>
+
+  <Link href="/resume" passHref>
+    <button className="btn btn-accent">Resume</button>
+  </Link>
+
+  <Link href="Contact" smooth>
+    <button className="btn btn-accent">CV</button>
+  </Link>
+</div>
+
+
           {/* stats */}
           {/* <Stats /> */}
         </div>

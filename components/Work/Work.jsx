@@ -7,13 +7,15 @@ import WorkItem from "./WorkItem";
 // sample data for projects with verious categories
 const data = [
   {
-    href: "",
+    href: "/work/luminex-ui-kit",
+    slug: "luminex-ui-kit",
     category: "design",
     img: "/assets/work/thumb-1.png",
     title: "Luminex UI Kit",
   },
   {
-    href: "",
+    slug: "nebula-dashboard",
+    href: "/work/nebula-dashboard",
     category: "design",
     img: "/assets/work/thumb-2.png",
     title: "Nebula Dashboard",
@@ -127,9 +129,9 @@ xl:justify-between md-[30px]"
             </div>
             {/*Load more button   */}
             {vistibleItems < filterWork.length && (
-              <div className="flex justify-center mt-12"> 
+              <div className="flex justify-center mt-12">
                 <button onClick={loadMoreItems}
-                className="btn btn-accent">Load more</button>
+                  className="btn btn-accent">Load more</button>
               </div>
             )}
           </TabsContent>
