@@ -3,6 +3,7 @@ import Image from "next/image";
 import { TypeAnimation } from "react-type-animation";
 import { Link as ScrollLink } from "react-scroll";
 import Link from "next/link";
+
 // components
 import RotatingShape from "./RotatingShape";
 import Header from "./Header";
@@ -55,9 +56,9 @@ const Hero = () => {
     <button className="btn btn-accent">Resume</button>
   </Link>
 
-  <Link href="Contact" smooth>
-    <button className="btn btn-accent">CV</button>
-  </Link>
+<ScrollLink to="Contact"  >
+  <button className="btn btn-accent">CV</button>
+</ScrollLink>
 </div>
 
 

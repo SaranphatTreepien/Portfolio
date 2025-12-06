@@ -1,7 +1,7 @@
 const works = [
   {
     slug: "luminex-ui-kit",
-    title: "Luminex UI Kit",
+    title: "Luminex  ",
     category: "design",
     img: "/assets/work/thumb-1.png",
 
@@ -15,13 +15,30 @@ const works = [
     content: [
       {
         img: "/assets/work/thumb-1.png",
-        description: "หน้าแรกของ UI Kit แสดงส่วนประกอบพื้นฐาน \nเช่นปุ่ม, input, และ card."
+        description: "หน้าแรกของ UI Kit แสดงส่วนประกอบพื้นฐาน เช่น ปุ่ม, input, และ card."
       },
       {
         img: "/assets/work/thumb-1.png",
-        description: "หน้าตารางและกราฟิกต่าง ๆ สำหรับใช้ใน dashboard..."
+        description: "หน้าตารางและกราฟิกต่าง ๆ สำหรับใช้ใน dashboard แสดงสถิติและข้อมูลเชิงลึกแบบเรียลไทม์."
+      },
+      {
+        img: "/assets/work/thumb-1.png",
+        description: "หน้ารายงานสรุป แสดงกราฟและชาร์ตแบบ interactive ช่วยให้ผู้ใช้งานวิเคราะห์ข้อมูลได้ง่ายขึ้น."
+      },
+      {
+        img: "/assets/work/thumb-1.png",
+        description: "หน้าโปรไฟล์ผู้ใช้ แสดงข้อมูลส่วนตัวและกิจกรรมล่าสุด พร้อมปุ่มแก้ไขและตั้งค่า."
+      },
+      {
+        img: "/assets/work/thumb-1.png",
+        description: "หน้าตั้งค่าระบบและธีม ให้ผู้ใช้งานปรับแต่ง UI สีสันและการแสดงผลตามความต้องการ."
+      },
+      {
+        img: "/assets/work/thumb-1.png",
+        description: "หน้าช่วยเหลือและ FAQ มีไกด์และ tips ต่าง ๆ เพื่อให้ผู้ใช้งานเริ่มใช้งานระบบได้เร็วขึ้น."
       }
     ]
+
   },
 
   {
@@ -48,5 +65,5 @@ const works = [
       }
     ]
   }
-]; 
+];
 export default works;

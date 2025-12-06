@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function ProjectContent({ content }) {
   return (
-    <div className="max-w-3xl mx-auto space-y-10 px-4">
+    <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 gap-10">
       {content.map((item, index) => (
         <motion.div
           key={index}
@@ -23,10 +23,11 @@ export default function ProjectContent({ content }) {
             transition 
             duration-300 
             hover:-translate-y-1
+            w-full
           "
         >
           {/* รูปภาพ */}
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-4">
             <Image
               src={item.img}
               alt={`project-image-${index}`}
@@ -36,12 +37,12 @@ export default function ProjectContent({ content }) {
           </div>
 
           {/* เส้นคั่น */}
-          <div className="w-20 h-1 bg-gradient-to-r from-[#7edad2] to-[#79d3cc] rounded-full mt-6 mb-4" />
+          <div className="w-20 h-1 bg-gradient-to-r from-[#7edad2] to-[#79d3cc] rounded-full mb-4" />
 
           {/* Description */}
-         <p className="text-gray-700 text-lg leading-relaxed whitespace-normal break-words">
-  {item.description}
-</p>
+          <p className="text-gray-700 text-base leading-relaxed whitespace-pre-wrap">
+            {item.description}
+          </p>
         </motion.div>
       ))}
     </div>
