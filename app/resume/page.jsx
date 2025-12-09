@@ -20,14 +20,14 @@ export default function ResumePage() {
     const [showSendAlert, setShowSendAlert] = useState(false);
     const [emailToSend, setEmailToSend] = useState("");
     const [form, setForm] = useState({
-        fullName: "",
-        position: "",
-        company: "",
-        receiverName: "",
-        receiverEmail: "",
-        skills: "",
-        portfolio: "",
-        phone: "",
+        fullName: "สมชาย ใจดี",
+        position: "Frontend Developer",
+        company: "บริษัทเทคโนโลยีไทย จำกัด",
+        receiverName: "คุณอรพิน HR",
+        receiverEmail: "maxnum752@gmail.com",
+        skills: "React, Next.js, TailwindCSS",
+        portfolio: "https://myportfolio.com",
+        phone: "098-123-4567",
     });
 
     const sendEmail = async () => {
@@ -164,28 +164,28 @@ export default function ResumePage() {
                     >
 
                         <input type="text" placeholder="ชื่อ–นามสกุลของคุณ" className="border p-2 rounded-lg"
-                            value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required />
+                            value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
 
                         <input type="text" placeholder="ตำแหน่งที่สมัคร" className="border p-2 rounded-lg"
-                            value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} required />
+                            value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} />
 
                         <input type="text" placeholder="ชื่อบริษัท" className="border p-2 rounded-lg"
-                            value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} required />
+                            value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
 
                         <input type="text" placeholder="ชื่อผู้รับ (HR/Recruiter)" className="border p-2 rounded-lg"
                             value={form.receiverName} onChange={(e) => setForm({ ...form, receiverName: e.target.value })} />
 
                         <input type="email" placeholder="อีเมลผู้รับ" className="border p-2 rounded-lg"
-                            value={form.receiverEmail} onChange={(e) => setForm({ ...form, receiverEmail: e.target.value })} required />
+                            value={form.receiverEmail} onChange={(e) => setForm({ ...form, receiverEmail: e.target.value })} />
 
                         <textarea placeholder="ทักษะหรือประสบการณ์เด่น (2–3 ข้อ)" className="border p-2 rounded-lg"
-                            value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} required />
+                            value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} />
 
                         <input type="text" placeholder="ลิงก์ Portfolio (ถ้ามี)" className="border p-2 rounded-lg"
                             value={form.portfolio} onChange={(e) => setForm({ ...form, portfolio: e.target.value })} />
 
                         <input type="text" placeholder="เบอร์โทรติดต่อ" className="border p-2 rounded-lg"
-                            value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+                            value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
 
                         <button type="submit"
                             className={`w-full text-white p-2 rounded-lg shadow-md transition-all duration-300 ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#7edad2] hover:bg-[#79d3cc]"
