@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SiGmail } from "react-icons/si";
 import { FaDownload } from "react-icons/fa";
 import Confetti from "react-confetti";
-import emailjs from "emailjs-com";
 
 export default function ResumePage() {
     const [email, setEmail] = useState("");
@@ -14,41 +13,52 @@ export default function ResumePage() {
     const [loading, setLoading] = useState(false);
     const [lightbox, setLightbox] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [toastMessage, setToastMessage] = useState(""); // สำหรับข้อความ Toast
+    const [toastMessage, setToastMessage] = useState("");
     const [showDownloadAlert, setShowDownloadAlert] = useState(false);
     const [showSendAlert, setShowSendAlert] = useState(false);
     const [emailToSend, setEmailToSend] = useState("");
 
-    // ฟังก์ชันส่งอีเมล
-    const sendEmail = async (toEmail) => {
+    const [form, setForm] = useState({
+        fullName: "สมชาย ใจดี",
+        position: "Frontend Developer",
+        company: "บริษัทเทคโนโลยีไทย จำกัด",
+        receiverName: "คุณอรพิน HR",
+        receiverEmail: "maxnum752@gmail.com",
+        skills: "React, Next.js, TailwindCSS",
+        portfolio: "https://myportfolio.com",
+        phone: "098-123-4567",
+    });
+
+    const sendEmail = async () => {
         setLoading(true);
+
         try {
-            emailjs.init("2j9WROJO9dwKKgzQ8");
+            const res = await fetch("/api/send-resume", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
+            });
 
-            const templateParams = {
-                to_email: toEmail,
-                from_name: "Saranphat",
-                resume_link: window.location.origin + "/resume.pdf",
-                website_url: window.location.href
-            };
+            const data = await res.json();
 
-            await emailjs.send("service_vwi57vh", "template_yy6buhf", templateParams);
-
-            // แสดง Toast + Confetti
-            setToastMessage("📧 ส่งอีเมลสำเร็จแล้ว!");
-            setSuccess(true);
-            setTimeout(() => {
-                setSuccess(false);
-                setToastMessage("");
-            }, 3000);
+            if (data.success) {
+                setToastMessage("📧 ส่งอีเมลสมัครงานสำเร็จแล้ว!");
+                setSuccess(true);
+                setTimeout(() => {
+                    setSuccess(false);
+                    setToastMessage("");
+                }, 3000);
+            } else {
+                alert("❌ ส่งเมลไม่สำเร็จ: " + data.error);
+            }
         } catch (err) {
             console.error(err);
-            alert("❌ Failed to send email.");
+            alert("❌ เกิดข้อผิดพลาด");
         }
+
         setLoading(false);
     };
 
-    // ฟังก์ชันดาวน์โหลด PDF
     const handleDownload = () => {
         const link = document.createElement("a");
         link.href = "/resume.pdf";
@@ -143,27 +153,82 @@ export default function ResumePage() {
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
-                            setEmailToSend(email);
                             setShowSendAlert(true);
                         }}
                         className="flex flex-col gap-3"
                     >
                         <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter recipient email"
-                            className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7edad2]"
-                            required
+                            type="text"
+                            placeholder="ชื่อ–นามสกุลของคุณ"
+                            className="border p-2 rounded-lg"
+                            value={form.fullName}
+                            onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                         />
+
+                        <input
+                            type="text"
+                            placeholder="ตำแหน่งที่สมัคร"
+                            className="border p-2 rounded-lg"
+                            value={form.position}
+                            onChange={(e) => setForm({ ...form, position: e.target.value })}
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="ชื่อบริษัท"
+                            className="border p-2 rounded-lg"
+                            value={form.company}
+                            onChange={(e) => setForm({ ...form, company: e.target.value })}
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="ชื่อผู้รับ (HR/Recruiter)"
+                            className="border p-2 rounded-lg"
+                            value={form.receiverName}
+                            onChange={(e) => setForm({ ...form, receiverName: e.target.value })}
+                        />
+
+                        <input
+                            type="email"
+                            placeholder="อีเมลผู้รับ"
+                            className="border p-2 rounded-lg"
+                            value={form.receiverEmail}
+                            onChange={(e) =>
+                                setForm({ ...form, receiverEmail: e.target.value })
+                            }
+                        />
+
+                        <textarea
+                            placeholder="ทักษะหรือประสบการณ์เด่น (2–3 ข้อ)"
+                            className="border p-2 rounded-lg"
+                            value={form.skills}
+                            onChange={(e) => setForm({ ...form, skills: e.target.value })}
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="ลิงก์ Portfolio (ถ้ามี)"
+                            className="border p-2 rounded-lg"
+                            value={form.portfolio}
+                            onChange={(e) => setForm({ ...form, portfolio: e.target.value })}
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="เบอร์โทรติดต่อ"
+                            className="border p-2 rounded-lg"
+                            value={form.phone}
+                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        />
+
                         <button
                             type="submit"
-                            className={`w-full text-white p-2 rounded-lg shadow-md transition-all duration-300 ${
-                                loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#7edad2] hover:bg-[#79d3cc]"
-                            }`}
+                            className={`w-full text-white p-2 rounded-lg shadow-md transition-all duration-300 ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#7edad2] hover:bg-[#79d3cc]"
+                                }`}
                             disabled={loading}
                         >
-                            {loading ? "Sending..." : "Send Email"}
+                            {loading ? "Sending..." : "Send Resume Email"}
                         </button>
                     </form>
                 </motion.div>
@@ -189,7 +254,7 @@ export default function ResumePage() {
                 </motion.div>
             </motion.div>
 
-            {/* Lightbox Modal */}
+            {/* Lightbox */}
             {lightbox && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
@@ -223,9 +288,11 @@ export default function ResumePage() {
                             transition={{ duration: 0.3 }}
                         >
                             <p className="text-gray-800 mb-4 text-lg font-medium">
-                                คุณกำลังจะดาวน์โหลดไฟล์ <span className="font-bold">resume.pdf</span>
+                                คุณกำลังจะดาวน์โหลดไฟล์{" "}
+                                <span className="font-bold">resume.pdf</span>
                             </p>
                             <p className="text-gray-500 mb-6">ต้องการดำเนินการต่อหรือไม่?</p>
+
                             <div className="flex justify-center gap-4">
                                 <button
                                     className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
@@ -233,6 +300,7 @@ export default function ResumePage() {
                                 >
                                     ยกเลิก
                                 </button>
+
                                 <button
                                     className="px-4 py-2 bg-[#7edad2] text-white rounded-lg hover:bg-[#79d3cc] transition"
                                     onClick={() => {
@@ -265,8 +333,10 @@ export default function ResumePage() {
                             transition={{ duration: 0.3 }}
                         >
                             <p className="text-gray-800 mb-4 text-lg font-medium">
-                                คุณต้องการส่ง Resume ไปที่ <span className="font-bold">{emailToSend}</span> หรือไม่?
+                                คุณต้องการส่ง Resume ไปที่{" "}
+                                <span className="font-bold">{form.receiverEmail}</span> หรือไม่?
                             </p>
+
                             <div className="flex justify-center gap-4">
                                 <button
                                     className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
@@ -274,10 +344,11 @@ export default function ResumePage() {
                                 >
                                     ยกเลิก
                                 </button>
+
                                 <button
                                     className="px-4 py-2 bg-[#7edad2] text-white rounded-lg hover:bg-[#79d3cc] transition"
                                     onClick={() => {
-                                        sendEmail(emailToSend);
+                                        sendEmail();
                                         setShowSendAlert(false);
                                     }}
                                 >
@@ -290,7 +361,13 @@ export default function ResumePage() {
             </AnimatePresence>
 
             {/* Confetti */}
-            {success && <Confetti width={window.innerWidth} height={window.innerHeight} recycle={false} />}
+            {success && (
+                <Confetti
+                    width={window.innerWidth}
+                    height={window.innerHeight}
+                    recycle={false}
+                />
+            )}
         </div>
     );
 }
