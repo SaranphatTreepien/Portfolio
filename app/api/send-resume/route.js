@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
 
@@ -18,36 +18,39 @@ export async function POST(request) {
 
         // โหลดไฟล์ PDF
         const filePath = path.join(process.cwd(), "public", "resume.pdf");
-        const fileContent = fs.readFileSync(filePath).toString("base64");
+        const fileContent = fs.readFileSync(filePath);
 
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        // สร้าง transporter SMTP
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT) || 465,
+            secure: process.env.SMTP_SECURE === "true",
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS.replace(/\s/g, ""),
+            },
+        });
 
-        const result = await resend.emails.send({
-            from: "Portfolio <no-reply@yourdomain.com>",
+
+        // ส่งอีเมล
+        const info = await transporter.sendMail({
+            from: `"Portfolio" <${process.env.SMTP_USER}>`,
             to: receiverEmail,
             subject: `สมัครงานตำแหน่ง ${position} – ${fullName}`,
-            text: `
-ชื่อ: ${fullName}
-บริษัท: ${company}
-ตำแหน่งที่สมัคร: ${position}
-ผู้รับ HR: ${receiverName}
-ทักษะเด่น: ${skills}
-Portfolio: ${portfolio}
-เบอร์โทร: ${phone}
-      `,
+            text: `ชื่อ: ${fullName}\nบริษัท: ${company}\nตำแหน่งที่สมัคร: ${position}\nผู้รับ HR: ${receiverName}\nทักษะเด่น: ${skills}\nPortfolio: ${portfolio}\nเบอร์โทร: ${phone}`,
             attachments: [
                 {
                     filename: "resume.pdf",
                     content: fileContent,
                     contentType: "application/pdf",
-                }
-            ]
+                },
+            ],
         });
 
-        return Response.json({ success: true, result });
+        return new Response(JSON.stringify({ success: true, info }), { status: 200 });
 
     } catch (error) {
         console.error("Email error:", error);
-        return Response.json({ success: false, error });
+        return new Response(JSON.stringify({ success: false, error: error.message }), { status: 500 });
     }
 }
