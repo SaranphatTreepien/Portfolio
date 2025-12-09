@@ -6,8 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SiGmail } from "react-icons/si";
 import { FaDownload } from "react-icons/fa";
 import Confetti from "react-confetti";
-
-
+import emailjs from "emailjs-com";
 
 export default function ResumePage() {
     const [email, setEmail] = useState("");
@@ -19,46 +18,33 @@ export default function ResumePage() {
     const [showDownloadAlert, setShowDownloadAlert] = useState(false);
     const [showSendAlert, setShowSendAlert] = useState(false);
     const [emailToSend, setEmailToSend] = useState("");
-    const [form, setForm] = useState({
-        fullName: "",
-        position: "",
-        company: "",
-        receiverName: "",
-        receiverEmail: "",
-        skills: "",
-        portfolio: "",
-        phone: "",
-    });
 
-    const sendEmail = async () => {
+    // ฟังก์ชันส่งอีเมล
+    const sendEmail = async (toEmail) => {
         setLoading(true);
-
         try {
-            const res = await fetch("/api/send-resume", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(form),
-            });
+            emailjs.init("2j9WROJO9dwKKgzQ8");
 
-            const data = await res.json();
+            const templateParams = {
+                to_email: toEmail,
+                from_name: "Saranphat",
+                resume_link: window.location.origin + "/resume.pdf",
+                website_url: window.location.href
+            };
 
-            if (data.success) {
-                setToastMessage("📧 ส่งอีเมลสมัครงานสำเร็จแล้ว!");
-                setSuccess(true);
-                setTimeout(() => {
-                    setSuccess(false);
-                    setToastMessage("");
-                }, 3000);
-            } else {
-                alert("❌ ส่งเมลไม่สำเร็จ: " + data.error);
-            }
+            await emailjs.send("service_vwi57vh", "template_yy6buhf", templateParams);
+
+            // แสดง Toast + Confetti
+            setToastMessage("📧 ส่งอีเมลสำเร็จแล้ว!");
+            setSuccess(true);
+            setTimeout(() => {
+                setSuccess(false);
+                setToastMessage("");
+            }, 3000);
         } catch (err) {
             console.error(err);
-            alert("❌ เกิดข้อผิดพลาด");
+            alert("❌ Failed to send email.");
         }
-
         setLoading(false);
     };
 
@@ -147,7 +133,6 @@ export default function ResumePage() {
             </AnimatePresence>
 
             {/* Email Form */}
-            {/* Email Form (Full Resume Info) */}
             {showForm && (
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -158,41 +143,27 @@ export default function ResumePage() {
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
+                            setEmailToSend(email);
                             setShowSendAlert(true);
                         }}
                         className="flex flex-col gap-3"
                     >
-
-                        <input type="text" placeholder="ชื่อ–นามสกุลของคุณ" className="border p-2 rounded-lg"
-                            value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required />
-
-                        <input type="text" placeholder="ตำแหน่งที่สมัคร" className="border p-2 rounded-lg"
-                            value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} required />
-
-                        <input type="text" placeholder="ชื่อบริษัท" className="border p-2 rounded-lg"
-                            value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} required />
-
-                        <input type="text" placeholder="ชื่อผู้รับ (HR/Recruiter)" className="border p-2 rounded-lg"
-                            value={form.receiverName} onChange={(e) => setForm({ ...form, receiverName: e.target.value })} />
-
-                        <input type="email" placeholder="อีเมลผู้รับ" className="border p-2 rounded-lg"
-                            value={form.receiverEmail} onChange={(e) => setForm({ ...form, receiverEmail: e.target.value })} required />
-
-                        <textarea placeholder="ทักษะหรือประสบการณ์เด่น (2–3 ข้อ)" className="border p-2 rounded-lg"
-                            value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} required />
-
-                        <input type="text" placeholder="ลิงก์ Portfolio (ถ้ามี)" className="border p-2 rounded-lg"
-                            value={form.portfolio} onChange={(e) => setForm({ ...form, portfolio: e.target.value })} />
-
-                        <input type="text" placeholder="เบอร์โทรติดต่อ" className="border p-2 rounded-lg"
-                            value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
-
-                        <button type="submit"
-                            className={`w-full text-white p-2 rounded-lg shadow-md transition-all duration-300 ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#7edad2] hover:bg-[#79d3cc]"
-                                }`}
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter recipient email"
+                            className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7edad2]"
+                            required
+                        />
+                        <button
+                            type="submit"
+                            className={`w-full text-white p-2 rounded-lg shadow-md transition-all duration-300 ${
+                                loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#7edad2] hover:bg-[#79d3cc]"
+                            }`}
                             disabled={loading}
                         >
-                            {loading ? "Sending..." : "Send Resume Email"}
+                            {loading ? "Sending..." : "Send Email"}
                         </button>
                     </form>
                 </motion.div>
@@ -294,7 +265,7 @@ export default function ResumePage() {
                             transition={{ duration: 0.3 }}
                         >
                             <p className="text-gray-800 mb-4 text-lg font-medium">
-                                คุณต้องการส่ง Resume ไปที่ <span className="font-bold"> {form.receiverEmail}</span> หรือไม่?
+                                คุณต้องการส่ง Resume ไปที่ <span className="font-bold">{emailToSend}</span> หรือไม่?
                             </p>
                             <div className="flex justify-center gap-4">
                                 <button
@@ -306,7 +277,7 @@ export default function ResumePage() {
                                 <button
                                     className="px-4 py-2 bg-[#7edad2] text-white rounded-lg hover:bg-[#79d3cc] transition"
                                     onClick={() => {
-                                        sendEmail();
+                                        sendEmail(emailToSend);
                                         setShowSendAlert(false);
                                     }}
                                 >

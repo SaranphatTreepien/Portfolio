@@ -8,18 +8,19 @@ export default async function WorkDetailPage({ params }) {
 
   const project = works.find((item) => item.slug === slug);
 
-  if (!project) {
-    return (
-      <div className="p-10 text-red-500 text-center">
-        Project not found.
-        <Link href="/">
-          <button className="mt-4 px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:scale-105 transition-transform">
-            กลับหน้า Home
-          </button>
-        </Link>
-      </div>
-    );
-  }
+ if (!project) {
+  return (
+    <div className="flex items-center justify-center min-h-screen flex-col text-center p-4">
+      <p className="text-red-500 text-lg mb-4">Project not found.</p>
+      <Link href="/">
+        <button className="px-6 py-3 bg-gradient-to-r from-[#7edad2] to-[#79d3cc] text-white rounded-lg shadow-md hover:scale-105 transition-transform">
+          กลับหน้า Home
+        </button>
+      </Link>
+    </div>
+  );
+}
+
 
   return (
     <div className="relative min-h-screen py-24 px-4 bg-gradient-to-b from-[#f0f7f6] to-[#e6f1ef] overflow-x-hidden">
