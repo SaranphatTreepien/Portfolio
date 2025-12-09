@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
+import { NextResponse } from "next/server";
 
 export async function POST(request) {
     try {
@@ -16,30 +17,31 @@ export async function POST(request) {
             attachments    
         } = body;
 
-        // 1. เตรียม Attachments สำหรับ Nodemailer
+        console.log(`📩 Preparing email to: ${receiverEmail}`);
+
         const mailAttachments = [];
 
         if (attachments && Array.isArray(attachments)) {
             for (const file of attachments) {
-                if (file.type === "PDF") {
-                    // อ่านไฟล์ PDF จาก public folder
-                    // file.path คือ "/assets/document/resume.pdf"
-                    // เราต้องเอา "/" หน้าสุดออกเพื่อให้ path.join ทำงานถูกกับ process.cwd()
+                // กรณี 1: ไฟล์ที่มีอยู่แล้วบน Server (Resume/CV หลัก)
+                if (file.type === "SERVER_FILE") {
                     const relativePath = file.path.startsWith("/") ? file.path.slice(1) : file.path;
                     const fullPath = path.join(process.cwd(), "public", relativePath);
 
                     if (fs.existsSync(fullPath)) {
                         mailAttachments.push({
-                            filename: file.fileName, // ชื่อไฟล์ที่ User แก้ไขแล้ว
-                            path: fullPath,          // อ่านจากไฟล์จริงบน Server
+                            filename: file.fileName,
+                            path: fullPath,
                             contentType: 'application/pdf'
                         });
                     } else {
-                        console.warn(`File not found: ${fullPath}`);
+                        console.warn(`⚠️ File not found on server: ${fullPath}`);
                     }
                 } 
-                else if (file.type === "Image" && file.content) {
-                    // รูปภาพมาเป็น Base64
+                // กรณี 2: ไฟล์ที่อัปโหลดเข้ามา (รูปภาพ หรือ PDF เพิ่มเติม)
+                else if (file.type === "UPLOAD_FILE" && file.content) {
+                    // file.content เป็น Base64 string
+                    // ตัด Header ออก (เช่น "data:application/pdf;base64,...")
                     const base64Data = file.content.split(";base64,").pop();
                     
                     mailAttachments.push({
@@ -50,18 +52,16 @@ export async function POST(request) {
             }
         }
 
-        // 2. ตั้งค่า Nodemailer (ใช้ค่าจาก env ที่คุณเตรียมไว้)
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST, 
             port: Number(process.env.SMTP_PORT),
-            secure: process.env.SMTP_SECURE === "true", // แปลง string "true" เป็น boolean
+            secure: process.env.SMTP_SECURE === "true",
             auth: {
                 user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS, // ควรเก็บใน .env
+                pass: process.env.SMTP_PASS,
             },
         });
 
-        // 3. ส่งอีเมล
         const info = await transporter.sendMail({
             from: `"${fullName} - Portfolio" <${process.env.SMTP_USER}>`, 
             to: receiverEmail,                                            
@@ -71,12 +71,12 @@ export async function POST(request) {
             attachments: mailAttachments                                  
         });
 
-        console.log("Message sent: %s", info.messageId);
+        console.log("✅ Message sent:", info.messageId);
 
-        return new Response(JSON.stringify({ success: true, messageId: info.messageId }), { status: 200 });
+        return NextResponse.json({ success: true, messageId: info.messageId }, { status: 200 });
 
     } catch (error) {
-        console.error("Email API Error:", error);
-        return new Response(JSON.stringify({ success: false, error: error.message }), { status: 500 });
+        console.error("❌ Email API Error:", error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }

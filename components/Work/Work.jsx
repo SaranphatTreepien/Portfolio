@@ -1,108 +1,50 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AnimatedText from "../AnimatedText";
+import AnimatedText from "../AnimatedText"; // เช็ค path
 import WorkItem from "./WorkItem";
+// ✅ Import ข้อมูลที่คุณเพิ่งแก้
+import { projects as data } from "@/lib/projectsData";
 
-// sample data for projects with verious categories
-const data = [
-  {
-    href: "/work/luminex-ui-kit",
-    slug: "luminex-ui-kit",
-    category: "design",
-    img: "/assets/work/thumb-1.png",
-    title: "Luminex UI Kit",
-  },
-  {
-    slug: "nebula-dashboard",
-    href: "/work/nebula-dashboard",
-    category: "design",
-    img: "/assets/work/thumb-2.png",
-    title: "Nebula Dashboard",
-  },
-  {
-    href: "",
-    category: "frontend",
-    img: "/assets/work/thumb-3.png",
-    title: "Velox APP",
-  },
-  {
-    href: "",
-    category: "frontend",
-    img: "/assets/work/thumb-4.png",
-    title: "Quantum Portfolio",
-  },
-  {
-    href: "",
-    category: "frontend",
-    img: "/assets/work/thumb-5.png",
-    title: "Synergry APP UI",
-  },
-  {
-    href: "",
-    category: "fullstack",
-    img: "/assets/work/thumb-6.png",
-    title: "Appollon Travel Platform",
-  },
-  {
-    href: "",
-    category: "fullstack",
-    img: "/assets/work/thumb-7.png",
-    title: "Horizon SaaS Dashboard",
-  },
-];
 const Work = () => {
-  // extract unique categories from data
+  // extract unique categories
   const uniqueCategories = Array.from(
     new Set(data.map((item) => item.category))
   );
 
-  //create tab data with "all" category and unique categories from data
   const tabData = [
     { category: "all" },
     ...uniqueCategories.map((category) => ({ category })),
   ];
 
-  // state to manage the currently seleccted tab
   const [tabValue, setTabValue] = useState("all");
-  // number of item to show initially
-  const [vistibleItems, setVisibleItems] = useState(6);
+  const [visibleItems, setVisibleItems] = useState(6); // แก้คำผิด vistible -> visible
 
-  // filter work item based on selected tab
   const filterWork =
     tabValue === "all"
-      ? data.filter((item) => item.category !== "all")
+      ? data
       : data.filter((item) => item.category === tabValue);
-  // handle load more items
+
   const loadMoreItems = () => {
-    // adjust the number to control how many items are loaded at a time
     setVisibleItems((prev) => prev + 2);
   };
 
-  console.log(tabData);
   return (
-    <section className="pt-24 min-h-[1000xp]" id="work">
+    <section className="pt-24 min-h-[1000px]" id="work">
       <div className="container mx-auto">
         <Tabs defaultValue="all" className="w-full flex flex-col">
-          <div
-            className="flex flex-col xl:flex-row items-center xl:items-start 
-xl:justify-between md-[30px]"
-          >
+          <div className="flex flex-col xl:flex-row items-center xl:items-start xl:justify-between mb-[30px]">
             <AnimatedText
               text="My Latest Work"
               textStyles="h2 mb-[30px] xl:mb-0"
             />
-            {/* Tab List for category selection */}
-            <TabsList
-              className="max-w-max h-full mb-[30px] 
-            flex flex-col md:flex-row gap-4 md:gap-0"
-            >
+            <TabsList className="max-w-max h-full mb-[30px] flex flex-col md:flex-row gap-4 md:gap-0">
               {tabData.map((item, index) => {
                 return (
                   <TabsTrigger
                     value={item.category}
                     key={index}
-                    className="capitalize  w-[120px] "
+                    className="capitalize w-[120px]"
                     onClick={() => setTabValue(item.category)}
                   >
                     {item.category}
@@ -111,27 +53,29 @@ xl:justify-between md-[30px]"
               })}
             </TabsList>
           </div>
-          {/*  render content for the selected tab  */}
+
           <TabsContent value={tabValue} className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
               <AnimatePresence>
-                {filterWork.slice(0, vistibleItems).map((item, index) => (
+                {filterWork.slice(0, visibleItems).map((item, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
+                    {/* ✅ ส่งข้อมูลทั้งหมด (รวมถึง slug) ไปให้ WorkItem */}
                     <WorkItem {...item} />
                   </motion.div>
                 ))}
               </AnimatePresence>
             </div>
-            {/*Load more button   */}
-            {vistibleItems < filterWork.length && (
+            
+            {visibleItems < filterWork.length && (
               <div className="flex justify-center mt-12">
-                <button onClick={loadMoreItems}
-                  className="btn btn-accent">Load more</button>
+                <button onClick={loadMoreItems} className="btn btn-accent">
+                  Load more
+                </button>
               </div>
             )}
           </TabsContent>

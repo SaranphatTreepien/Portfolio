@@ -56,9 +56,9 @@ const Hero = () => {
     <button className="btn btn-accent">Resume</button>
   </Link>
 
-<ScrollLink to="Contact"  >
+ <Link href="/cv" passHref>
   <button className="btn btn-accent">CV</button>
-</ScrollLink>
+</Link>
 </div>
 
 
