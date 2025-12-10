@@ -11,7 +11,7 @@ const links = [
     name: "journey",
   },
   {
-    name: "work",
+    name: "Learning",
   },
   {
     name: "Contact",

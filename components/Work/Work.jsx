@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AnimatedText from "../AnimatedText"; // เช็ค path
+import AnimatedText from "../AnimatedText";
 import WorkItem from "./WorkItem";
-// ✅ Import ข้อมูลที่คุณเพิ่งแก้
 import { projects as data } from "@/lib/projectsData";
 
 const Work = () => {
-  // extract unique categories
+  // 1. Extract unique categories
   const uniqueCategories = Array.from(
     new Set(data.map((item) => item.category))
   );
@@ -18,12 +17,19 @@ const Work = () => {
   ];
 
   const [tabValue, setTabValue] = useState("all");
-  const [visibleItems, setVisibleItems] = useState(6); // แก้คำผิด vistible -> visible
+  const [visibleItems, setVisibleItems] = useState(6);
 
+  // 2. Filter Logic
   const filterWork =
     tabValue === "all"
       ? data
       : data.filter((item) => item.category === tabValue);
+
+  // 3. Handle Tab Change (รวม Logic การเปลี่ยน Tab และ Reset visible items ไว้ด้วยกัน)
+  const handleTabChange = (value) => {
+    setTabValue(value);
+    setVisibleItems(6); // ✅ Reset จำนวนที่แสดงกลับมาเป็นค่าเริ่มต้นเมื่อเปลี่ยนหมวด
+  };
 
   const loadMoreItems = () => {
     setVisibleItems((prev) => prev + 2);
@@ -32,10 +38,15 @@ const Work = () => {
   return (
     <section className="pt-24 min-h-[1000px]" id="work">
       <div className="container mx-auto">
-        <Tabs defaultValue="all" className="w-full flex flex-col">
+        {/* ✅ ย้ายการควบคุม Value มาที่ Root Component เพื่อความแม่นยำ */}
+        <Tabs 
+          value={tabValue} 
+          onValueChange={handleTabChange} 
+          className="w-full flex flex-col"
+        >
           <div className="flex flex-col xl:flex-row items-center xl:items-start xl:justify-between mb-[30px]">
             <AnimatedText
-              text="My Latest Work"
+              text="My Learning"
               textStyles="h2 mb-[30px] xl:mb-0"
             />
             <TabsList className="max-w-max h-full mb-[30px] flex flex-col md:flex-row gap-4 md:gap-0">
@@ -45,7 +56,6 @@ const Work = () => {
                     value={item.category}
                     key={index}
                     className="capitalize w-[120px]"
-                    onClick={() => setTabValue(item.category)}
                   >
                     {item.category}
                   </TabsTrigger>
@@ -56,15 +66,19 @@ const Work = () => {
 
           <TabsContent value={tabValue} className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
-              <AnimatePresence>
-                {filterWork.slice(0, visibleItems).map((item, index) => (
+              {/* ✅ mode="popLayout" ช่วยให้การ์ดเก่าหายไป แล้วการ์ดใหม่ไหลเข้ามาแทนที่อย่างสวยงาม */}
+              <AnimatePresence mode="popLayout">
+                {filterWork.slice(0, visibleItems).map((item) => (
                   <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    layout // ✅ ทำให้เกิด Animation การจัดเรียงตำแหน่ง (Reordering)
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.3 }}
+                    whileHover={{ y: -5 }} // ✅ ลูกเล่นยกการ์ดขึ้นเล็กน้อยตอน Hover
+                    // ⚠️ สำคัญ: ต้องใช้ Unique ID (เช่น slug หรือ id) ห้ามใช้ index เด็ดขาด ไม่งั้น Animation จะเพี้ยน
+                    key={item.slug || item.id || item.title} 
                   >
-                    {/* ✅ ส่งข้อมูลทั้งหมด (รวมถึง slug) ไปให้ WorkItem */}
                     <WorkItem {...item} />
                   </motion.div>
                 ))}
@@ -73,7 +87,10 @@ const Work = () => {
             
             {visibleItems < filterWork.length && (
               <div className="flex justify-center mt-12">
-                <button onClick={loadMoreItems} className="btn btn-accent">
+                <button 
+                  onClick={loadMoreItems} 
+                  className="btn btn-accent transition-transform active:scale-95"
+                >
                   Load more
                 </button>
               </div>
