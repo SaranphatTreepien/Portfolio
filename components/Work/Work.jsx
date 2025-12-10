@@ -16,6 +16,7 @@ const PencilIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" vi
 const BackupIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>);
 const CheckCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-[#00ff99]"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>);
 const XCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-red-500"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" /></svg>);
+const SkullIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-red-600"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>);
 
 // --- Animation Variants ---
 const cardVariants = {
@@ -64,6 +65,11 @@ export default function Work() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+
+  // ✅ [NEW] State สำหรับปุ่มล้างบาง
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [isWipingData, setIsWipingData] = useState(false);
 
   const [passwordInput, setPasswordInput] = useState("");
 
@@ -143,12 +149,9 @@ export default function Work() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      // รับข้อมูล JSON ตอบกลับจาก Server (รวมถึง Error message)
       const data = await res.json();
 
       if (res.ok) {
-        // ✅ ถ้าสำเร็จ
         await fetchProjects();
         setTimeout(() => {
           setIsFormModalOpen(false);
@@ -158,10 +161,8 @@ export default function Work() {
           showToast(editingProject ? "แก้ไขงานสำเร็จ!" : "เพิ่มงานใหม่สำเร็จ!", "success");
         }, 800);
       } else {
-        // ❌ ถ้ามี Error (เช่น Slug ซ้ำ)
-        // เช็คว่า status เป็น 409 (Conflict) หรือไม่
         if (res.status === 409) {
-          showToast(data.error, "error"); // แจ้งเตือน: "Slug นี้ถูกใช้งานแล้ว..."
+          showToast(data.error, "error");
         } else {
           throw new Error(data.error || "Save failed");
         }
@@ -177,7 +178,6 @@ export default function Work() {
   const handleDeleteProject = async (slug) => {
     if (!confirm("⚠️ คุณแน่ใจหรือไม่ว่าจะลบงานนี้?")) return;
     setDeletingId(slug);
-
     try {
       const res = await fetch(`/api/projects?slug=${slug}`, { method: 'DELETE' });
       if (res.ok) {
@@ -195,6 +195,41 @@ export default function Work() {
     }
   };
 
+  // ✅ [NEW] ฟังก์ชันล้างข้อมูลทั้งหมด
+  // ✅ [FIXED] ฟังก์ชันล้างข้อมูลทั้งหมด
+  const handleWipeDatabase = async () => {
+    if (deleteConfirmationText !== "CONFIRM-DELETE") {
+      return;
+    }
+
+    setIsWipingData(true);
+    try {
+      // ❌ ของเดิม: เรียกผิดไฟล์
+      // const res = await fetch(`/api/projects?slug=DELETE_ALL_DATA_PERMANENTLY`, { method: 'DELETE' });
+
+      // ✅ ของใหม่: เรียกไฟล์ resetDBMongo โดยตรง
+      const res = await fetch(`/api/resetDBMongo`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        setProjects([]); // เคลียร์หน้าจอ
+        setIsDeleteAllModalOpen(false);
+        setDeleteConfirmationText("");
+        showToast("ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว", "success");
+      } else {
+        // อ่าน Error จาก API เพื่อ debug ง่ายขึ้น
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Reset Failed:", errorData);
+        throw new Error(errorData.error || "Wipe failed");
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("เกิดข้อผิดพลาดในการล้างข้อมูล", "error");
+    } finally {
+      setIsWipingData(false);
+    }
+  };
   const handleBackup = async () => {
     if (!confirm("ต้องการสำรองข้อมูล (Backup) ทั้งหมดใช่หรือไม่?")) return;
     setIsBackingUp(true);
@@ -251,6 +286,18 @@ export default function Work() {
                 Admin Mode
               </motion.span>
 
+              {/* ✅ [NEW] ปุ่มลับ! (Reset DB) - ทำให้มองเห็นยากๆ (Opacity 10% -> 100% on hover) */}
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.1 }}
+                whileHover={{ opacity: 1, color: "#ef4444" }}
+                onClick={() => { setDeleteConfirmationText(""); setIsDeleteAllModalOpen(true); }}
+                className="text-[10px] text-gray-400 px-2 py-1 transition-all cursor-pointer font-mono tracking-widest border border-transparent hover:border-red-500/30 rounded"
+                title="DANGER ZONE: RESET DATABASE"
+              >
+                [RESET DB]
+              </motion.button>
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -303,8 +350,8 @@ export default function Work() {
                         whileHover="hover"
                         className={`relative group rounded-3xl overflow-hidden ${isDeleting ? "ring-4 ring-red-500 shadow-2xl shadow-red-500/50" : ""}`}
                       >
-                        {/* ✅ SLUG DISPLAY - ปรับตำแหน่งลงมาด้านล่าง Category (top-14) */}
-                        <div className="absolute top-14 right-4 z-20 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300">
+                        {/* Slug Badge */}
+                        <div className="absolute top-14 left-4 z-20 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300">
                           <span className="text-[10px] tracking-wider font-mono text-white/90 bg-black/60 px-2 py-1 rounded backdrop-blur-md border border-white/10 shadow-sm">
                             /{item.slug}
                           </span>
@@ -319,7 +366,7 @@ export default function Work() {
                         )}
                         <WorkItem {...item} />
 
-                        {/* ✅ ปุ่มแก้ไขและลบ (Admin Only) */}
+                        {/* Buttons */}
                         {isAdmin && !isDeleting && (
                           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10 translate-y-2 group-hover:translate-y-0">
                             <motion.button
@@ -327,7 +374,6 @@ export default function Work() {
                               whileTap={{ scale: 0.9 }}
                               onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
                               className="p-2.5 bg-white text-blue-500 rounded-full shadow-lg hover:bg-blue-500 hover:text-white border border-blue-100"
-                              title="แก้ไข"
                             >
                               <PencilIcon />
                             </motion.button>
@@ -337,7 +383,6 @@ export default function Work() {
                               whileTap={{ scale: 0.9 }}
                               onClick={(e) => { e.stopPropagation(); handleDeleteProject(item.slug); }}
                               className="p-2.5 bg-white text-red-500 rounded-full shadow-lg hover:bg-red-500 hover:text-white border border-red-100"
-                              title="ลบ"
                             >
                               <TrashIcon />
                             </motion.button>
@@ -395,28 +440,64 @@ export default function Work() {
           <AnimatePresence>
             {isAuthModalOpen && (
               <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center backdrop-blur-sm p-4">
-                <motion.div
-                  variants={modalVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden"
-                >
+                <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden">
                   <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">Admin Login</h3>
                   <form onSubmit={handleLogin}>
-                    <input
-                      type="password"
-                      autoFocus
-                      placeholder="Password"
-                      className="border border-gray-300 p-2 rounded-lg w-full mb-4 text-center text-gray-800 outline-none focus:border-[#00ff99] transition-colors"
-                      value={passwordInput}
-                      onChange={e => setPasswordInput(e.target.value)}
-                    />
+                    <input type="password" autoFocus placeholder="Password" className="border border-gray-300 p-2 rounded-lg w-full mb-4 text-center text-gray-800 outline-none focus:border-[#00ff99] transition-colors" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
                     <div className="flex justify-between gap-2">
                       <button type="button" onClick={() => setIsAuthModalOpen(false)} className="text-gray-500 text-sm hover:text-gray-700">Cancel</button>
                       <button type="submit" className="bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors">Unlock</button>
                     </div>
                   </form>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* ✅ [NEW] Delete All Warning Modal */}
+          <AnimatePresence>
+            {isDeleteAllModalOpen && (
+              <div className="fixed inset-0 bg-red-950/80 z-[10000] flex items-center justify-center p-4 backdrop-blur-md">
+                <motion.div
+                  variants={modalVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border-4 border-red-500 text-center relative overflow-hidden"
+                >
+                  {/* Background warning stripes */}
+                  <div className="absolute top-0 left-0 w-full h-4 bg-[repeating-linear-gradient(45deg,#ef4444,#ef4444_10px,#b91c1c_10px,#b91c1c_20px)]"></div>
+
+                  <div className="flex flex-col items-center gap-4 mt-4">
+                    <SkullIcon />
+                    <h3 className="text-3xl font-black text-red-600 uppercase tracking-widest">Danger Zone</h3>
+                    <p className="text-gray-600 text-sm">
+                      คุณกำลังจะ <span className="font-bold text-red-600">ลบข้อมูลทั้งหมด</span> ในฐานข้อมูล <br />
+                      การกระทำนี้ <u className="font-bold">ไม่สามารถกู้คืนได้</u>
+                    </p>
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">พิมพ์ "CONFIRM-DELETE" เพื่อยืนยัน</label>
+                    <input
+                      type="text"
+                      className="border-2 border-red-200 bg-red-50 p-3 rounded-xl w-full text-center font-bold text-red-600 focus:outline-none focus:border-red-500 placeholder:text-red-200"
+                      placeholder="CONFIRM-DELETE"
+                      value={deleteConfirmationText}
+                      onChange={e => setDeleteConfirmationText(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex justify-between gap-3 mt-8">
+                    <button onClick={() => setIsDeleteAllModalOpen(false)} className="w-full py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
+                    <button
+                      onClick={handleWipeDatabase}
+                      disabled={deleteConfirmationText !== "CONFIRM-DELETE" || isWipingData}
+                      className="w-full py-3 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      {isWipingData ? "กำลังล้างข้อมูล..." : "ลบทั้งหมดเดี๋ยวนี้"}
+                    </button>
+                  </div>
                 </motion.div>
               </div>
             )}

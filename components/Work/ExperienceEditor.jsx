@@ -105,56 +105,64 @@ export default function ExperienceEditor({ slug }) {
         }
     };
 
-    const handleSaveProjectInfo = async (e) => {
-        e.preventDefault();
-        setIsSaving(true);
-        await saveToDatabase({ ...formData, slug }, "อัปเดตข้อมูลปกเรียบร้อย");
-        setProject({ ...project, ...formData });
-        setIsModalOpen(false);
-        setIsSaving(false);
-    };
+  const handleSaveProjectInfo = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
+        // 👇 เพิ่ม originalSlug: slug ตรงนี้
+        await saveToDatabase({ ...formData, slug, originalSlug: slug }, "อัปเดตข้อมูลปกเรียบร้อย");
+        setProject({ ...project, ...formData });
+        setIsModalOpen(false);
+        setIsSaving(false);
+    };
 
-    const handleSaveItem = async (e) => {
-        e.preventDefault();
-        setIsSaving(true);
-        let newItems = [...items];
-        if (editingItemIndex !== null) {
-            newItems[editingItemIndex] = formData;
+   const handleSaveItem = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
+        let newItems = [...items];
+        if (editingItemIndex !== null) {
+            newItems[editingItemIndex] = formData;
+        } else {
+            newItems = [formData, ...items];
+        }
+        // 👇 เพิ่ม originalSlug: slug ตรงนี้
+        await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "บันทึกเนื้อหาเรียบร้อย");
+        setItems(newItems);
+        setIsModalOpen(false);
+        setIsSaving(false);
+    };
+const handleDeleteItem = async (index) => {
+        if (!confirm("คุณแน่ใจหรือไม่ว่าจะลบรายการนี้?")) return;
+        setIsSaving(true);
+        const newItems = items.filter((_, i) => i !== index);
+        // 👇 เพิ่ม originalSlug: slug ตรงนี้
+        await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "ลบรายการเรียบร้อย");
+        setItems(newItems);
+        setIsSaving(false);
+    };
+   const saveToDatabase = async (payload, successMsg) => {
+    try {
+        const res = await fetch('/api/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+            showToast(successMsg, "success");
         } else {
-            newItems = [formData, ...items];
+            // --- ส่วนที่แก้ไข: อ่าน Error จาก Server ---
+            const errorData = await res.json().catch(() => ({})); // กันกรณี response ไม่ใช่ json
+            console.error("SERVER ERROR DETAILS:", errorData); // ดูค่านี้ใน Console Browser
+            console.error("STATUS CODE:", res.status); 
+            
+            throw new Error(errorData.error || errorData.message || "Save failed (Unknown reason)");
         }
-        await saveToDatabase({ slug, items: newItems }, "บันทึกเนื้อหาเรียบร้อย");
-        setItems(newItems);
-        setIsModalOpen(false);
-        setIsSaving(false);
-    };
-
-    const handleDeleteItem = async (index) => {
-        if (!confirm("คุณแน่ใจหรือไม่ว่าจะลบรายการนี้?")) return;
-        setIsSaving(true);
-        const newItems = items.filter((_, i) => i !== index);
-        await saveToDatabase({ slug, items: newItems }, "ลบรายการเรียบร้อย");
-        setItems(newItems);
-        setIsSaving(false);
-    };
-
-    const saveToDatabase = async (payload, successMsg) => {
-        try {
-            const res = await fetch('/api/projects', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-            if (res.ok) {
-                showToast(successMsg, "success");
-            } else {
-                throw new Error("Save failed");
-            }
-        } catch (error) {
-            console.error(error);
-            showToast("เกิดข้อผิดพลาดในการบันทึก", "error");
-        }
-    };
+    } catch (error) {
+        console.error("CATCH ERROR:", error);
+        // แสดง Error message จริงๆ ใน Toast เพื่อให้รู้เรื่อง
+        showToast(`บันทึกไม่สำเร็จ: ${error.message}`, "error");
+    }
+};
 
     // --- Handlers ---
     const openEditProject = () => {
