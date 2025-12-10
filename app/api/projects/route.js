@@ -2,60 +2,95 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
 const DB_NAME = 'my_portfolio';
-const COLLECTION_NAME = 'projects_content'; // แนะนำให้แยกชื่อ Collection ไม่ให้ปนกับข้อมูลอื่น
+const COLLECTION_NAME = 'projects';
 
-// 🟢 GET: ดึงข้อมูลเฉพาะของ Slug ที่ส่งมา
+// ✅ GET: เหมือนเดิม
 export async function GET(request) {
   try {
     const client = await clientPromise;
     const db = client.db(DB_NAME);
-
-    // 1. รับค่า slug จาก URL (เช่น /api/projects?slug=luminex-ui-kit)
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
 
-    if (!slug) {
-      return NextResponse.json({ error: 'Slug is required' }, { status: 400 });
+    if (slug) {
+      const project = await db.collection(COLLECTION_NAME).findOne({ slug: slug });
+      return NextResponse.json(project || {});
+    } else {
+      const projects = await db.collection(COLLECTION_NAME).find({}).sort({ _id: -1 }).toArray();
+      return NextResponse.json(projects);
     }
-
-    // 2. ค้นหาเอกสารที่มี slug ตรงกัน
-    const projectData = await db.collection(COLLECTION_NAME).findOne({ slug: slug });
-
-    // 3. ส่งกลับเฉพาะ items (ถ้าไม่เจอให้ส่ง array ว่าง)
-    return NextResponse.json(projectData ? projectData.items : []);
-    
   } catch (error) {
-    console.error("GET Error:", error);
-    return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// 🟠 POST: บันทึกข้อมูลลงใน Slug นั้นๆ (ไม่ลบของคนอื่น)
+// ✅ POST: ปรับปรุงให้รองรับการเปลี่ยน Slug (Rename)
 export async function POST(request) {
   try {
     const client = await clientPromise;
     const db = client.db(DB_NAME);
-    
-    // 1. รับค่าที่ส่งมาจาก Frontend ({ slug, items })
     const body = await request.json();
-    const { slug, items } = body;
 
-    if (!slug) {
-      return NextResponse.json({ error: 'Slug is required' }, { status: 400 });
+    if (!body.slug) {
+      return NextResponse.json({ error: "Slug is required" }, { status: 400 });
     }
 
-    // 2. ใช้ updateOne แบบ Upsert (ถ้ามีให้อัปเดต ถ้าไม่มีให้สร้างใหม่)
-    // ค้นหาด้วย slug -> แล้ว set ค่า items เป็นค่าใหม่
+    const { _id, originalSlug, ...updateData } = body;
+    const newSlug = body.slug;
+
+    // 🔥 1. ตรวจสอบว่า Slug ใหม่ซ้ำกับใครในระบบไหม?
+    const existingProject = await db.collection(COLLECTION_NAME).findOne({ slug: newSlug });
+
+    if (existingProject) {
+      // กรณีที่ 1: สร้างงานใหม่ (ไม่มี originalSlug) แต่ดันไปเจอ Slug ที่มีอยู่แล้ว
+      if (!originalSlug) {
+        return NextResponse.json({ error: "Slug (URL) นี้ถูกใช้งานแล้ว โปรดตั้งชื่ออื่น" }, { status: 409 });
+      }
+
+      // กรณีที่ 2: แก้ไขงานเดิม (มี originalSlug) แต่เปลี่ยนชื่อไปซ้ำกับคนอื่น
+      // (เช็คว่าชื่อใหม่ ไม่ใช่ชื่อเดิมของตัวเอง)
+      if (originalSlug && newSlug !== originalSlug) {
+        return NextResponse.json({ error: "Slug (URL) นี้ถูกใช้งานแล้ว โปรดตั้งชื่ออื่น" }, { status: 409 });
+      }
+    }
+
+    // 🔥 2. ถ้าไม่ซ้ำ ก็บันทึกตามปกติ
+    const filter = { slug: originalSlug || newSlug };
+
     await db.collection(COLLECTION_NAME).updateOne(
-      { slug: slug }, 
-      { $set: { slug: slug, items: items } }, 
+      filter,
+      { $set: updateData },
       { upsert: true }
     );
 
-    return NextResponse.json({ success: true, message: `Saved data for ${slug}` });
-
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("POST Error:", error);
-    return NextResponse.json({ error: 'Failed to save data' }, { status: 500 });
+    console.error("Database Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// ✅ DELETE: เหมือนเดิม
+export async function DELETE(request) {
+  try {
+    const client = await clientPromise;
+    const db = client.db(DB_NAME);
+    const { searchParams } = new URL(request.url);
+    const slug = searchParams.get('slug');
+
+    if (!slug) {
+      return NextResponse.json({ error: "Slug is required" }, { status: 400 });
+    }
+
+    const result = await db.collection(COLLECTION_NAME).deleteOne({ slug: slug });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: "Project deleted successfully" });
+  } catch (error) {
+    console.error("Delete Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
