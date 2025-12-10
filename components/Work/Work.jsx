@@ -255,11 +255,40 @@ export default function Work() {
     }
   };
 
-  const toBase64 = (file) => new Promise((resolve, reject) => {
+  // ✅ ฟังก์ชันใหม่: บีบอัดรูปให้เล็กลงก่อนแปลงเป็น Base64
+  const compressImage = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+
+        // 🛠️ ตั้งค่าขนาดสูงสุด (กว้างไม่เกิน 800px ก็ชัดพอสำหรับเว็บแล้ว)
+        const MAX_WIDTH = 800;
+        const scaleSize = MAX_WIDTH / img.width;
+
+        // คำนวณขนาดใหม่ (คงอัตราส่วนเดิม)
+        const width = (img.width > MAX_WIDTH) ? MAX_WIDTH : img.width;
+        const height = (img.width > MAX_WIDTH) ? (img.height * scaleSize) : img.height;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // 🔥 แปลงเป็น JPEG คุณภาพ 70% (ลดขนาดไฟล์ได้มหาศาล)
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+
+      img.onerror = (error) => reject(error);
+    };
+
+    reader.onerror = (error) => reject(error);
   });
 
   if (loading) return <div className="pt-24 text-center animate-pulse text-[#00ff99]">กำลังโหลดข้อมูล...</div>;
@@ -543,7 +572,18 @@ export default function Work() {
                         whileTap={{ scale: 0.98 }}
                         className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer relative group"
                       >
-                        <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={async (e) => { if (e.target.files[0]) { const base64 = await toBase64(e.target.files[0]); setFormData({ ...formData, img: base64 }); } }} />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="..."
+                          onChange={async (e) => {
+                            if (e.target.files[0]) {
+                              // ✅ เปลี่ยนจาก toBase64 เป็น compressImage
+                              const base64 = await compressImage(e.target.files[0]);
+                              setFormData({ ...formData, img: base64 });
+                            }
+                          }}
+                        />
                         {formData.img ? (
                           <div className="relative">
                             <img src={formData.img} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
