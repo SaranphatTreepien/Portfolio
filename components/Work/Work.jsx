@@ -75,7 +75,7 @@ export default function Work() {
 
   const [editingProject, setEditingProject] = useState(null);
 
-  const [formData, setFormData] = useState({ title: "", category: "2569", slug: "", img: "" });
+  const [formData, setFormData] = useState({ title: "", category: "2569", slug: "", img: "", createdAt: "" });
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   useEffect(() => {
@@ -116,10 +116,38 @@ export default function Work() {
       showToast("รหัสผ่านไม่ถูกต้อง", "error");
     }
   };
+  const handleDateChange = (e) => {
+    const newDate = e.target.value;
 
+    // ถ้ามีการเลือกวันที่
+    if (newDate) {
+      const yearAD = parseInt(newDate.split("-")[0]); // ดึงปี ค.ศ. (ตัวหน้าสุด)
+      const yearBE = yearAD + 543; // แปลงเป็น พ.ศ.
+
+      setFormData({
+        ...formData,
+        createdAt: newDate,
+        category: yearBE.toString() // อัปเดตช่อง Category อัตโนมัติ
+      });
+    } else {
+      // ถ้าลบวันที่ออก ก็แค่อัปเดตวันที่เป็นค่าว่าง
+      setFormData({ ...formData, createdAt: newDate });
+    }
+  };
   const openAddModal = () => {
     setEditingProject(null);
-    setFormData({ title: "", category: "2569", slug: "", img: "" });
+
+    const today = new Date();
+    const dateString = today.toISOString().split('T')[0]; // 2025-12-11
+    const currentThaiYear = (today.getFullYear() + 543).toString(); // 2568
+
+    setFormData({
+      title: "",
+      category: currentThaiYear, // ✅ ปีเริ่มต้นอัตโนมัติ
+      slug: "",
+      img: "",
+      createdAt: dateString // ✅ วันที่เริ่มต้นอัตโนมัติ
+    });
     setIsFormModalOpen(true);
   };
 
@@ -129,7 +157,9 @@ export default function Work() {
       title: project.title,
       category: project.category,
       slug: project.slug,
-      img: project.img
+      img: project.img,
+      // ✅ เพิ่มบรรทัดนี้: ดึงวันที่จาก Database มาแปลงเป็น YYYY-MM-DD
+      createdAt: project.createdAt ? new Date(project.createdAt).toISOString().split('T')[0] : ""
     });
     setIsFormModalOpen(true);
   };
@@ -558,12 +588,26 @@ export default function Work() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">ปี (Category)</label>
-                        <input required placeholder="เช่น 2569" className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
+                        <input required placeholder="เช่น 2569" readOnly className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
                         <input required placeholder="eng-only-no-space" className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all" value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
                       </div>
+                      {/* ✅ เพิ่มช่องวันที่ตรงนี้ (วางต่อจาก Grid ด้านบน) */} 
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ (Date)</label>
+                        <input
+                          type="date"
+                          required
+                          className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all"
+                          value={formData.createdAt}
+
+                          // ✅ เปลี่ยนตรงนี้: เรียกใช้ฟังก์ชันใหม่
+                          onChange={handleDateChange}
+                        />
+                      </div>
+                      {/* ... จบส่วนที่เพิ่ม ... */}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">รูปปก (Image)</label>

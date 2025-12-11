@@ -4,7 +4,7 @@ import clientPromise from '@/lib/mongodb';
 const DB_NAME = 'my_portfolio';
 const COLLECTION_NAME = 'projects';
 
-// ✅ GET: เรียงตาม createdAt (จากใหม่ไปเก่า)
+// ✅ GET: เหมือนเดิม
 export async function GET(request) {
   try {
     const client = await clientPromise;
@@ -16,10 +16,7 @@ export async function GET(request) {
       const project = await db.collection(COLLECTION_NAME).findOne({ slug: slug });
       return NextResponse.json(project || {});
     } else {
-      const projects = await db.collection(COLLECTION_NAME)
-        .find({})
-        .sort({ createdAt: -1 }) // เรียงงานใหม่สุดขึ้นก่อน
-        .toArray();
+      const projects = await db.collection(COLLECTION_NAME).find({}).sort({ _id: -1 }).toArray();
       return NextResponse.json(projects);
     }
   } catch (error) {
@@ -27,7 +24,7 @@ export async function GET(request) {
   }
 }
 
-// ✅ POST: รวม Logic เช็ค Slug ซ้ำ + จัดการวันที่
+// ✅ POST: ปรับปรุงให้รองรับการเปลี่ยน Slug (Rename)
 export async function POST(request) {
   try {
     const client = await clientPromise;
@@ -38,38 +35,26 @@ export async function POST(request) {
       return NextResponse.json({ error: "Slug is required" }, { status: 400 });
     }
 
-    // แยก _id และ originalSlug ออกจากข้อมูลที่จะอัปเดต
     const { _id, originalSlug, ...updateData } = body;
     const newSlug = body.slug;
 
-    // 🔥 1. เริ่มต้นการตรวจสอบ Slug ซ้ำ (คืนชีพกลับมาแล้วครับ)
+    // 🔥 1. ตรวจสอบว่า Slug ใหม่ซ้ำกับใครในระบบไหม?
     const existingProject = await db.collection(COLLECTION_NAME).findOne({ slug: newSlug });
 
     if (existingProject) {
-      // กรณี 1: สร้างงานใหม่ (ไม่มี originalSlug) แต่ดันไปตั้งชื่อซ้ำกับที่มีอยู่
+      // กรณีที่ 1: สร้างงานใหม่ (ไม่มี originalSlug) แต่ดันไปเจอ Slug ที่มีอยู่แล้ว
       if (!originalSlug) {
         return NextResponse.json({ error: "Slug (URL) นี้ถูกใช้งานแล้ว โปรดตั้งชื่ออื่น" }, { status: 409 });
       }
 
-      // กรณี 2: แก้ไขงานเดิม แต่เปลี่ยนชื่อ URL ไปซ้ำกับงานอื่น
-      // (เช็คว่า newSlug ไม่ใช่ชื่อเดิมของตัวเอง)
+      // กรณีที่ 2: แก้ไขงานเดิม (มี originalSlug) แต่เปลี่ยนชื่อไปซ้ำกับคนอื่น
+      // (เช็คว่าชื่อใหม่ ไม่ใช่ชื่อเดิมของตัวเอง)
       if (originalSlug && newSlug !== originalSlug) {
         return NextResponse.json({ error: "Slug (URL) นี้ถูกใช้งานแล้ว โปรดตั้งชื่ออื่น" }, { status: 409 });
       }
     }
 
-    // 🔥 2. จัดการเรื่องวันที่ (Date Logic)
-    if (body.createdAt) {
-      // ถ้าฟอร์มส่งวันที่มา (จากการเลือกใน Input Date) ให้ใช้ค่านั้น
-      updateData.createdAt = new Date(body.createdAt);
-    } else {
-      // ถ้าไม่ได้ส่งมา (กรณีกันเหนียว) และเป็นงานใหม่ ให้ใช้วันที่ปัจจุบัน
-      if (!originalSlug) {
-        updateData.createdAt = new Date();
-      }
-    }
-    
-    // 🔥 3. บันทึกลง Database
+    // 🔥 2. ถ้าไม่ซ้ำ ก็บันทึกตามปกติ
     const filter = { slug: originalSlug || newSlug };
 
     await db.collection(COLLECTION_NAME).updateOne(
