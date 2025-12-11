@@ -8,7 +8,7 @@ const Journey = () => {
     <section id="journey">
       <div className="container mx-auto">
         <AnimatedText
-          text="My Professional Journey"
+          text="My Learning & Professional Growth Journey"
           textStyles="h2 mb-[30px] text-center"
         />
         <Cards />
