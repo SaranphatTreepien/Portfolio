@@ -26,7 +26,7 @@ const Hero = () => {
             <span className="text-accent"> I'm Computer</span> Engineering
             <br></br>
             <TypeAnimation
-              preRenderFristString={true}
+              preRenderFirstString={true}
               sequence={[
                 "My",
                 1000,

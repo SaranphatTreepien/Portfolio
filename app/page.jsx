@@ -25,7 +25,11 @@ const Home = () => {
       <Hero />
       <FixedMenu />
       <Services />
-      <Work />
+      {/* --- แก้ไขจุดนี้ครับ --- */}
+      <section id="Learning"> 
+        <Work />
+      </section>
+      {/* -------------------- */}
       <Journey />
       <About />
       {/* <Testimonial /> */}
