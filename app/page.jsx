@@ -24,7 +24,7 @@ const Home = () => {
     <>
       <Hero />
       <FixedMenu />
-      <Services />
+      {/* <Services /> */}
       {/* --- แก้ไขจุดนี้ครับ --- */}
       <section id="Learning"> 
         <Work />

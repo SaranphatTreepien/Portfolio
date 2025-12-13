@@ -1,99 +1,103 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import AnimatedText from "./AnimatedText";
+import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaUser } from "react-icons/fa"; // Import Icons
 
 const About = () => {
-  return (
-    <section className="relative pt-12 pb-24" id="About">
-      <div className="container mx-auto h-full">
-        <div className="h-full flex items-center justify-center">
-          {/* image + shapes*/}
-          <div className="hidden xl:flex flex-1 pl-8">
-            <div className="relative w-full max-w-[380px]">
-              {/* shape */}
-              <div className="w-[160px] h-[160px] bg-accent absolute -left-5 -top-5 -z-10"></div>
+  // ข้อมูลส่วนตัวแยกออกมาเพื่อให้แก้ได้ง่าย
+  const info = [
+    { icon: <FaUser />, field: "Name", value: "Saranphat (Max)" },
+    { icon: <FaMapMarkerAlt />, field: "Location", value: "Rayong, Bangkok" },
+    { icon: <FaPhoneAlt />, field: "Phone", value: "+66 61 446 1930" },
+    { icon: <FaEnvelope />, field: "Email", value: "saranphat.tre289@gmail.com" },
+  ];
 
-              {/* image */}
-              <div
-                className="rounded-tl-[8px] rounded-tr-[120px] w-full bg-[#e5f8f6]
-              min-h-[480px] flex items-center justify-center"
-              >
+  // ดึง Skills เด่นๆ ออกมาจาก Text ของคุณเพื่อทำเป็น Tags
+  const skills = [
+    "Network Engineering", "AI & Computer Vision", "IoT (MQTT/HTTP)", 
+    "Hardware/Circuits", "Data Analysis", "Risk Assessment"
+  ];
+
+  return (
+    <section className="relative pt-16 pb-32 overflow-hidden" id="About">
+      <div className="container mx-auto h-full">
+        <div className="flex flex-col xl:flex-row items-center justify-between gap-12 xl:gap-20">
+          
+          {/* --- Image Section --- */}
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="flex-1 flex justify-center xl:justify-start relative"
+          >
+            {/* Background Decorative Shape */}
+            <div className="absolute w-[300px] h-[300px] xl:w-[450px] xl:h-[450px] bg-accent/20 rounded-full blur-3xl -z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+            
+            <div className="relative w-full max-w-[420px]">
+              {/* Solid Shape Behind */}
+              <div className="w-[90%] h-[90%] bg-accent absolute -left-4 -top-4 -z-10 rounded-tl-[20px] rounded-br-[20px]"></div>
+              
+              {/* Image Container */}
+              <div className="rounded-tl-[20px] rounded-br-[20px] rounded-tr-[80px] rounded-bl-[80px] overflow-hidden bg-[#e5f8f6] shadow-2xl border-4 border-white">
                 <Image
                   src="/assets/about/dev3.png"
-                  width={350}
-                  height={478}
-                  quality={100} 
+                  width={420}
+                  height={560}
+                  quality={100}
                   priority
-                  alt=""
+                  alt="Max Saranphat"
+                  className="object-cover object-center transform hover:scale-105 transition-transform duration-500"
                 />
               </div>
-              {/* rotating sharp */}
-              {/* <div className="absolute top-2/4 -right-[65px] flex items-center justify-center">
-                <motion.div
-                  animate={{
-                    rotate: [0, 360],
-                  }}
-                  transition={{
-                    duration: 10,
-                    ease: "linear",
-                    repeat: Infinity,
-                  }}
-                >
-                  <Image
-                    src="/assets/about/shape-1.svg"
-                    width={160}
-                    height={160}
-                    alt=""
-                  />
-                </motion.div>
-                <div className="absolute text-center text-white">
-                  <div className="text-5xl font-bold leading-none"> 10+ </div>
-                  <div className="leadding-none text-center">
-                    Years of <br />
-                    Experience
+            </div>
+          </motion.div>
+
+          {/* --- Text Content Section --- */}
+          <motion.div 
+             initial={{ opacity: 0, x: 50 }}
+             whileInView={{ opacity: 1, x: 0 }}
+             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+             className="flex-1 flex flex-col items-center xl:items-start text-center xl:text-left"
+          >
+            {/* Header */}
+            <div className="mb-6">
+              <span className="text-accent font-semibold tracking-wider uppercase text-sm">About Me</span>
+              <AnimatedText text="My Name is Max" textStyles="h2 text-4xl font-bold mt-2 mb-2" />
+              <p className="text-xl text-primary font-medium">B.Eng., Computer Engineering</p>
+            </div>
+
+            {/* Main Description */}
+            <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 max-w-[700px]">
+              I am passionate about <span className="text-accent font-semibold">Network Infrastructure</span>, enjoying the challenge of managing servers, switches, and routers. 
+              My expertise extends to <span className="text-accent font-semibold">AI & Computer Vision</span> for safety solutions and <span className="text-accent font-semibold">IoT protocols</span> (MQTT, HTTP, I2C). 
+              I love combining hardware knowledge with data analysis to build practical, intelligent systems that solve real-world problems.
+            </p>
+
+            {/* Skills Tags (Optional: ดีไซน์แบบป้ายกำกับ) */}
+            <div className="flex flex-wrap justify-center xl:justify-start gap-3 mb-10">
+                {skills.map((skill, index) => (
+                    <span key={index} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-full font-medium border border-gray-200 dark:border-gray-700">
+                        {skill}
+                    </span>
+                ))}
+            </div>
+
+            {/* Contact Info Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+              {info.map((item, index) => (
+                <div key={index} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 bg-accent/10 text-accent rounded-lg flex items-center justify-center text-lg">
+                    {item.icon}
+                  </div>
+                  <div className="text-left">
+                    <div className="text-xs uppercase font-bold text-gray-400 tracking-wide">{item.field}</div>
+                    <div className="text-sm font-semibold text-gray-800 dark:text-white break-all">{item.value}</div>
                   </div>
                 </div>
-              </div> */}
+              ))}
             </div>
-          </div>
-          {/* text */}
-          <div
-            className="text-center xl:text-left w-full xl:w-[50%] mx-auto xl:mx-0
-          flex flex-col gap-6"
-          >
-            <div>
-              <AnimatedText text="My Name is Max" textStyles="h2 mb-2" />
-              <p className="text-lg">B.Eng., Computer Engineering</p>
-            </div>
-            <p className="max-w-[680px] mx-auto xl:mx-0 mb-2">
-               I am passionate about working with networks because managing servers and connecting devices such as switches, routers, and APs gives me satisfaction and motivates me to improve. I have learned programming to control network devices and understand how systems communicate. I also have experience using AI with cameras to detect objects, vehicles, and people, applying it for PPE and construction safety. In addition, I have explored IoT protocols such as I2C, RS232, and RS485, using MQTT and HTTP, as well as assembling and working with hardware chips. I enjoy working with data by cleaning, analyzing, 
-             and performing basic risk assessments, combining it with AI and IoT projects to create practical and intelligent solutions
-            </p>
-            {/* info items */}
-            <div className="flex flex-col lg:flex-row gap-8 
-            xl:gap-12 max-w-max mx-auto xl:mx-0 items-center">
-              {/* item 1 */}
-              {/* <div className="max-w-max">
-                <div className="uppercase font-bold text-primary">Age</div>
-                <p  className="whitespace-nowrap">25 Years</p>
-              </div> */}
-               {/* item 2 */}
-              {/* <div className="max-w-max">
-                <div className="uppercase font-bold text-primary">Born In</div>
-                <p>Rayong,BangKok</p>
-              </div> */}
-                {/* item 3 */}
-              <div className="max-w-max">
-                <div className="uppercase font-bold text-primary">Phone</div>
-                <p>+66614461930</p>
-              </div>
-                   {/* item 4 */}
-              <div className="max-w-max">
-                <div className="uppercase font-bold text-primary">Email</div>
-                <p>saranphat.tre289@gmail.com</p>
-              </div>
-            </div>
-          </div>
+
+          </motion.div>
         </div>
       </div>
     </section>
