@@ -321,7 +321,7 @@ export default function Work() {
     reader.onerror = (error) => reject(error);
   });
 
-  if (loading) return <div className="pt-24 text-center animate-pulse text-[#00ff99]">กำลังโหลดข้อมูล...</div>;
+  if (loading) return <div className="pt-24 text-center animate-pulse text-[##7edad2]">กำลังโหลดข้อมูล...</div>;
 
   return (
     <section className="pt-24 min-h-[1000px]" id="work">
@@ -583,16 +583,16 @@ export default function Work() {
                   <form onSubmit={handleSaveProject} className="flex flex-col gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อโปรเจกต์ (Title)</label>
-                      <input required className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                      <input required className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">ปี (Category)</label>
-                        <input required placeholder="เช่น 2569" readOnly className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
+                        <input required placeholder="เช่น 2569" readOnly className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
-                        <input required placeholder="eng-only-no-space" className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all" value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
+                        <input required placeholder="eng-only-no-space" className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all" value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
                       </div>
                       {/* ✅ เพิ่มช่องวันที่ตรงนี้ (วางต่อจาก Grid ด้านบน) */}
                       <div>
@@ -600,7 +600,7 @@ export default function Work() {
                         <input
                           type="date"
                           required
-                          className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all"
+                          className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all"
                           value={formData.createdAt}
 
                           // ✅ เปลี่ยนตรงนี้: เรียกใช้ฟังก์ชันใหม่
@@ -634,7 +634,7 @@ export default function Work() {
                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-bold text-sm">เปลี่ยนรูป</div>
                           </div>
                         ) : (
-                          <div className="text-gray-400 text-sm py-8"><span className="text-[#00ff99] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง</div>
+                          <div className="text-gray-400 text-sm py-8"><span className="text-[##7edad2] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง</div>
                         )}
                       </motion.div>
                     </div>
@@ -646,7 +646,7 @@ export default function Work() {
                       <input
                         type="url"
                         placeholder="https://www.instagram.com/..."
-                        className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all placeholder:text-gray-300"
+                        className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all placeholder:text-gray-300"
                         value={formData.link}
                         onChange={e => setFormData({ ...formData, link: e.target.value })}
                       />
@@ -659,7 +659,7 @@ export default function Work() {
                         disabled={isSaving}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`px-8 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 min-w-[140px] justify-center ${isSaving ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-[#00ff99] text-black hover:bg-[#00cc7a] shadow-[#00ff99]/20"}`}
+                        className={`px-8 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 min-w-[140px] justify-center ${isSaving ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-[##7edad2] text-black hover:bg-[##7edad2] shadow-[#00ff99]/20"}`}
                       >
                         {isSaving ? (
                           <>

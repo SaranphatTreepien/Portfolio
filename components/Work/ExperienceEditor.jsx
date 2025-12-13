@@ -45,7 +45,35 @@ export default function ExperienceEditor({ slug }) {
     useEffect(() => {
         if (slug) fetchProjectData();
     }, [slug]);
+    // ฟังก์ชันสำหรับย่อรูปและแปลงเป็น JPG
+    const compressImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = document.createElement("img");
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    // กำหนดความกว้างสูงสุดที่ต้องการ (เช่น 1920px สำหรับจอคอมทั่วไป)
+                    const MAX_WIDTH = 1920;
+                    const scaleSize = MAX_WIDTH / img.width;
 
+                    // ถ้ารูปเล็กกว่า 1920 ก็ใช้ขนาดเดิม, ถ้าใหญ่กว่าก็ย่อลง
+                    canvas.width = scaleSize < 1 ? MAX_WIDTH : img.width;
+                    canvas.height = scaleSize < 1 ? img.height * scaleSize : img.height;
+
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    // แปลงเป็น JPG โดยลดคุณภาพเหลือ 80% (0.8)
+                    // ถ้าอยากได้ชัดกว่านี้ปรับเป็น 0.9, ถ้าอยากได้เล็กจิ๋วปรับ 0.7
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+                    resolve(dataUrl);
+                };
+            };
+        });
+    };
     const fetchProjectData = async () => {
         try {
             setIsLoading(true);
@@ -419,16 +447,29 @@ export default function ExperienceEditor({ slug }) {
                                         <label className="block text-sm font-bold mb-2 text-gray-700">รูปภาพ</label>
                                         <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-[#7edad2]/5 hover:border-[#7edad2] transition-all group">
                                             <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <svg className="w-8 h-8 mb-3 text-gray-400 group-hover:text-[#7edad2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                                <svg className="w-8 h-8 mb-3 text-gray-400 group-hover:text-[#7edad2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                                </svg>
                                                 <p className="mb-2 text-sm text-gray-500 group-hover:text-[#7edad2] font-medium">คลิกเพื่ออัปโหลดรูปภาพ</p>
                                             </div>
-                                            <input type="file" className="hidden" onChange={async (e) => {
-                                                if (e.target.files[0]) {
-                                                    const base64 = await toBase64(e.target.files[0]);
-                                                    setFormData({ ...formData, img: base64 });
-                                                }
-                                            }} />
+
+                                            {/* ✅✅✅ ส่วนที่แก้ไข: ใช้ compressImage แทน ✅✅✅ */}
+                                            <input
+                                                type="file"
+                                                className="hidden"
+                                                accept="image/*" // กรองเฉพาะไฟล์รูป
+                                                onChange={async (e) => {
+                                                    if (e.target.files[0]) {
+                                                        // เรียกฟังก์ชันย่อรูปที่เพิ่มไปก่อนหน้านี้
+                                                        const compressedBase64 = await compressImage(e.target.files[0]);
+
+                                                        // บันทึกรูปที่ย่อแล้วลง State
+                                                        setFormData({ ...formData, img: compressedBase64 });
+                                                    }
+                                                }}
+                                            />
                                         </label>
+
                                         {formData.img && (
                                             <div className="mt-4 relative h-40 w-full rounded-xl overflow-hidden shadow-md border">
                                                 <Image src={formData.img} alt="preview" fill className="object-contain bg-gray-100" />
@@ -469,7 +510,7 @@ export default function ExperienceEditor({ slug }) {
                                 {/* --- Layout: เปลี่ยนเป็น Flex Row เพื่อแบ่งซ้ายขวา --- */}
                                 <div className="flex flex-col md:flex-row h-full">
 
-                                    {/* ✅ ส่วนที่ 1: พื้นที่รูปภาพ (แก้ใหม่) */} 
+                                    {/* ✅ ส่วนที่ 1: พื้นที่รูปภาพ (แก้ใหม่) */}
                                     <div className="relative w-full md:w-3/4 h-[50vh] md:h-full bg-black border-r border-gray-800 overflow-hidden">
 
                                         {/* Wrapper สำหรับ Scroll: จัดการการเลื่อนเมื่อซูม */}
