@@ -136,17 +136,17 @@ export default function Work() {
   };
   const openAddModal = () => {
     setEditingProject(null);
-
     const today = new Date();
-    const dateString = today.toISOString().split('T')[0]; // 2025-12-11
-    const currentThaiYear = (today.getFullYear() + 543).toString(); // 2568
+    const dateString = today.toISOString().split('T')[0];
+    const currentThaiYear = (today.getFullYear() + 543).toString();
 
     setFormData({
       title: "",
-      category: currentThaiYear, // ✅ ปีเริ่มต้นอัตโนมัติ
+      category: currentThaiYear,
       slug: "",
       img: "",
-      createdAt: dateString // ✅ วันที่เริ่มต้นอัตโนมัติ
+      createdAt: dateString,
+      link: "" // ✅ เพิ่มบรรทัดนี้ (เคลียร์ค่าให้ว่าง)
     });
     setIsFormModalOpen(true);
   };
@@ -158,8 +158,8 @@ export default function Work() {
       category: project.category,
       slug: project.slug,
       img: project.img,
-      // ✅ เพิ่มบรรทัดนี้: ดึงวันที่จาก Database มาแปลงเป็น YYYY-MM-DD
-      createdAt: project.createdAt ? new Date(project.createdAt).toISOString().split('T')[0] : ""
+      createdAt: project.createdAt ? new Date(project.createdAt).toISOString().split('T')[0] : "",
+      link: project.link || "" // ✅ เพิ่มบรรทัดนี้ (ดึงลิงก์เดิมมาโชว์ ถ้าไม่มีให้เป็นค่าว่าง)
     });
     setIsFormModalOpen(true);
   };
@@ -594,7 +594,7 @@ export default function Work() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
                         <input required placeholder="eng-only-no-space" className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all" value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
                       </div>
-                      {/* ✅ เพิ่มช่องวันที่ตรงนี้ (วางต่อจาก Grid ด้านบน) */} 
+                      {/* ✅ เพิ่มช่องวันที่ตรงนี้ (วางต่อจาก Grid ด้านบน) */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ (Date)</label>
                         <input
@@ -637,6 +637,19 @@ export default function Work() {
                           <div className="text-gray-400 text-sm py-8"><span className="text-[#00ff99] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง</div>
                         )}
                       </motion.div>
+                    </div>
+                    {/* ✅ ช่องกรอกลิงก์ (Link) */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        แนบลิงก์ผลงาน (Link / URL) <span className="text-xs text-gray-400 font-normal">(ไม่บังคับ)</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://www.instagram.com/..."
+                        className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#00ff99]/20 outline-none border-gray-200 text-black transition-all placeholder:text-gray-300"
+                        value={formData.link}
+                        onChange={e => setFormData({ ...formData, link: e.target.value })}
+                      />
                     </div>
                     <div className="flex justify-end gap-3 mt-6 border-t pt-4">
                       <button type="button" onClick={() => setIsFormModalOpen(false)} className="px-6 py-2.5 text-gray-500 hover:bg-gray-100 rounded-xl font-medium transition-colors">ยกเลิก</button>

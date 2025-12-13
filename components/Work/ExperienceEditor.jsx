@@ -5,10 +5,13 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-// --- 🔒 รหัสผ่าน Admin ---
+
+
 const ADMIN_PASSWORD = "1234";
 
 // --- Icons ---
+// ... icons เดิม ...
+const LinkIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>;
 const ArrowLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>;
 const EditIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>;
 const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>;
@@ -34,7 +37,7 @@ export default function ExperienceEditor({ slug }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItemIndex, setEditingItemIndex] = useState(null);
     const [viewingItem, setViewingItem] = useState(null);
-
+    const [isZoomed, setIsZoomed] = useState(false);
     const [formData, setFormData] = useState({ title: "", description: "", img: "", category: "" });
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
@@ -105,64 +108,64 @@ export default function ExperienceEditor({ slug }) {
         }
     };
 
-  const handleSaveProjectInfo = async (e) => {
-        e.preventDefault();
-        setIsSaving(true);
+    const handleSaveProjectInfo = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
         // 👇 เพิ่ม originalSlug: slug ตรงนี้
-        await saveToDatabase({ ...formData, slug, originalSlug: slug }, "อัปเดตข้อมูลปกเรียบร้อย");
-        setProject({ ...project, ...formData });
-        setIsModalOpen(false);
-        setIsSaving(false);
-    };
+        await saveToDatabase({ ...formData, slug, originalSlug: slug }, "อัปเดตข้อมูลปกเรียบร้อย");
+        setProject({ ...project, ...formData });
+        setIsModalOpen(false);
+        setIsSaving(false);
+    };
 
-   const handleSaveItem = async (e) => {
-        e.preventDefault();
-        setIsSaving(true);
-        let newItems = [...items];
-        if (editingItemIndex !== null) {
-            newItems[editingItemIndex] = formData;
-        } else {
-            newItems = [formData, ...items];
-        }
-        // 👇 เพิ่ม originalSlug: slug ตรงนี้
-        await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "บันทึกเนื้อหาเรียบร้อย");
-        setItems(newItems);
-        setIsModalOpen(false);
-        setIsSaving(false);
-    };
-const handleDeleteItem = async (index) => {
-        if (!confirm("คุณแน่ใจหรือไม่ว่าจะลบรายการนี้?")) return;
-        setIsSaving(true);
-        const newItems = items.filter((_, i) => i !== index);
-        // 👇 เพิ่ม originalSlug: slug ตรงนี้
-        await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "ลบรายการเรียบร้อย");
-        setItems(newItems);
-        setIsSaving(false);
-    };
-   const saveToDatabase = async (payload, successMsg) => {
-    try {
-        const res = await fetch('/api/projects', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-
-        if (res.ok) {
-            showToast(successMsg, "success");
+    const handleSaveItem = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
+        let newItems = [...items];
+        if (editingItemIndex !== null) {
+            newItems[editingItemIndex] = formData;
         } else {
-            // --- ส่วนที่แก้ไข: อ่าน Error จาก Server ---
-            const errorData = await res.json().catch(() => ({})); // กันกรณี response ไม่ใช่ json
-            console.error("SERVER ERROR DETAILS:", errorData); // ดูค่านี้ใน Console Browser
-            console.error("STATUS CODE:", res.status); 
-            
-            throw new Error(errorData.error || errorData.message || "Save failed (Unknown reason)");
+            newItems = [formData, ...items];
         }
-    } catch (error) {
-        console.error("CATCH ERROR:", error);
-        // แสดง Error message จริงๆ ใน Toast เพื่อให้รู้เรื่อง
-        showToast(`บันทึกไม่สำเร็จ: ${error.message}`, "error");
-    }
-};
+        // 👇 เพิ่ม originalSlug: slug ตรงนี้
+        await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "บันทึกเนื้อหาเรียบร้อย");
+        setItems(newItems);
+        setIsModalOpen(false);
+        setIsSaving(false);
+    };
+    const handleDeleteItem = async (index) => {
+        if (!confirm("คุณแน่ใจหรือไม่ว่าจะลบรายการนี้?")) return;
+        setIsSaving(true);
+        const newItems = items.filter((_, i) => i !== index);
+        // 👇 เพิ่ม originalSlug: slug ตรงนี้
+        await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "ลบรายการเรียบร้อย");
+        setItems(newItems);
+        setIsSaving(false);
+    };
+    const saveToDatabase = async (payload, successMsg) => {
+        try {
+            const res = await fetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (res.ok) {
+                showToast(successMsg, "success");
+            } else {
+                // --- ส่วนที่แก้ไข: อ่าน Error จาก Server ---
+                const errorData = await res.json().catch(() => ({})); // กันกรณี response ไม่ใช่ json
+                console.error("SERVER ERROR DETAILS:", errorData); // ดูค่านี้ใน Console Browser
+                console.error("STATUS CODE:", res.status);
+
+                throw new Error(errorData.error || errorData.message || "Save failed (Unknown reason)");
+            }
+        } catch (error) {
+            console.error("CATCH ERROR:", error);
+            // แสดง Error message จริงๆ ใน Toast เพื่อให้รู้เรื่อง
+            showToast(`บันทึกไม่สำเร็จ: ${error.message}`, "error");
+        }
+    };
 
     // --- Handlers ---
     const openEditProject = () => {
@@ -179,7 +182,8 @@ const handleDeleteItem = async (index) => {
     const openAddItem = () => {
         setEditMode('ITEM');
         setEditingItemIndex(null);
-        setFormData({ title: "", description: "", img: "" });
+        // ✅ เพิ่ม link: "" เข้าไปในนี้
+        setFormData({ title: "", description: "", img: "", link: "" });
         setIsModalOpen(true);
     };
 
@@ -250,7 +254,7 @@ const handleDeleteItem = async (index) => {
                         </span>
                     </div>
 
-                    <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold text-white mb-8 leading-tight tracking-tight drop-shadow-sm break-words">
+                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-6 leading-tight tracking-tight drop-shadow-sm break-words">
                         {project.title}
                     </h1>
 
@@ -265,11 +269,13 @@ const handleDeleteItem = async (index) => {
             {/* ส่วนที่ 2: เนื้อหาด้านใน (Gallery) */}
             <div className="max-w-6xl mx-auto">
                 <div className="flex justify-between items-end mb-10">
-                    <div className="relative">
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Gallery & Content</h2>
-                        <div className="absolute -bottom-2 left-0 w-1/2 h-1.5 bg-[#7edad2] rounded-full"></div>
+                    <div className="mb-8">
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 inline-block relative">
+                            Gallery & Content
+                            {/* เส้นขีดใต้ปรับให้บางลงและชิดขึ้น */}
+                            <span className="absolute bottom-[-8px] left-0 w-1/2 h-1 bg-[#7edad2] rounded-full"></span>
+                        </h2>
                     </div>
-
                     {isAdmin && (
                         <button onClick={openAddItem} className="bg-[#7edad2] hover:bg-[#6bcbc0] text-white px-4 py-2 md:px-6 md:py-3 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-[#7edad2]/40 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 active:scale-95 text-sm md:text-base">
                             <PlusIcon /> <span className="hidden md:inline">เพิ่มเนื้อหาใหม่</span><span className="md:hidden">เพิ่ม</span>
@@ -297,11 +303,35 @@ const handleDeleteItem = async (index) => {
                                     </div>
                                 )}
                                 <div className="relative w-full h-56 bg-gray-50 rounded-2xl overflow-hidden mb-5 border border-gray-100">
-                                    {item.img ? <Image src={item.img} alt="item" fill className="object-cover group-hover:scale-110 transition-transform duration-700" /> : <div className="flex items-center justify-center h-full text-gray-300 text-sm">No Image</div>}
+                                    {item.img ? <Image
+                                        src={item.img}
+                                        alt="item"
+                                        fill
+                                        // ✅ เพิ่มบรรทัดนี้ครับ สำคัญมาก!
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                    /> : <div className="flex items-center justify-center h-full text-gray-300 text-sm">No Image</div>}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 </div>
-                                <h3 className="font-bold text-xl text-gray-800 mb-3 line-clamp-1 group-hover:text-[#7edad2] transition-colors">{item.title}</h3>
-                                <p className="text-gray-500 text-sm line-clamp-3 whitespace-pre-wrap break-words leading-relaxed">{item.description}</p>
+                                <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-1 group-hover:text-[#7edad2] transition-colors">{item.title}</h3>
+                                <p className="text-gray-500 text-xs md:text-sm line-clamp-3 ...">{item.description}</p>
+                                {/* ✅✅✅ แทรกส่วนแสดงปุ่มลิงก์บนการ์ด ตรงนี้ครับ ✅✅✅ */}
+                                {item.link && (
+                                    <div className="mt-4 pt-3 border-t border-gray-100 flex justify-start">
+                                        <a
+                                            href={item.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()} // สำคัญ! ป้องกันไม่ให้เด้งเปิด Modal ซ้อน
+                                            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[#7edad2] transition-colors group/link"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 group-hover/link:scale-110 transition-transform">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                            </svg>
+                                            <span>เปิดลิงก์</span>
+                                        </a>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -369,6 +399,22 @@ const handleDeleteItem = async (index) => {
                                         <label className="block text-sm font-bold mb-2 text-gray-700">รายละเอียด (Description)</label>
                                         <textarea rows={6} className="border border-gray-200 p-4 rounded-xl w-full bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#7edad2] focus:bg-white transition-all shadow-sm resize-none" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="เขียนรายละเอียด..." />
                                     </div>
+                                    {/* ✅ แทรกส่วนนี้: ช่องกรอก Link */}
+                                    <div>
+                                        <label className="block text-sm font-bold mb-2 text-gray-700">ลิงก์แนบ (Optional)</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                                <LinkIcon />
+                                            </div>
+                                            <input
+                                                type="url"
+                                                className="border border-gray-200 pl-10 p-4 rounded-xl w-full bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#7edad2] focus:bg-white transition-all shadow-sm"
+                                                value={formData.link || ""} // กัน error กรณีค่าว่าง
+                                                onChange={e => setFormData({ ...formData, link: e.target.value })}
+                                                placeholder="https://www.example.com"
+                                            />
+                                        </div>
+                                    </div>
                                     <div>
                                         <label className="block text-sm font-bold mb-2 text-gray-700">รูปภาพ</label>
                                         <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-[#7edad2]/5 hover:border-[#7edad2] transition-all group">
@@ -404,50 +450,95 @@ const handleDeleteItem = async (index) => {
                         </div>
                     )}
 
-                    {/* Viewer Modal (ดูรูปขยาย) */}
-                    {/* Viewer Modal (ดูรูปขยาย) */}
                     {viewingItem && (
                         <div
                             className="fixed inset-0 bg-black/95 z-[10000] flex items-center justify-center p-4 backdrop-blur-lg animate-in fade-in duration-300"
-                            onClick={() => setViewingItem(null)}
+                            onClick={() => { setViewingItem(null); setIsZoomed(false); }} // ✅ รีเซ็ตซูมเมื่อปิด
                         >
                             <div
-                                className="bg-white rounded-[2rem] overflow-hidden w-full max-w-6xl max-h-[90vh] flex flex-col relative shadow-2xl animate-in zoom-in-95 duration-300"
+                                className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[90vw] h-[85vh] flex flex-col relative shadow-2xl animate-in zoom-in-95 duration-300"
                                 onClick={e => e.stopPropagation()}
                             >
-                                <button onClick={() => setViewingItem(null)} className="absolute top-4 right-4 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-red-500 transition shadow-lg backdrop-blur-sm">
+                                <button
+                                    onClick={() => { setViewingItem(null); setIsZoomed(false); }}
+                                    className="absolute top-4 right-4 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-red-500 transition shadow-lg backdrop-blur-sm"
+                                >
                                     <CloseIcon />
                                 </button>
 
-                                {/* --- แก้ไขบรรทัดนี้: เพิ่ม min-h-[60vh] เพื่อดันความสูงให้รูปดูใหญ่เสมอ --- */}
-                                <div className="overflow-y-auto custom-scrollbar h-full flex flex-col md:flex-row min-h-[60vh]">
+                                {/* --- Layout: เปลี่ยนเป็น Flex Row เพื่อแบ่งซ้ายขวา --- */}
+                                <div className="flex flex-col md:flex-row h-full">
 
-                                    {/* --- แก้ไขส่วนรูปภาพ --- */}
-                                    {/* เปลี่ยน bg-gray-100 เป็น bg-black เพื่อความสวยงาม */}
-                                    <div className="relative w-full md:w-3/5 min-h-[400px] md:min-h-full shrink-0 bg-black flex items-center justify-center">
-                                        {viewingItem.img ? (
-                                            <Image
-                                                src={viewingItem.img}
-                                                alt={viewingItem.title}
-                                                fill
-                                                // ใช้ object-contain ถ้าอยากเห็นครบทั้งรูป (จะมีขอบดำ)
-                                                // ใช้ object-cover ถ้าอยากให้รูปเต็มพื้นที่ (ขอบจะโดนตัด)
-                                                className="object-contain"
-                                            />
-                                        ) : (
-                                            <div className="text-gray-500">No Image</div>
+                                    {/* ✅ ส่วนที่ 1: พื้นที่รูปภาพ (แก้ใหม่) */} 
+                                    <div className="relative w-full md:w-3/4 h-[50vh] md:h-full bg-black border-r border-gray-800 overflow-hidden">
+
+                                        {/* Wrapper สำหรับ Scroll: จัดการการเลื่อนเมื่อซูม */}
+                                        <div
+                                            className={`w-full h-full overflow-auto flex items-center justify-center custom-scrollbar ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+                                            onClick={() => setIsZoomed(!isZoomed)}
+                                        >
+                                            {/* ตัวรูปภาพ */}
+                                            <div
+                                                className={`relative transition-all duration-300 ease-in-out flex-shrink-0 ${isZoomed
+                                                    ? 'w-[150%] h-[150%]' // ซูม: ขยายพื้นที่ 1.5 เท่า
+                                                    : 'w-full h-full p-4' // ปกติ: เต็มจอ + มีขอบนิดหน่อยให้ดูไม่อึดอัด
+                                                    }`}
+                                            >
+                                                {viewingItem.img ? (
+                                                    <Image
+                                                        src={viewingItem.img}
+                                                        alt={viewingItem.title}
+                                                        fill
+                                                        className="object-contain" // ✅ สำคัญ: จัดรูปให้อยู่ในกรอบเสมอ สัดส่วนไม่เพี้ยน
+                                                        priority
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                        No Image
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* ปุ่ม Hint ลอยอยู่ด้านล่าง */}
+                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white/80 text-xs px-4 py-1.5 rounded-full pointer-events-none border border-white/10">
+                                            {isZoomed ? 'คลิกเพื่อย่อ' : 'คลิกเพื่อซูม'}
+                                        </div>
+                                    </div>
+
+                                    {/* ✅ ส่วนที่ 2: พื้นที่เนื้อหา (ลดลงเหลือ 1/4 หรือ 25%) 
+                   - ใส่ border-l เพื่อแบ่งเขต
+                */}
+                                    <div className="w-full md:w-1/4 bg-white p-6 md:p-8 overflow-y-auto border-l border-gray-100 flex flex-col shadow-[-10px_0_20px_rgba(0,0,0,0.05)] z-10">
+                                        <div>
+                                            <span className="inline-block px-3 py-1 rounded-full bg-[#7edad2]/10 text-[#7edad2] text-xs font-bold mb-4">
+                                                DETAILS
+                                            </span>
+                                            <h2 className="text-2xl font-bold text-gray-800 mb-4 leading-tight">
+                                                {viewingItem.title}
+                                            </h2>
+                                            <div className="w-10 h-1 bg-[#7edad2] rounded-full mb-6"></div>
+
+                                            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+                                                {viewingItem.description}
+                                            </p>
+                                        </div>
+
+                                        {/* ปุ่ม Link (ถ้ามี) */}
+                                        {viewingItem.link && (
+                                            <div className="mt-8 pt-6 border-t border-gray-100">
+                                                <a
+                                                    href={viewingItem.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="block w-full text-center bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-[#7edad2] transition-colors shadow-lg shadow-gray-200"
+                                                >
+                                                    เปิดลิงก์เพิ่มเติม
+                                                </a>
+                                            </div>
                                         )}
                                     </div>
 
-                                    {/* --- ส่วนเนื้อหา --- */}
-                                    <div className="p-8 md:p-12 w-full md:w-2/5 bg-white text-black flex flex-col justify-center">
-                                        <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-6 border-b-4 border-[#7edad2] pb-4 inline-block w-fit break-words">
-                                            {viewingItem.title}
-                                        </h2>
-                                        <div className="text-gray-600 whitespace-pre-wrap break-words leading-loose text-base md:text-lg font-light flex-grow">
-                                            {viewingItem.description}
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
