@@ -110,7 +110,7 @@ const Hero = () => {
 
             {/* Type Animation */}
             <div className="text-xl sm:text-2xl md:text-3xl font-bold h-[40px] flex justify-center lg:justify-start items-center text-white/90 lg:text-gray-500 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <span className="mr-3 font-medium">Building</span>
+              <span className="mr-3 font-medium">Currently </span>
               <TypeAnimation
                 sequence={[
                   "Not perfect yet", 1500,
