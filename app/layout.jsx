@@ -13,7 +13,7 @@ const bebasNeue = Bebas_Neue({
   variable: '--font-bebas',
 });
 export const metadata = {
-  title: 'MYSITE',
+  title: 'Saranphat',
   description: 'This is my personal portfolio website showcasing projects and skills.',
   // icons: {
   //   icon: '/assets/icon/favicon-16x16.png', // วางไฟล์ favicon.ico ในโฟลเดอร์ public/
