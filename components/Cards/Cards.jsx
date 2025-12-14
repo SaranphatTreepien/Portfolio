@@ -33,35 +33,35 @@ const journeyData = {
       company: "Smart Plug IoT Project",
       icon: <FaPlug />,
       duration: "2566",
-      description: "Developed a Smart Plug IoT system using ESP32 and relay modules. Designed a basic electrical circuit to handle 220V AC input and convert it to 12V DC. Implemented remote control via Blynk and Alexa integration.",
+      description: "Developed a Smart Plug IoT system using ESP32 and relay modules.Designed an electrical circuit to safely convert 220V AC to 12V DC.Enabled remote control and automation via Blynk platform and Alexa voice integration.ฃ.",
       type: "default"
     },
     {
       company: "Dangerous Animal Detection AI",
       icon: <FaRobot />,
       duration: "2566",
-      description: "Developed an AI-based system using YOLOv8 and Python to detect dangerous animals via IP Camera and ESP32-CAM. Upon detection (e.g., tigers), the system sends real-time alerts through LINE Messaging API. The project was developed for the I-NEW GEN Inventor Award 2025.",
+      description: "Developed an AI-based dangerous animal detection system using YOLOv8 and Python with IP Camera and ESP32-CAM.Implemented real-time alert notifications via LINE Messaging API upon detection (e.g., tigers).This project was developed for the I-NEW GEN Inventor Award 2025",
       type: "default"
     },
     {
       company: "Smart AI Streetlight System (Academic Project)", 
       icon: <FaLightbulb />,
       duration: "2567",
-      description: "Developed the full prototype of a smart streetlight. Integrated the AI detection module with the physical control system. Designed the logic to trigger flashing lights and send LINE notifications instantly when dangerous animals are detected.",
+      description: "Developed a full prototype of a smart AI-powered streetlight system.Integrated AI detection modules with physical control systems to trigger flashing warning lights and send instant LINE notifications when dangerous animals are detected.",
       type: "default"
     },
     {
       company: "Custom PCB Assembly & Sensor Integration", 
       icon: <FaMicrochip />,
       duration: "2567",
-      description: "Specialized in hardware implementation. Assembled and soldered a custom PCB board (Chip mounting & Soldering). Tested circuit connectivity and integrated environmental sensors (Light, Dust, Temperature) via GPIO interface to ensure hardware reliability.",
+      description: "Specialized in hardware implementation and PCB assembly.Performed chip mounting, soldering, and circuit testing.Integrated environmental sensors (Light, Dust, Temperature) via GPIO interfaces to ensure system reliability.",
       type: "default"
     },
     {
       company: "Smart Care Monitor System (OS Academic Project)",
       icon: <FaHeartbeat />,
       duration: "2568",
-      description: "Academic project developed for an Operating Systems course. Built a smart patient monitoring system using Ubuntu as a server. The system allows doctors, nurses, and patients to monitor bedside health data via the cloud, with AI-generated health summaries to support medical decision-making.",
+      description: "Developed a cloud-based smart patient monitoring system for an Operating Systems course.Used Ubuntu as server to support multi-role access (doctors, nurses, patients).Implemented AI-generated health summaries to assist medical decision-making.",
       tech: "Flask (Python), Jinja2, HTMX, HTML5, MQTT, MongoDB, AI Microservice, Docker",
       type: "default"
     },
