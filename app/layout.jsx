@@ -22,7 +22,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`antialiased ${inter.variable} ${bebasNeue.variable}`}>{children}</body>
+      <body 
+        className={`antialiased ${inter.variable} ${bebasNeue.variable}`}
+        suppressHydrationWarning={true}  // 👈 เพิ่มบรรทัดนี้เข้าไปครับ
+      >
+        {children}
+      </body>
     </html>
   )
 }

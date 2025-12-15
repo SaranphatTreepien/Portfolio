@@ -6,8 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SiGmail } from "react-icons/si";
 import { FaDownload, FaUser, FaFileAlt, FaBriefcase, FaBuilding, FaPhone, FaPaperPlane, FaTimes, FaLock, FaCalendarAlt, FaFilePdf, FaFileSignature, FaImage, FaTrash, FaFileUpload, FaPencilAlt } from "react-icons/fa";
 import { MdEmail, MdDateRange } from "react-icons/md";
-import Confetti from "react-confetti";
-
+import Confetti from "react-confetti"; 
 // --- ⚙️ ตั้งรหัสผ่าน Admin ---
 const ADMIN_PASSWORD = "1234";
 
@@ -406,7 +405,6 @@ ${form.phone}`;
 
 
 
-
             <div className="max-w-4xl mx-auto">
                 <div className="text-center mb-10">
                     <motion.h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 tracking-tight mb-2">
@@ -749,7 +747,8 @@ ${form.phone}`;
                     </form>
 
                 </div></motion.div>}</AnimatePresence>
-                <AnimatePresence>{lightbox && <motion.div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4" onClick={() => setLightbox(false)}><img src="/assets/document/resume.png" className="max-h-[90vh] rounded shadow-2xl" /></motion.div>}</AnimatePresence>
+                <AnimatePresence>{lightbox && <motion.div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4" onClick={() => setLightbox(false)}>
+                <img src="/assets/document/resume.png" className="max-h-[90vh] rounded shadow-2xl" /></motion.div>}</AnimatePresence>
                 <AnimatePresence>
                     {(showDownloadAlert || showSendAlert) && (
                         <div className="fixed inset-0 bg-black/50 z-[90] flex items-center justify-center p-4">

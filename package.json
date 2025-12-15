@@ -26,6 +26,8 @@
     "react-countup": "^6.5.3",
     "react-dom": "^18",
     "react-icons": "^5.5.0",
+    "react-medium-image-zoom": "^5.4.0",
+    "react-pdf": "^10.2.0",
     "react-responsive": "^10.0.1",
     "react-scroll": "^1.9.3",
     "react-simple-typewriter": "^5.0.1",
