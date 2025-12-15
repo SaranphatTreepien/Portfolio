@@ -69,6 +69,10 @@ export default function Work() {
   // ✅ [NEW] State สำหรับปุ่มล้างบาง
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  // ✅ [NEW] State สำหรับจัดการรูปภาพ (เพิ่มใหม่)
+  const [selectedFile, setSelectedFile] = useState(null); // เก็บไฟล์ดิบรออัปโหลด
+  const [imagePreview, setImagePreview] = useState("");   // เก็บ URL รูปตัวอย่าง
+
   const [isWipingData, setIsWipingData] = useState(false);
 
   const [passwordInput, setPasswordInput] = useState("");
@@ -148,7 +152,7 @@ export default function Work() {
     }
   };
 
-// 1. หาปีที่มีทั้งหมด (เหมือนเดิม)
+  // 1. หาปีที่มีทั้งหมด (เหมือนเดิม)
   const uniqueCategories = Array.from(new Set(projects.map((item) => item.category))).sort().reverse();
 
   // 2. สร้าง Tabs: เริ่มด้วย all -> แทรก Certificate -> ตามด้วยปีต่างๆ
@@ -161,7 +165,7 @@ export default function Work() {
   // 3. แก้เงื่อนไขการกรอง (Filter)
   const filterWork = projects.filter((item) => {
     if (tabValue === "all") return true; // ถ้าเลือก all โชว์หมด
-    
+
     if (tabValue === "Certificate") {
       return item.isCertificate === true; // ✅ ถ้าเลือก Certificate ให้เช็คว่างานไหนมี cer บ้าง
     }
@@ -197,6 +201,42 @@ export default function Work() {
       setFormData({ ...formData, createdAt: newDate });
     }
   };
+  // ✅ [NEW] ฟังก์ชันจัดการเมื่อเลือกไฟล์ (เปลี่ยนจาก compressImage มาใช้อันนี้)
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file); // เก็บไฟล์ไว้รอส่ง Cloudinary
+      setImagePreview(URL.createObjectURL(file)); // สร้าง Link ชั่วคราวโชว์หน้าเว็บทันที (เร็วมาก)
+    }
+  };
+
+  // ✅ [UPDATED] ฟังก์ชันอัปโหลด (ใช้ Env Variables)
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    // ดึงค่าจาก .env.local
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET;
+
+    formData.append("upload_preset", uploadPreset);
+    formData.append("cloud_name", cloudName);
+
+    try {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Upload failed");
+
+      return data.secure_url; // คืนค่า URL รูปภาพ
+    } catch (error) {
+      console.error("Cloudinary Error:", error);
+      throw error;
+    }
+  };
   const openAddModal = () => {
     setEditingProject(null);
     const today = new Date();
@@ -210,12 +250,18 @@ export default function Work() {
       img: "",
       createdAt: dateString,
       link: "",
-      isCertificate: false // ✅ เพิ่มตรงนี้ (ค่า default เป็นเท็จ)
+      isCertificate: false
     });
+
+    // เคลียร์รูป
+    setSelectedFile(null);
+    setImagePreview("");
+
     setIsFormModalOpen(true);
   };
 
   // 3. อัปเดตฟังก์ชัน openEditModal (ดึงค่าเดิมมาใส่)
+  // ✅ [UPDATED] ดึงรูปเดิมมาโชว์ เมื่อเปิด Modal แก้ไข
   const openEditModal = (project) => {
     setEditingProject(project);
     setFormData({
@@ -225,20 +271,40 @@ export default function Work() {
       img: project.img,
       createdAt: project.createdAt ? new Date(project.createdAt).toISOString().split('T')[0] : "",
       link: project.link || "",
-      isCertificate: project.isCertificate || false // ✅ เพิ่มตรงนี้ (ถ้าไม่มีให้เป็น false)
+      isCertificate: project.isCertificate || false
     });
+
+    // โชว์รูปเดิม
+    setImagePreview(project.img);
+    setSelectedFile(null); // เคลียร์ไฟล์ใหม่ เพราะยังไม่ได้เลือก
+
     setIsFormModalOpen(true);
   };
+  // ✅ [UPDATED] บันทึกข้อมูล (อัปโหลดรูปก่อน แล้วค่อยเซฟลง DB)
   const handleSaveProject = async (e) => {
     e.preventDefault();
     setIsSaving(true);
 
-    const payload = { ...formData };
-    if (editingProject) {
-      payload.originalSlug = editingProject.slug;
-    }
-
     try {
+      let finalImageUrl = formData.img; // เริ่มต้นด้วยรูปเดิม
+
+      // 1. เช็คว่า user เลือกไฟล์ใหม่มาไหม?
+      if (selectedFile) {
+        // ถ้ามีไฟล์ใหม่ ให้อัปโหลดไป Cloudinary ก่อน
+        finalImageUrl = await uploadToCloudinary(selectedFile);
+      }
+
+      // 2. เตรียมข้อมูลส่งเข้า MongoDB (ตอนนี้ img จะเป็น URL แล้ว)
+      const payload = {
+        ...formData,
+        img: finalImageUrl
+      };
+
+      if (editingProject) {
+        payload.originalSlug = editingProject.slug;
+      }
+
+      // 3. ส่งข้อมูลไป API (ส่วนนี้เหมือนเดิม)
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -252,7 +318,11 @@ export default function Work() {
           setIsFormModalOpen(false);
           setIsSaving(false);
           setEditingProject(null);
-          setFormData({ title: "", description: "", img: "", category: "", slug: "" });
+          // Reset ค่าทั้งหมด
+          setFormData({ title: "", category: "2569", slug: "", img: "", createdAt: "", link: "", isCertificate: false });
+          setSelectedFile(null);
+          setImagePreview("");
+
           showToast(editingProject ? "แก้ไขงานสำเร็จ!" : "เพิ่มงานใหม่สำเร็จ!", "success");
         }, 800);
       } else {
@@ -350,41 +420,7 @@ export default function Work() {
     }
   };
 
-  // ✅ ฟังก์ชันใหม่: บีบอัดรูปให้เล็กลงก่อนแปลงเป็น Base64
-  const compressImage = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
 
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-
-        // 🛠️ ตั้งค่าขนาดสูงสุด (กว้างไม่เกิน 800px ก็ชัดพอสำหรับเว็บแล้ว)
-        const MAX_WIDTH = 800;
-        const scaleSize = MAX_WIDTH / img.width;
-
-        // คำนวณขนาดใหม่ (คงอัตราส่วนเดิม)
-        const width = (img.width > MAX_WIDTH) ? MAX_WIDTH : img.width;
-        const height = (img.width > MAX_WIDTH) ? (img.height * scaleSize) : img.height;
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // 🔥 แปลงเป็น JPEG คุณภาพ 70% (ลดขนาดไฟล์ได้มหาศาล)
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
-      };
-
-      img.onerror = (error) => reject(error);
-    };
-
-    reader.onerror = (error) => reject(error);
-  });
 
   if (loading) return <div className="pt-24 text-center animate-pulse text-[##7edad2]">กำลังโหลดข้อมูล...</div>;
 
@@ -719,22 +755,22 @@ export default function Work() {
                         <input
                           type="file"
                           accept="image/*"
-                          className="..."
-                          onChange={async (e) => {
-                            if (e.target.files[0]) {
-                              // ✅ เปลี่ยนจาก toBase64 เป็น compressImage
-                              const base64 = await compressImage(e.target.files[0]);
-                              setFormData({ ...formData, img: base64 });
-                            }
-                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                          onChange={handleFileChange}
                         />
-                        {formData.img ? (
+
+                        {/* ✅ แก้ตรงนี้: เช็ค imagePreview แทน formData.img */}
+                        {imagePreview ? (
                           <div className="relative">
-                            <img src={formData.img} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-bold text-sm">เปลี่ยนรูป</div>
+                            {/* ✅ แก้ตรงนี้: src ใช้ imagePreview */}
+                            <img src={imagePreview} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-bold text-sm pointer-events-none">เปลี่ยนรูป</div>
                           </div>
                         ) : (
-                          <div className="text-gray-400 text-sm py-8"><span className="text-[##7edad2] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง</div>
+                          <div className="text-gray-400 text-sm py-8 pointer-events-none">
+                            {/* ✅ แก้ตรงนี้: ลบ # ที่เกินมาหนึ่งตัว */}
+                            <span className="text-[#7edad2] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง
+                          </div>
                         )}
                       </motion.div>
                     </div>

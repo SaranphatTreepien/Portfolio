@@ -22,7 +22,9 @@ const Spinner = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="ht
 
 export default function ExperienceEditor({ slug }) {
     const router = useRouter();
-
+    // ✅ 1. เพิ่ม State สำหรับเก็บไฟล์ที่เลือกรออัปโหลด
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     // --- State ---
     const [project, setProject] = useState(null);
     const [items, setItems] = useState([]);
@@ -40,39 +42,42 @@ export default function ExperienceEditor({ slug }) {
     const [isZoomed, setIsZoomed] = useState(false);
     const [formData, setFormData] = useState({ title: "", description: "", img: "", category: "" });
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
-
+    // เพิ่ม state นี้ไว้เก็บรูปที่จะโชว์ใน Modal 
     // --- Load Data ---
     useEffect(() => {
         if (slug) fetchProjectData();
     }, [slug]);
     // ฟังก์ชันสำหรับย่อรูปและแปลงเป็น JPG
-    const compressImage = (file) => {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = document.createElement("img");
-                img.src = event.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    // กำหนดความกว้างสูงสุดที่ต้องการ (เช่น 1920px สำหรับจอคอมทั่วไป)
-                    const MAX_WIDTH = 1920;
-                    const scaleSize = MAX_WIDTH / img.width;
+    // ✅ 2. ฟังก์ชันจัดการเมื่อเลือกไฟล์ (โชว์ Preview ทันที แต่ยังไม่อัปโหลด)
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file); // เก็บไฟล์จริงไว้รอส่ง
+            setImagePreview(URL.createObjectURL(file)); // สร้าง Link ชั่วคราวโชว์ทันที
+        }
+    };
 
-                    // ถ้ารูปเล็กกว่า 1920 ก็ใช้ขนาดเดิม, ถ้าใหญ่กว่าก็ย่อลง
-                    canvas.width = scaleSize < 1 ? MAX_WIDTH : img.width;
-                    canvas.height = scaleSize < 1 ? img.height * scaleSize : img.height;
+    // ✅ 3. ฟังก์ชันอัปโหลดไป Cloudinary
+    const uploadToCloudinary = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_PRESET);
+        formData.append("cloud_name", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME);
 
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        try {
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: "POST",
+                body: formData,
+            });
 
-                    // แปลงเป็น JPG โดยลดคุณภาพเหลือ 80% (0.8)
-                    // ถ้าอยากได้ชัดกว่านี้ปรับเป็น 0.9, ถ้าอยากได้เล็กจิ๋วปรับ 0.7
-                    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
-                    resolve(dataUrl);
-                };
-            };
-        });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error?.message || "Upload failed");
+
+            return data.secure_url; // ได้ Link รูปกลับมา
+        } catch (error) {
+            console.error("Cloudinary Error:", error);
+            throw error;
+        }
     };
     const fetchProjectData = async () => {
         try {
@@ -95,12 +100,7 @@ export default function ExperienceEditor({ slug }) {
         }
     };
 
-    const toBase64 = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
+
 
     const showToast = (message, type = "success") => {
         setToast({ show: true, message, type });
@@ -139,27 +139,65 @@ export default function ExperienceEditor({ slug }) {
     const handleSaveProjectInfo = async (e) => {
         e.preventDefault();
         setIsSaving(true);
-        // 👇 เพิ่ม originalSlug: slug ตรงนี้
-        await saveToDatabase({ ...formData, slug, originalSlug: slug }, "อัปเดตข้อมูลปกเรียบร้อย");
-        setProject({ ...project, ...formData });
-        setIsModalOpen(false);
-        setIsSaving(false);
+        try {
+            // 1. เช็คว่ามีการเปลี่ยนรูปไหม? ถ้ามีให้อัปโหลดใหม่ ถ้าไม่มีใช้ Link เดิม
+            let imageUrl = formData.img;
+            if (selectedFile) {
+                imageUrl = await uploadToCloudinary(selectedFile);
+            }
+
+            // 2. ส่งข้อมูลเข้า DB (ส่ง URL ไป)
+            const payload = {
+                ...formData,
+                img: imageUrl, // ใช้ URL ใหม่ (หรือเก่า)
+                slug,
+                originalSlug: slug
+            };
+
+            await saveToDatabase(payload, "อัปเดตข้อมูลปกเรียบร้อย");
+
+            setProject({ ...project, ...payload });
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error(error);
+            showToast("อัปโหลดรูปไม่สำเร็จ", "error");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleSaveItem = async (e) => {
         e.preventDefault();
         setIsSaving(true);
-        let newItems = [...items];
-        if (editingItemIndex !== null) {
-            newItems[editingItemIndex] = formData;
-        } else {
-            newItems = [formData, ...items];
+
+        try {
+            // 1. เช็คว่ามีการเปลี่ยนรูปไหม?
+            let imageUrl = formData.img;
+            if (selectedFile) {
+                imageUrl = await uploadToCloudinary(selectedFile);
+            }
+
+            // 2. เตรียมข้อมูลใหม่
+            const newItemData = { ...formData, img: imageUrl };
+
+            let newItems = [...items];
+            if (editingItemIndex !== null) {
+                newItems[editingItemIndex] = newItemData;
+            } else {
+                newItems = [newItemData, ...items];
+            }
+
+            // 3. บันทึกลง DB
+            await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "บันทึกเนื้อหาเรียบร้อย");
+
+            setItems(newItems);
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error(error);
+            showToast("เกิดข้อผิดพลาดในการบันทึก", "error");
+        } finally {
+            setIsSaving(false);
         }
-        // 👇 เพิ่ม originalSlug: slug ตรงนี้
-        await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "บันทึกเนื้อหาเรียบร้อย");
-        setItems(newItems);
-        setIsModalOpen(false);
-        setIsSaving(false);
     };
     const handleDeleteItem = async (index) => {
         if (!confirm("คุณแน่ใจหรือไม่ว่าจะลบรายการนี้?")) return;
@@ -195,23 +233,25 @@ export default function ExperienceEditor({ slug }) {
         }
     };
 
-    // --- Handlers ---
     const openEditProject = () => {
         setEditMode('PROJECT');
         setFormData({
             title: project.title || "",
             description: project.description || "",
-            img: project.img || "",
+            img: project.img || "", // Link รูปเดิม
             category: project.category || ""
         });
+        setImagePreview(project.img || null); // โชว์รูปเดิม
+        setSelectedFile(null); // ✅ Reset ไฟล์ที่จะอัปโหลด
         setIsModalOpen(true);
     };
 
     const openAddItem = () => {
         setEditMode('ITEM');
         setEditingItemIndex(null);
-        // ✅ เพิ่ม link: "" เข้าไปในนี้
         setFormData({ title: "", description: "", img: "", link: "" });
+        setImagePreview(null);
+        setSelectedFile(null); // ✅ Reset ไฟล์
         setIsModalOpen(true);
     };
 
@@ -219,9 +259,10 @@ export default function ExperienceEditor({ slug }) {
         setEditMode('ITEM');
         setEditingItemIndex(index);
         setFormData({ ...item });
+        setImagePreview(item.img || null);
+        setSelectedFile(null); // ✅ Reset ไฟล์
         setIsModalOpen(true);
     };
-
     const handleLogin = (e) => {
         e.preventDefault();
         if (passwordInput === ADMIN_PASSWORD) {
@@ -453,26 +494,25 @@ export default function ExperienceEditor({ slug }) {
                                                 <p className="mb-2 text-sm text-gray-500 group-hover:text-[#7edad2] font-medium">คลิกเพื่ออัปโหลดรูปภาพ</p>
                                             </div>
 
-                                            {/* ✅✅✅ ส่วนที่แก้ไข: ใช้ compressImage แทน ✅✅✅ */}
+                                            {/* ✅✅✅ ส่วนที่แก้ไข: เปลี่ยนมาใช้ handleFileChange ✅✅✅ */}
                                             <input
                                                 type="file"
                                                 className="hidden"
-                                                accept="image/*" // กรองเฉพาะไฟล์รูป
-                                                onChange={async (e) => {
-                                                    if (e.target.files[0]) {
-                                                        // เรียกฟังก์ชันย่อรูปที่เพิ่มไปก่อนหน้านี้
-                                                        const compressedBase64 = await compressImage(e.target.files[0]);
-
-                                                        // บันทึกรูปที่ย่อแล้วลง State
-                                                        setFormData({ ...formData, img: compressedBase64 });
-                                                    }
-                                                }}
+                                                accept="image/*"
+                                                onChange={handleFileChange}  // 👈 เรียกฟังก์ชันนี้คำเดียวจบครับ
                                             />
                                         </label>
 
-                                        {formData.img && (
+                                        {/* เช็คว่ามี imagePreview (รูปใหม่) หรือ formData.img (รูปเก่า) หรือไม่ */}
+                                        {(imagePreview || formData.img) && (
                                             <div className="mt-4 relative h-40 w-full rounded-xl overflow-hidden shadow-md border">
-                                                <Image src={formData.img} alt="preview" fill className="object-contain bg-gray-100" />
+                                                <Image
+                                                    // 👈 ให้ความสำคัญกับ imagePreview ก่อน ถ้าไม่มีค่อยใช้ formData.img
+                                                    src={imagePreview || formData.img}
+                                                    alt="preview"
+                                                    fill
+                                                    className="object-contain bg-gray-100"
+                                                />
                                             </div>
                                         )}
                                     </div>

@@ -1,10 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    // รูปแบบไฟล์ที่รองรับ
+    // รูปแบบไฟล์ที่รองรับ (ของเดิม)
     formats: ['image/avif', 'image/webp'],
-    // กำหนด quality ที่จะใช้ได้ เช่น 75 และ 100
-    qualities: [75, 100],
+    
+    // ✅ เพิ่มส่วนนี้ครับ: อนุญาตโดเมน Cloudinary
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '**', // อนุญาตทุกโฟลเดอร์/ทุกรูป
+      },
+    ],
   },
 }
 
