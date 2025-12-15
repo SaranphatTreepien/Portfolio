@@ -11,6 +11,7 @@ import {
   FaWordpress,
   FaFigma,
   FaBriefcase,
+  FaCarSide,
   FaGraduationCap,
   FaMicrochip,
   FaUniversity,
@@ -18,13 +19,20 @@ import {
   FaRobot,
   FaLightbulb,
   FaHeartbeat,
-  FaNetworkWired, // Networking
-  FaServer,       // เพิ่ม icon สำหรับ Cisco/Server
-  FaDatabase,     // Database
-  FaCode,         // Programming
-  FaHandshake,    // Soft Skills
-  FaCertificate,  // Training
+  FaNetworkWired,
+  FaServer,
+  FaDatabase,
+  FaCode,
+  FaHandshake,
+  FaCertificate,
 } from "react-icons/fa";
+
+// ✅ 1. แก้ไขตรงนี้: เปลี่ยนสไตล์เป็น "พื้นเหลือง-ตัวหนังสือดำ"
+const Year = ({ children }) => (
+  <span className="inline-block bg-[#FFD700] text-black px-2 py-0.5 rounded-md font-bold text-sm shadow-sm">
+    {children}
+  </span>
+);
 
 // --- Data Section ---
 const journeyData = {
@@ -32,35 +40,42 @@ const journeyData = {
     {
       company: "Smart Plug IoT Project",
       icon: <FaPlug />,
-      duration: "2566",
-      description: "Developed a Smart Plug IoT system using ESP32 and relay modules.Designed an electrical circuit to safely convert 220V AC to 12V DC.Enabled remote control and automation via Blynk platform and Alexa voice integration.ฃ.",
+      duration: <Year>2566</Year>,
+      description: "Developed a Smart Plug IoT system using ESP32 and relay modules.Designed an electrical circuit to safely convert 220V AC to 12V DC.Enabled remote control and automation via Blynk platform and Alexa voice integration.",
       type: "default"
     },
     {
       company: "Dangerous Animal Detection System",
       icon: <FaRobot />,
-      duration: "2566",
+      duration: <Year>2566</Year>,
       description: "Developed a prototype for dangerous animal detection using YOLOv8 and Python. Integrated IP Cameras and ESP32-CAM to process real-time video feeds and implemented instant alert notifications via LINE Messaging API.",
       type: "default"
     },
     {
       company: "TourGuard: Smart AI Streetlight (I-New Gen Award 2025)",
       icon: <FaLightbulb />,
-      duration: "2567",
+      duration: <Year>2567</Year>,
       description: "Award-winning project: Designed a smart streetlight system that integrates AI detection with physical warning mechanisms. The system triggers flashing lights and sends LINE notifications upon detecting dangerous animals. Received the Silver Medal at I-New Gen Award 2025 (NRCT).",
       type: "default"
     },
     {
       company: "Custom PCB Assembly & Sensor Integration",
       icon: <FaMicrochip />,
-      duration: "2567",
+      duration: <Year>2567</Year>,
       description: "Specialized in hardware implementation and PCB assembly.Performed chip mounting, soldering, and circuit testing.Integrated environmental sensors (Light, Dust, Temperature) via GPIO interfaces to ensure system reliability.",
+      type: "default"
+    },
+    {
+      company: "Line Following Robot (Digital Logic Project)",
+      icon: <FaCarSide />, 
+      duration: <Year>2567</Year>,
+      description: "Designed a microcontroller-free robot using pure Logic Gates (ICs). Optimized complex control circuits using 5-variable K-Map to process sensor signals for precise navigation.",
       type: "default"
     },
     {
       company: "Smart Care Monitor System (OS Academic Project)",
       icon: <FaHeartbeat />,
-      duration: "2568",
+      duration: <Year>2568</Year>,
       description: "Developed a cloud-based smart patient monitoring system for an Operating Systems course.Used Ubuntu as server to support multi-role access (doctors, nurses, patients).Implemented AI-generated health summaries to assist medical decision-making.",
       tech: "Flask (Python), Jinja2, HTMX, HTML5, MQTT, MongoDB, AI Microservice, Docker",
       type: "default"
@@ -71,7 +86,7 @@ const journeyData = {
       company: "Thai-Austrian Technical College",
       icon: <FaUniversity />,
       qualification: "Higher Vocational Certificate (IT)",
-      duration: "May 2019 - Mar 2021",
+      duration: <Year>May 2019 - Mar 2021</Year>,
       description: "Studied Information Technology (IT) with focus on hardware and networking basics.",
       type: "default"
     },
@@ -79,12 +94,11 @@ const journeyData = {
       company: "Sripatum University",
       icon: <FaGraduationCap />,
       qualification: "Bachelor’s Degree (Student)",
-      duration: "2023 - Expected 2026",
+      duration: <Year>2023 - Expected 2026</Year>,
       description: "Currently studying software development, web technologies, and practical computing skills.",
       type: "default"
     }
   ],
-  // --- Skills ปรับปรุงใหม่ตามข้อมูลล่าสุด ---
   skill: [
     {
       company: "Networking Fundamentals",
@@ -94,7 +108,7 @@ const journeyData = {
     },
     {
       company: "Cisco Technologies",
-      icon: <FaServer />, // ใช้รูป Server/Rack เพื่อสื่อถึง Cisco
+      icon: <FaServer />,
       description: "VLAN, Trunk, Tagging, SSH Telnet, Spanning Tree.",
       type: "skill"
     },
@@ -117,19 +131,18 @@ const journeyData = {
       type: "skill"
     }
   ],
-  // --- Training ตามข้อมูลล่าสุด ---
   training: [
     {
       company: "CCNA Network Labs Professional",
       icon: <FaCertificate />,
-      duration: "NetPrime Training",
+      duration: <Year>NetPrime Training</Year>,
       description: "Focused on practical lab work regarding Networking and Cisco technologies.",
       type: "learning"
     },
     {
       company: "Intermediate and Advanced Computer Programming",
       icon: <FaCertificate />,
-      duration: "Mahidol MOOC",
+      duration: <Year>Mahidol MOOC</Year>,
       description: "Comprehensive study of programming structures and algorithms.",
       type: "learning"
     }
@@ -204,7 +217,7 @@ const Cards = () => {
                   animate="visible"
                   exit="exit"
                   className={`grid gap-6 ${key === "skill"
-                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2" // Skill ใช้ 2 คอลัมน์เพื่อความอ่านง่าย
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
                     : "grid-cols-1 lg:grid-cols-2"
                     }`}
                 >
