@@ -75,7 +75,15 @@ export default function Work() {
 
   const [editingProject, setEditingProject] = useState(null);
 
-  const [formData, setFormData] = useState({ title: "", category: "2569", slug: "", img: "", createdAt: "" });
+  const [formData, setFormData] = useState({
+    title: "",
+    category: "2569",
+    slug: "",
+    img: "",
+    createdAt: "",
+    link: "",
+    isCertificate: false // ✅ เพิ่มตรงนี้
+  });
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   useEffect(() => {
@@ -140,10 +148,26 @@ export default function Work() {
     }
   };
 
+// 1. หาปีที่มีทั้งหมด (เหมือนเดิม)
   const uniqueCategories = Array.from(new Set(projects.map((item) => item.category))).sort().reverse();
-  const tabData = [{ category: "all" }, ...uniqueCategories.map((category) => ({ category }))];
-  const filterWork = tabValue === "all" ? projects : projects.filter((item) => item.category === tabValue);
 
+  // 2. สร้าง Tabs: เริ่มด้วย all -> แทรก Certificate -> ตามด้วยปีต่างๆ
+  const tabData = [
+    { category: "all" },
+    { category: "Certificate" }, // ✅ เพิ่มบรรทัดนี้ เพื่อให้มีปุ่ม Certificate
+    ...uniqueCategories.map((category) => ({ category }))
+  ];
+
+  // 3. แก้เงื่อนไขการกรอง (Filter)
+  const filterWork = projects.filter((item) => {
+    if (tabValue === "all") return true; // ถ้าเลือก all โชว์หมด
+    
+    if (tabValue === "Certificate") {
+      return item.isCertificate === true; // ✅ ถ้าเลือก Certificate ให้เช็คว่างานไหนมี cer บ้าง
+    }
+
+    return item.category === tabValue; // ถ้าเลือกปี ให้กรองตามปีปกติ
+  });
   // --- Handlers ---
   const handleLogin = (e) => {
     e.preventDefault();
@@ -185,11 +209,13 @@ export default function Work() {
       slug: "",
       img: "",
       createdAt: dateString,
-      link: "" // ✅ เพิ่มบรรทัดนี้ (เคลียร์ค่าให้ว่าง)
+      link: "",
+      isCertificate: false // ✅ เพิ่มตรงนี้ (ค่า default เป็นเท็จ)
     });
     setIsFormModalOpen(true);
   };
 
+  // 3. อัปเดตฟังก์ชัน openEditModal (ดึงค่าเดิมมาใส่)
   const openEditModal = (project) => {
     setEditingProject(project);
     setFormData({
@@ -198,11 +224,11 @@ export default function Work() {
       slug: project.slug,
       img: project.img,
       createdAt: project.createdAt ? new Date(project.createdAt).toISOString().split('T')[0] : "",
-      link: project.link || "" // ✅ เพิ่มบรรทัดนี้ (ดึงลิงก์เดิมมาโชว์ ถ้าไม่มีให้เป็นค่าว่าง)
+      link: project.link || "",
+      isCertificate: project.isCertificate || false // ✅ เพิ่มตรงนี้ (ถ้าไม่มีให้เป็น false)
     });
     setIsFormModalOpen(true);
   };
-
   const handleSaveProject = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -661,6 +687,24 @@ export default function Work() {
 
                           // ✅ เปลี่ยนตรงนี้: เรียกใช้ฟังก์ชันใหม่
                           onChange={handleDateChange}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 cursor-pointer" onClick={() => setFormData({ ...formData, isCertificate: !formData.isCertificate })}>
+                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isCertificate ? "bg-[#7edad2] border-[#7edad2]" : "border-gray-300 bg-white"}`}>
+                          {formData.isCertificate && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-gray-700 font-small select-none">Certificate/Award🏆</span>
+
+                        {/* Input ซ่อนไว้แต่ทำงานจริง */}
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={formData.isCertificate}
+                          onChange={(e) => setFormData({ ...formData, isCertificate: e.target.checked })}
                         />
                       </div>
                       {/* ... จบส่วนที่เพิ่ม ... */}
