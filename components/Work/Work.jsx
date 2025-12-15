@@ -93,7 +93,12 @@ export default function Work() {
   useEffect(() => {
     fetchProjects();
   }, []);
-
+  // ✅ เพิ่ม useEffect นี้:
+  useEffect(() => {
+    // รีเซ็ตจำนวนที่แสดงเป็น 6 ทุกครั้งที่เปลี่ยน Tab
+    setVisibleItems(6);
+  }, [tabValue]);
+  // ✅ ฟังก์ชันแสดง Toast
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000);
@@ -576,10 +581,10 @@ export default function Work() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setVisibleItems(prev => prev + 2)}
+                  onClick={() => setVisibleItems(prev => prev + 6)}
                   className="btn btn-accent rounded-full px-6"
                 >
-                  Load more
+                  Load more ({filterWork.length - visibleItems})
                 </motion.button>
               </div>
             )}
