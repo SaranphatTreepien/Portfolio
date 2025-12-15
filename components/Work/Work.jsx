@@ -57,7 +57,7 @@ export default function Work() {
   const [deletingId, setDeletingId] = useState(null);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
+  const [isRestoring, setIsRestoring] = useState(false);
   const [tabValue, setTabValue] = useState("all");
   const [visibleItems, setVisibleItems] = useState(6);
 
@@ -86,7 +86,46 @@ export default function Work() {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000);
   };
+  // ✅ [NEW] ฟังก์ชันจัดการการ Restore (อัปโหลดไฟล์)
+  const handleRestore = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    if (!confirm(`⚠️ คุณแน่ใจหรือไม่ที่จะ "กู้คืนข้อมูล" จากไฟล์ ${file.name}? ข้อมูลปัจจุบันจะถูกเขียนทับ`)) {
+      e.target.value = null; // Clear file input
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      setIsRestoring(true);
+      try {
+        const data = JSON.parse(event.target.result);
+
+        // ส่งข้อมูล JSON ไปให้ API ใหม่ (API ที่ชื่อว่า /api/restoreDBMongo)
+        const res = await fetch('/api/restoreDBMongo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || "Restore failed");
+        }
+
+        await fetchProjects(); // ดึงข้อมูลใหม่มาแสดงผล
+        showToast("กู้คืนข้อมูลสำเร็จ! ฐานข้อมูลถูกอัปเดตแล้ว", "success");
+      } catch (error) {
+        console.error("Restore Error:", error);
+        showToast(error.message || "เกิดข้อผิดพลาดในการกู้คืนข้อมูล", "error");
+      } finally {
+        setIsRestoring(false);
+        e.target.value = null; // ล้าง input file
+      }
+    };
+    reader.readAsText(file);
+  };
   const fetchProjects = async () => {
     try {
       const res = await fetch('/api/projects');
@@ -356,7 +395,24 @@ export default function Work() {
               >
                 [RESET DB]
               </motion.button>
-
+              {/* ✅ [NEW] ปุ่ม Restore (เป็นปุ่มซ่อน Input File) */}
+              <motion.label
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                htmlFor="restore-file-input"
+                className={`bg-red-500 text-white px-4 py-2 rounded-full font-bold transition-all text-sm flex items-center gap-2 shadow-sm cursor-pointer ${isRestoring ? 'opacity-50' : 'hover:bg-red-600'}`}
+              >
+                {isRestoring ? <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span> : <BackupIcon className="rotate-180" />}
+                <span>Restore</span>
+                <input
+                  type="file"
+                  id="restore-file-input"
+                  accept=".json"
+                  onChange={handleRestore}
+                  disabled={isRestoring}
+                  className="hidden"
+                />
+              </motion.label>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
