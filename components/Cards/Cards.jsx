@@ -37,21 +37,21 @@ const journeyData = {
       type: "default"
     },
     {
-      company: "Dangerous Animal Detection AI",
+      company: "Dangerous Animal Detection System",
       icon: <FaRobot />,
       duration: "2566",
-      description: "Developed an AI-based dangerous animal detection system using YOLOv8 and Python with IP Camera and ESP32-CAM.Implemented real-time alert notifications via LINE Messaging API upon detection (e.g., tigers).This project was developed for the I-NEW GEN Inventor Award 2025",
+      description: "Developed a prototype for dangerous animal detection using YOLOv8 and Python. Integrated IP Cameras and ESP32-CAM to process real-time video feeds and implemented instant alert notifications via LINE Messaging API.",
       type: "default"
     },
     {
-      company: "Smart AI Streetlight System (Academic Project)", 
+      company: "TourGuard: Smart AI Streetlight (I-New Gen Award 2025)",
       icon: <FaLightbulb />,
       duration: "2567",
-      description: "Developed a full prototype of a smart AI-powered streetlight system.Integrated AI detection modules with physical control systems to trigger flashing warning lights and send instant LINE notifications when dangerous animals are detected.",
+      description: "Award-winning project: Designed a smart streetlight system that integrates AI detection with physical warning mechanisms. The system triggers flashing lights and sends LINE notifications upon detecting dangerous animals. Received the Silver Medal at I-New Gen Award 2025 (NRCT).",
       type: "default"
     },
     {
-      company: "Custom PCB Assembly & Sensor Integration", 
+      company: "Custom PCB Assembly & Sensor Integration",
       icon: <FaMicrochip />,
       duration: "2567",
       description: "Specialized in hardware implementation and PCB assembly.Performed chip mounting, soldering, and circuit testing.Integrated environmental sensors (Light, Dust, Temperature) via GPIO interfaces to ensure system reliability.",
@@ -167,26 +167,26 @@ const Cards = () => {
       >
         {/* TabsList */}
         <TabsList className="flex flex-wrap justify-center gap-2 bg-white/50 backdrop-blur-md border border-gray-200 p-2 rounded-full mb-12 shadow-sm sticky top-4 z-10">
-          <TabsTrigger 
-            value="experience" 
+          <TabsTrigger
+            value="experience"
             className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-accent data-[state=active]:shadow-md transition-all duration-300"
           >
             Experience
           </TabsTrigger>
-          <TabsTrigger 
-            value="education" 
+          <TabsTrigger
+            value="education"
             className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-accent data-[state=active]:shadow-md transition-all duration-300"
           >
             Education
           </TabsTrigger>
-          <TabsTrigger 
-            value="skill" 
+          <TabsTrigger
+            value="skill"
             className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-accent data-[state=active]:shadow-md transition-all duration-300"
           >
             Skills
           </TabsTrigger>
-          <TabsTrigger 
-            value="training" 
+          <TabsTrigger
+            value="training"
             className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-accent data-[state=active]:shadow-md transition-all duration-300"
           >
             Training
@@ -203,18 +203,17 @@ const Cards = () => {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className={`grid gap-6 ${
-                    key === "skill"
-                      ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2" // Skill ใช้ 2 คอลัมน์เพื่อความอ่านง่าย
-                      : "grid-cols-1 lg:grid-cols-2"
-                  }`}
+                  className={`grid gap-6 ${key === "skill"
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2" // Skill ใช้ 2 คอลัมน์เพื่อความอ่านง่าย
+                    : "grid-cols-1 lg:grid-cols-2"
+                    }`}
                 >
                   {data.map((item, index) => {
                     return (
-                      <motion.div 
-                        key={index} 
-                        variants={itemVariants} 
-                        layout 
+                      <motion.div
+                        key={index}
+                        variants={itemVariants}
+                        layout
                       >
                         <Card {...item} />
                       </motion.div>
