@@ -42,6 +42,56 @@ export default function ExperienceEditor({ slug }) {
     const [isZoomed, setIsZoomed] = useState(false);
     const [formData, setFormData] = useState({ title: "", description: "", img: "", category: "" });
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+    // --- ✅ [ใหม่ 1] เพิ่ม State สำหรับเช็คสถานะการลาก ---
+    const [isDragging, setIsDragging] = useState(false);
+    const processFile = (file) => {
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+            alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+            return;
+        }
+        setSelectedFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    };
+    // --- ✅ [ใหม่ 3] useEffect สำหรับดักจับ Ctrl+V (Paste) ---
+    useEffect(() => {
+        const handlePaste = (e) => {
+            if (!isModalOpen) return; // ทำงานเฉพาะตอนเปิด Modal
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf("image") !== -1) {
+                    const file = items[i].getAsFile();
+                    processFile(file);
+                    e.preventDefault(); // ป้องกันการ paste รูปซ้ำใน text area (ถ้ามี)
+                    break;
+                }
+            }
+        };
+
+        window.addEventListener("paste", handlePaste);
+        return () => window.removeEventListener("paste", handlePaste);
+    }, [isModalOpen]);
+    // --- ✅ [ใหม่ 4] Drag Event Handlers ---
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            processFile(files[0]);
+        }
+    };
     // เพิ่ม state นี้ไว้เก็บรูปที่จะโชว์ใน Modal 
     // --- Load Data ---
     useEffect(() => {
@@ -49,12 +99,10 @@ export default function ExperienceEditor({ slug }) {
     }, [slug]);
     // ฟังก์ชันสำหรับย่อรูปและแปลงเป็น JPG
     // ✅ 2. ฟังก์ชันจัดการเมื่อเลือกไฟล์ (โชว์ Preview ทันที แต่ยังไม่อัปโหลด)
+    // --- ฟังก์ชันเดิม ---
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setSelectedFile(file); // เก็บไฟล์จริงไว้รอส่ง
-            setImagePreview(URL.createObjectURL(file)); // สร้าง Link ชั่วคราวโชว์ทันที
-        }
+        processFile(file); // เปลี่ยนมาใช้ฟังก์ชันกลาง
     };
 
     // ✅ 3. ฟังก์ชันอัปโหลดไป Cloudinary
@@ -486,33 +534,55 @@ export default function ExperienceEditor({ slug }) {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-bold mb-2 text-gray-700">รูปภาพ</label>
-                                        <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-[#7edad2]/5 hover:border-[#7edad2] transition-all group">
-                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                <svg className="w-8 h-8 mb-3 text-gray-400 group-hover:text-[#7edad2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <label
+                                            // เพิ่ม Event Handlers สำหรับ Drag & Drop ที่ Label นี้
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
+                                            className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-2xl cursor-pointer transition-all group relative overflow-hidden
+                                        ${isDragging
+                                                    ? "border-[#7edad2] bg-[#7edad2]/10 scale-[1.02]" // สไตล์ตอนลากของเข้ามา
+                                                    : "border-gray-300 bg-gray-50 hover:bg-[#7edad2]/5 hover:border-[#7edad2]"
+                                                }
+                                    `}
+                                        >
+                                            <div className="flex flex-col items-center justify-center pt-5 pb-6 relative z-10">
+                                                <svg className={`w-8 h-8 mb-3 transition-colors ${isDragging ? "text-[#7edad2]" : "text-gray-400 group-hover:text-[#7edad2]"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                                 </svg>
-                                                <p className="mb-2 text-sm text-gray-500 group-hover:text-[#7edad2] font-medium">คลิกเพื่ออัปโหลดรูปภาพ</p>
+                                                <p className="mb-1 text-sm text-gray-500 group-hover:text-[#7edad2] font-medium">
+                                                    {isDragging ? "วางรูปภาพที่นี่" : "คลิกเพื่ออัปโหลดรูปภาพ หรือลากไฟล์มาวาง"}
+                                                </p>
+                                                <p className="text-xs text-gray-400">หรือกด <span className="bg-gray-200 px-1 rounded text-gray-600">Ctrl + V</span> เพื่อวางรูป</p>
                                             </div>
 
-                                            {/* ✅✅✅ ส่วนที่แก้ไข: เปลี่ยนมาใช้ handleFileChange ✅✅✅ */}
                                             <input
                                                 type="file"
                                                 className="hidden"
                                                 accept="image/*"
-                                                onChange={handleFileChange}  // 👈 เรียกฟังก์ชันนี้คำเดียวจบครับ
+                                                onChange={handleFileChange}
                                             />
                                         </label>
 
-                                        {/* เช็คว่ามี imagePreview (รูปใหม่) หรือ formData.img (รูปเก่า) หรือไม่ */}
+                                        {/* Preview */}
                                         {(imagePreview || formData.img) && (
-                                            <div className="mt-4 relative h-40 w-full rounded-xl overflow-hidden shadow-md border">
+                                            <div className="mt-4 relative h-40 w-full rounded-xl overflow-hidden shadow-md border animate-in fade-in zoom-in duration-300">
                                                 <Image
-                                                    // 👈 ให้ความสำคัญกับ imagePreview ก่อน ถ้าไม่มีค่อยใช้ formData.img
                                                     src={imagePreview || formData.img}
                                                     alt="preview"
                                                     fill
                                                     className="object-contain bg-gray-100"
                                                 />
+                                                {/* ปุ่มลบรูป preview (Optional) */}
+                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded cursor-pointer hover:bg-red-500 transition-colors"
+                                                    onClick={() => {
+                                                        setImagePreview(null);
+                                                        setSelectedFile(null);
+                                                        // ถ้าต้องการลบรูปเก่าด้วย uncomment บรรทัดล่าง
+                                                        // setFormData({ ...formData, img: "" });
+                                                    }}>
+                                                    เปลี่ยนรูปใหม่
+                                                </div>
                                             </div>
                                         )}
                                     </div>

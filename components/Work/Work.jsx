@@ -78,8 +78,64 @@ export default function Work() {
   const [passwordInput, setPasswordInput] = useState("");
 
   const [editingProject, setEditingProject] = useState(null);
+const [isDragging, setIsDragging] = useState(false); // ✅ เพิ่ม state เพื่อทำ Effect ตอนลากไฟล์เข้ามา
+// ✅ 1. สร้างฟังก์ชันกลางสำหรับจัดการไฟล์ (ใช้ร่วมกันทั้ง เลือกไฟล์, ลากวาง, ก๊อปวาง)
+  const handleProcessFile = (file) => {
+    if (!file) return;
+    
+    // เช็คว่าเป็นรูปภาพหรือไม่
+    if (!file.type.startsWith("image/")) {
+      showToast("กรุณาเลือกไฟล์รูปภาพเท่านั้น", "error");
+      return;
+    }
 
-  const [formData, setFormData] = useState({
+    setSelectedFile(file); // เก็บไฟล์สำหรับอัปโหลด
+    setImagePreview(URL.createObjectURL(file)); // สร้างพรีวิว
+  };
+
+  // ✅ 2. ดักจับการกด Paste (Ctrl+V)
+  useEffect(() => {
+    const handlePaste = (e) => {
+      // ทำงานเฉพาะตอน Modal เปิดอยู่
+      if (!isFormModalOpen) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          const file = items[i].getAsFile();
+          handleProcessFile(file); // เรียกใช้ฟังก์ชันกลาง
+          break; // เอาแค่รูปแรกที่เจอ
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [isFormModalOpen]);
+
+  // ✅ 3. ฟังก์ชันสำหรับ Drag & Drop
+  const handleDragOver = (e) => {
+    e.preventDefault(); // สำคัญ! ต้องใส่เพื่อบอก Browser ว่ายอมให้วางไฟล์ได้
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleProcessFile(e.dataTransfer.files[0]);
+      e.dataTransfer.clearData();
+    }
+  };  
+const [formData, setFormData] = useState({
     title: "",
     category: "2569",
     slug: "",
@@ -206,13 +262,11 @@ export default function Work() {
       setFormData({ ...formData, createdAt: newDate });
     }
   };
-  // ✅ [NEW] ฟังก์ชันจัดการเมื่อเลือกไฟล์ (เปลี่ยนจาก compressImage มาใช้อันนี้)
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file); // เก็บไฟล์ไว้รอส่ง Cloudinary
-      setImagePreview(URL.createObjectURL(file)); // สร้าง Link ชั่วคราวโชว์หน้าเว็บทันที (เร็วมาก)
-    }
+// ✅ ปรับปรุง handleFileChange เดิม ให้มาเรียกใช้ฟังก์ชันกลาง
+  const handleFileChangeRevised = (e) => {
+     if(e.target.files?.[0]) {
+       handleProcessFile(e.target.files[0]);
+     }
   };
 
   // ✅ [UPDATED] ฟังก์ชันอัปโหลด (ใช้ Env Variables)
@@ -751,33 +805,50 @@ export default function Work() {
                       {/* ... จบส่วนที่เพิ่ม ... */}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">รูปปก (Image)</label>
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer relative group"
-                      >
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                          onChange={handleFileChange}
-                        />
+                    {/* ... ส่วน Label ... */}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">รูปปก (Image)</label>
+                    
+                    {/* ✅ ส่วนอัปโหลดที่แก้ใหม่ */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      // เพิ่ม Event Handlers สำหรับ Drag & Drop
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer relative group ${
+                        isDragging 
+                          ? "border-[#7edad2] bg-[#7edad2]/10 scale-105" // สีตอนลากไฟล์เข้ามา
+                          : "border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                        // เปลี่ยนไปใช้ฟังก์ชันกลาง handleProcessFile
+                        onChange={(e) => handleProcessFile(e.target.files[0])}
+                      />
 
-                        {/* ✅ แก้ตรงนี้: เช็ค imagePreview แทน formData.img */}
-                        {imagePreview ? (
-                          <div className="relative">
-                            {/* ✅ แก้ตรงนี้: src ใช้ imagePreview */}
-                            <img src={imagePreview} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-bold text-sm pointer-events-none">เปลี่ยนรูป</div>
+                      {imagePreview ? (
+                        <div className="relative">
+                          <img src={imagePreview} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-bold text-sm pointer-events-none">
+                            เปลี่ยนรูป
                           </div>
-                        ) : (
-                          <div className="text-gray-400 text-sm py-8 pointer-events-none">
-                            {/* ✅ แก้ตรงนี้: ลบ # ที่เกินมาหนึ่งตัว */}
+                        </div>
+                      ) : (
+                        <div className="text-gray-400 text-sm py-8 pointer-events-none flex flex-col items-center gap-1">
+                          <div>
                             <span className="text-[#7edad2] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง
                           </div>
-                        )}
-                      </motion.div>
+                          {/* เพิ่มข้อความแนะนำ Ctrl+V */}
+                          <div className="text-xs text-gray-300">
+                             หรือกด <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">Ctrl</kbd> + <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">V</kbd> เพื่อวางรูป
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
                     </div>
                     {/* ✅ ช่องกรอกลิงก์ (Link) */}
                     <div>

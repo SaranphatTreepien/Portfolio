@@ -36,7 +36,6 @@ const Nav = ({ containerStyles, listStyles, linkStyles, spy }) => {
             `}
           >
             {link.name}
-
             {/* Top Light Effect */}
             <span
               className={`
