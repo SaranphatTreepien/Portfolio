@@ -78,11 +78,11 @@ export default function Work() {
   const [passwordInput, setPasswordInput] = useState("");
 
   const [editingProject, setEditingProject] = useState(null);
-const [isDragging, setIsDragging] = useState(false); // ✅ เพิ่ม state เพื่อทำ Effect ตอนลากไฟล์เข้ามา
-// ✅ 1. สร้างฟังก์ชันกลางสำหรับจัดการไฟล์ (ใช้ร่วมกันทั้ง เลือกไฟล์, ลากวาง, ก๊อปวาง)
+  const [isDragging, setIsDragging] = useState(false); // ✅ เพิ่ม state เพื่อทำ Effect ตอนลากไฟล์เข้ามา
+  // ✅ 1. สร้างฟังก์ชันกลางสำหรับจัดการไฟล์ (ใช้ร่วมกันทั้ง เลือกไฟล์, ลากวาง, ก๊อปวาง)
   const handleProcessFile = (file) => {
     if (!file) return;
-    
+
     // เช็คว่าเป็นรูปภาพหรือไม่
     if (!file.type.startsWith("image/")) {
       showToast("กรุณาเลือกไฟล์รูปภาพเท่านั้น", "error");
@@ -129,20 +129,21 @@ const [isDragging, setIsDragging] = useState(false); // ✅ เพิ่ม stat
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleProcessFile(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
     }
-  };  
-const [formData, setFormData] = useState({
+  };
+  const [formData, setFormData] = useState({
     title: "",
     category: "2569",
     slug: "",
     img: "",
     createdAt: "",
     link: "",
-    isCertificate: false // ✅ เพิ่มตรงนี้
+    isCertificate: false,// ✅ เพิ่มตรงนี้
+    isBest: false // ✅ [เพิ่ม] ค่าเริ่มต้นสำหรับ Best Project
   });
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
@@ -219,20 +220,28 @@ const [formData, setFormData] = useState({
   // 2. สร้าง Tabs: เริ่มด้วย all -> แทรก Certificate -> ตามด้วยปีต่างๆ
   const tabData = [
     { category: "all" },
-    { category: "Certificate" }, // ✅ เพิ่มบรรทัดนี้ เพื่อให้มีปุ่ม Certificate
+    { category: "Best" },        // ✅ 1. เพิ่ม Tab "Best" ตรงนี้ (ให้เป็นอันดับ 2 รองจาก all)
+    { category: "Certificate" }, 
+    
     ...uniqueCategories.map((category) => ({ category }))
   ];
 
   // 3. แก้เงื่อนไขการกรอง (Filter)
-  const filterWork = projects.filter((item) => {
-    if (tabValue === "all") return true; // ถ้าเลือก all โชว์หมด
-
-    if (tabValue === "Certificate") {
-      return item.isCertificate === true; // ✅ ถ้าเลือก Certificate ให้เช็คว่างานไหนมี cer บ้าง
-    }
-
-    return item.category === tabValue; // ถ้าเลือกปี ให้กรองตามปีปกติ
-  });
+ const filterWork = projects
+    .filter((item) => {
+      if (tabValue === "all") return true;
+      if (tabValue === "Best") return item.isBest === true; // ✅ 2. เพิ่ม Logic กรองเฉพาะงานที่มีดาว (isBest)
+      if (tabValue === "Certificate") return item.isCertificate === true;
+      return item.category === tabValue;
+    })
+    .sort((a, b) => {
+      // ✅ Logic การเรียงลำดับ (เอา Best ขึ้นก่อนเสมอ ในทุกๆ Tab)
+      if (a.isBest === true && b.isBest !== true) return -1;
+      if (a.isBest !== true && b.isBest === true) return 1;
+      
+      // ถ้าสถานะเหมือนกัน ให้เรียงตามวันที่ (ใหม่สุดขึ้นก่อน)
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
   // --- Handlers ---
   const handleLogin = (e) => {
     e.preventDefault();
@@ -262,11 +271,11 @@ const [formData, setFormData] = useState({
       setFormData({ ...formData, createdAt: newDate });
     }
   };
-// ✅ ปรับปรุง handleFileChange เดิม ให้มาเรียกใช้ฟังก์ชันกลาง
+  // ✅ ปรับปรุง handleFileChange เดิม ให้มาเรียกใช้ฟังก์ชันกลาง
   const handleFileChangeRevised = (e) => {
-     if(e.target.files?.[0]) {
-       handleProcessFile(e.target.files[0]);
-     }
+    if (e.target.files?.[0]) {
+      handleProcessFile(e.target.files[0]);
+    }
   };
 
   // ✅ [UPDATED] ฟังก์ชันอัปโหลด (ใช้ Env Variables)
@@ -309,7 +318,8 @@ const [formData, setFormData] = useState({
       img: "",
       createdAt: dateString,
       link: "",
-      isCertificate: false
+      isCertificate: false,
+      isBest: false // ✅ [เพิ่ม] Reset ค่า
     });
 
     // เคลียร์รูป
@@ -330,7 +340,8 @@ const [formData, setFormData] = useState({
       img: project.img,
       createdAt: project.createdAt ? new Date(project.createdAt).toISOString().split('T')[0] : "",
       link: project.link || "",
-      isCertificate: project.isCertificate || false
+      isCertificate: project.isCertificate || false,
+      isBest: project.isBest || false // ✅ [เพิ่ม] ดึงค่าเดิมมาใส่
     });
 
     // โชว์รูปเดิม
@@ -802,53 +813,72 @@ const [formData, setFormData] = useState({
                           onChange={(e) => setFormData({ ...formData, isCertificate: e.target.checked })}
                         />
                       </div>
+                      {/* 2. ปุ่ม Best Project (เพิ่มใหม่ ⭐) */}
+                      <div
+                        className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all select-none
+                            ${formData.isBest
+                            ? "bg-yellow-50 border-yellow-400 text-yellow-600 shadow-sm"
+                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                          }`}
+                        onClick={() => setFormData({ ...formData, isBest: !formData.isBest })}
+                      >
+                        {formData.isBest ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-yellow-500 animate-pulse">
+                            <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.563.045.797.777.385 1.178l-4.154 4.045a.563.563 0 00-.153.518l1.268 5.443c.129.554-.474.975-.92.68l-4.665-2.923a.563.563 0 00-.606 0L6.92 21.24c-.445.295-1.05-.126-.92-.68l1.268-5.443a.563.563 0 00-.153-.518L2.96 10.575c-.412-.401-.178-1.133.386-1.178l5.518-.442a.563.563 0 00.474-.345L11.48 3.5z" />
+                          </svg>
+                        )}
+                        <span className="font-medium text-sm">Best Project</span>
+                      </div>
                       {/* ... จบส่วนที่เพิ่ม ... */}
                     </div>
                     <div>
-                    {/* ... ส่วน Label ... */}
-                    <label className="block text-sm font-medium text-gray-700 mb-1">รูปปก (Image)</label>
-                    
-                    {/* ✅ ส่วนอัปโหลดที่แก้ใหม่ */}
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      // เพิ่ม Event Handlers สำหรับ Drag & Drop
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer relative group ${
-                        isDragging 
+                      {/* ... ส่วน Label ... */}
+                      <label className="block text-sm font-medium text-gray-700 mb-1">รูปปก (Image)</label>
+
+                      {/* ✅ ส่วนอัปโหลดที่แก้ใหม่ */}
+                      <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        // เพิ่ม Event Handlers สำหรับ Drag & Drop
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer relative group ${isDragging
                           ? "border-[#7edad2] bg-[#7edad2]/10 scale-105" // สีตอนลากไฟล์เข้ามา
                           : "border-gray-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                        // เปลี่ยนไปใช้ฟังก์ชันกลาง handleProcessFile
-                        onChange={(e) => handleProcessFile(e.target.files[0])}
-                      />
+                          }`}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                          // เปลี่ยนไปใช้ฟังก์ชันกลาง handleProcessFile
+                          onChange={(e) => handleProcessFile(e.target.files[0])}
+                        />
 
-                      {imagePreview ? (
-                        <div className="relative">
-                          <img src={imagePreview} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-bold text-sm pointer-events-none">
-                            เปลี่ยนรูป
+                        {imagePreview ? (
+                          <div className="relative">
+                            <img src={imagePreview} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-bold text-sm pointer-events-none">
+                              เปลี่ยนรูป
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="text-gray-400 text-sm py-8 pointer-events-none flex flex-col items-center gap-1">
-                          <div>
-                            <span className="text-[#7edad2] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง
+                        ) : (
+                          <div className="text-gray-400 text-sm py-8 pointer-events-none flex flex-col items-center gap-1">
+                            <div>
+                              <span className="text-[#7edad2] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง
+                            </div>
+                            {/* เพิ่มข้อความแนะนำ Ctrl+V */}
+                            <div className="text-xs text-gray-300">
+                              หรือกด <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">Ctrl</kbd> + <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">V</kbd> เพื่อวางรูป
+                            </div>
                           </div>
-                          {/* เพิ่มข้อความแนะนำ Ctrl+V */}
-                          <div className="text-xs text-gray-300">
-                             หรือกด <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">Ctrl</kbd> + <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">V</kbd> เพื่อวางรูป
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
+                        )}
+                      </motion.div>
                     </div>
                     {/* ✅ ช่องกรอกลิงก์ (Link) */}
                     <div>

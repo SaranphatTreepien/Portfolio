@@ -1,10 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FiArrowUpRight, FiLink, FiCalendar } from "react-icons/fi";
+import { FiArrowUpRight, FiLink, FiCalendar, FiStar } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
 
-// ✅ 1. เพิ่ม isCertificate เข้าไปในวงเล็บ props
-const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate }) => {
+const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate, isBest }) => {
 
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleString("en-US", {
@@ -26,7 +25,38 @@ const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate }
             {category}
           </Badge>
 
+          {/* ✅ Badge Theme: Rose Pink (แดงชมพู) */}
+          {/* ✅ Badge Theme: Rose Pink + Active Hover Effects */}
+         {/* ✅ Badge Theme: Solid Gold (พื้นเหลือง) + Active Hover Effects */}
+{isBest && (
+  <div className="absolute bottom-4 left-4 z-20">
+    <div className="
+      relative overflow-hidden cursor-default
+      flex items-center gap-1.5 px-3 py-1.5 rounded-full 
       
+      /* --- 1. ปรับพื้นหลังเป็นสีเหลืองทอง (Solid Yellow) --- */
+      bg-yellow-400 
+      border border-yellow-200/50
+      text-yellow-950  /* ตัวหนังสือสีน้ำตาลเข้มเกือบดำ อ่านง่ายบนพื้นเหลือง */
+      shadow-[0_4px_10px_-2px_rgba(250,204,21,0.5)] /* เงาสีเหลือง */
+      
+      /* --- Hover Effects (เมื่อชี้ที่รูปใหญ่) --- */
+      transition-all duration-500 ease-out
+      group-hover:scale-110 
+      group-hover:bg-yellow-300 /* สีสว่างขึ้นนิดนึงตอน Hover */
+      group-hover:shadow-[0_0_20px_0px_rgba(250,204,21,0.8)] /* เงาฟุ้งกระจาย */
+    ">
+
+      {/* ✨ Shine Effect: แสงวิบวับวิ่งผ่าน (สีขาวจางๆ) */}
+      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-[200%] bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-1000 ease-in-out w-full h-full skew-x-12" />
+
+      {/* ⭐ Icon: ดาวสีเข้ม หมุนดุ๊กดิ๊กตอน Hover */}
+      <FiStar className="fill-yellow-950 text-yellow-950 w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
+
+   
+    </div>
+  </div>
+)}
 
           {/* Image */}
           <Image
@@ -45,7 +75,7 @@ const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate }
       <div className="mt-6 px-1 flex flex-col gap-3">
 
         {/* Date & Meta Row */}
-        <div className="flex items-center justify-between text-sm text-gray-400 h-6"> {/* เพิ่ม h-6 เพื่อล็อคความสูง */}
+        <div className="flex items-center justify-between text-sm text-gray-400 h-6">
 
           {/* ฝั่งซ้าย: วันที่ */}
           {formattedDate ? (
@@ -54,17 +84,18 @@ const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate }
               <span>{formattedDate}</span>
             </div>
           ) : (
-            <div></div> /* ใส่ div เปล่าๆ ไว้ดันทรงกรณีไม่มีวันที่ */
+            <div></div>
           )}
 
-          {/* ✅ ฝั่งขวา: Certificate Badge (ย้ายมาตรงนี้) */}
+          {/* ฝั่งขวา: Certificate Badge */}
           {isCertificate && (
-            <div className="flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-md text-xs font-bold border border-yellow-200 shadow-sm">
-              🏆 Certificate
+            <div className="flex items-center gap-1 text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md text-xs font-bold border border-teal-200 shadow-sm">
+              📜 Certificate
             </div>
           )}
 
         </div>
+
         {/* Title & Arrow Row */}
         <Link href={`/work/${slug}`} className="flex items-start justify-between gap-4 group/title">
           <h3 className="text-2xl font-bold text-gray-800 leading-tight transition-colors duration-300 group-hover/title:text-accent">

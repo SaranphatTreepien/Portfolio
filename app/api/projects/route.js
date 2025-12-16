@@ -5,6 +5,7 @@ const DB_NAME = 'my_portfolio';
 const COLLECTION_NAME = 'projects';
 
 // ✅ GET: เรียงตาม createdAt (จากใหม่ไปเก่า)
+// ✅ GET: เรียงดาว (Best) ขึ้นก่อน -> ตามด้วยวันที่ใหม่สุด
 export async function GET(request) {
   try {
     const client = await clientPromise;
@@ -18,7 +19,8 @@ export async function GET(request) {
     } else {
       const projects = await db.collection(COLLECTION_NAME)
         .find({})
-        .sort({ createdAt: -1 }) // เรียงงานใหม่สุดขึ้นก่อน
+        // 🔥 แก้ตรงนี้: ให้ความสำคัญกับ isBest (-1 คือมากไปน้อย/True มาก่อน) แล้วค่อยดูวันที่
+        .sort({ isBest: -1, createdAt: -1 })
         .toArray();
       return NextResponse.json(projects);
     }
@@ -27,7 +29,6 @@ export async function GET(request) {
   }
 }
 
-// ✅ POST: รวม Logic เช็ค Slug ซ้ำ + จัดการวันที่
 export async function POST(request) {
   try {
     const client = await clientPromise;
@@ -42,17 +43,15 @@ export async function POST(request) {
     const { _id, originalSlug, ...updateData } = body;
     const newSlug = body.slug;
 
-    // 🔥 1. เริ่มต้นการตรวจสอบ Slug ซ้ำ (คืนชีพกลับมาแล้วครับ)
+    // 🔥 1. ตรวจสอบ Slug ซ้ำ
     const existingProject = await db.collection(COLLECTION_NAME).findOne({ slug: newSlug });
 
     if (existingProject) {
-      // กรณี 1: สร้างงานใหม่ (ไม่มี originalSlug) แต่ดันไปตั้งชื่อซ้ำกับที่มีอยู่
+      // กรณี 1: สร้างงานใหม่ แต่ชื่อซ้ำ
       if (!originalSlug) {
         return NextResponse.json({ error: "Slug (URL) นี้ถูกใช้งานแล้ว โปรดตั้งชื่ออื่น" }, { status: 409 });
       }
-
-      // กรณี 2: แก้ไขงานเดิม แต่เปลี่ยนชื่อ URL ไปซ้ำกับงานอื่น
-      // (เช็คว่า newSlug ไม่ใช่ชื่อเดิมของตัวเอง)
+      // กรณี 2: แก้ไขงานเดิม แต่เปลี่ยนชื่อไปซ้ำกับคนอื่น
       if (originalSlug && newSlug !== originalSlug) {
         return NextResponse.json({ error: "Slug (URL) นี้ถูกใช้งานแล้ว โปรดตั้งชื่ออื่น" }, { status: 409 });
       }
@@ -60,16 +59,18 @@ export async function POST(request) {
 
     // 🔥 2. จัดการเรื่องวันที่ (Date Logic)
     if (body.createdAt) {
-      // ถ้าฟอร์มส่งวันที่มา (จากการเลือกใน Input Date) ให้ใช้ค่านั้น
       updateData.createdAt = new Date(body.createdAt);
     } else {
-      // ถ้าไม่ได้ส่งมา (กรณีกันเหนียว) และเป็นงานใหม่ ให้ใช้วันที่ปัจจุบัน
       if (!originalSlug) {
         updateData.createdAt = new Date();
       }
     }
-    
-    // 🔥 3. บันทึกลง Database
+
+    // 🔥 3. เพิ่มเติม: บังคับให้ Checkbox เป็น Boolean (กันไว้ดีกว่าแก้)
+    updateData.isCertificate = Boolean(body.isCertificate);
+    updateData.isBest = Boolean(body.isBest);
+
+    // 🔥 4. บันทึกลง Database
     const filter = { slug: originalSlug || newSlug };
 
     await db.collection(COLLECTION_NAME).updateOne(
@@ -84,7 +85,6 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
 // ✅ DELETE: เหมือนเดิม
 export async function DELETE(request) {
   try {
