@@ -36,6 +36,21 @@ const Year = ({ children }) => (
 
 // --- Data Section ---
 const journeyData = {
+  freelance: [
+    {
+      company: "Water Vending Machine System (IoT Commercial Project)",
+      icon: <FaBriefcase />,
+      duration: <Year>2567-2568</Year>,
+      description: "Implemented and maintained IoT systems for over 70 commercial vending units. Focused on hardware reliability and stable network connectivity in residential environments.",
+      details: [
+        "Hardware: PCB assembly, soldering, and chip-level troubleshooting for control boards.",
+        "Network: SIM-based IoT configuration and IP management for machine-to-server communication.",
+        "System: On-site troubleshooting and API integration testing with the backend team.",
+        "Scale: Successfully deployed 70+ operational units."
+      ],
+      type: "default"
+    },
+  ],
   experience: [
     {
       company: "Smart Plug IoT Project",
@@ -67,7 +82,7 @@ const journeyData = {
     },
     {
       company: "Line Following Robot (Digital Logic Project)",
-      icon: <FaCarSide />, 
+      icon: <FaCarSide />,
       duration: <Year>2567</Year>,
       description: "Designed a microcontroller-free robot using pure Logic Gates (ICs). Optimized complex control circuits using 5-variable K-Map to process sensor signals for precise navigation.",
       type: "default"
@@ -175,11 +190,18 @@ const Cards = () => {
   return (
     <section className="w-full max-w-7xl mx-auto px-4 py-8">
       <Tabs
-        defaultValue="experience"
+        defaultValue="freelance"// ตั้งค่าแท็บเริ่มต้นเป็น "freelance"
         className="flex flex-col items-center w-full"
       >
         {/* TabsList */}
+
         <TabsList className="flex flex-wrap justify-center gap-2 bg-white/50 backdrop-blur-md border border-gray-200 p-2 rounded-full mb-12 shadow-sm sticky top-4 z-10">
+          <TabsTrigger
+            value="freelance"
+            className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-accent data-[state=active]:shadow-md transition-all duration-300"
+          >
+            Freelance
+          </TabsTrigger>
           <TabsTrigger
             value="experience"
             className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-accent data-[state=active]:shadow-md transition-all duration-300"
