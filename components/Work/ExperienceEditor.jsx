@@ -34,7 +34,8 @@ export default function ExperienceEditor({ slug }) {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [passwordInput, setPasswordInput] = useState("");
-
+    const [showZoomBar, setShowZoomBar] = useState(false);
+    const [zoomLevel, setZoomLevel] = useState(100);
     const [editMode, setEditMode] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItemIndex, setEditingItemIndex] = useState(null);
@@ -42,6 +43,7 @@ export default function ExperienceEditor({ slug }) {
     const [isZoomed, setIsZoomed] = useState(false);
     const [formData, setFormData] = useState({ title: "", description: "", img: "", category: "" });
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
     // --- ✅ [ใหม่ 1] เพิ่ม State สำหรับเช็คสถานะการลาก ---
     const [isDragging, setIsDragging] = useState(false);
     const processFile = (file) => {
@@ -600,96 +602,142 @@ export default function ExperienceEditor({ slug }) {
                             </div>
                         </div>
                     )}
-
                     {viewingItem && (
                         <div
-                            className="fixed inset-0 bg-black/95 z-[10000] flex items-center justify-center p-4 backdrop-blur-lg animate-in fade-in duration-300"
-                            onClick={() => { setViewingItem(null); setIsZoomed(false); }} // ✅ รีเซ็ตซูมเมื่อปิด
+                            className="fixed inset-0 bg-black/98 z-[10000] flex items-center justify-center backdrop-blur-md animate-in fade-in duration-500"
+                            onClick={() => {
+                                setViewingItem(null);
+                                setZoomLevel(100);
+                                setShowZoomBar(false);
+                                setIsDescExpanded(false);
+                            }}
                         >
                             <div
-                                className="bg-white rounded-[2rem] overflow-hidden w-full max-w-[90vw] h-[85vh] flex flex-col relative shadow-2xl animate-in zoom-in-95 duration-300"
+                                className="bg-[#0a0a0a] md:rounded-[2.5rem] overflow-hidden w-full max-w-[100vw] md:max-w-[90vw] h-full md:h-[92vh] flex flex-col md:flex-row relative shadow-2xl"
                                 onClick={e => e.stopPropagation()}
                             >
+                                {/* ปุ่มปิด Modal หลัก */}
                                 <button
-                                    onClick={() => { setViewingItem(null); setIsZoomed(false); }}
-                                    className="absolute top-4 right-4 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-red-500 transition shadow-lg backdrop-blur-sm"
+                                    onClick={() => { setViewingItem(null); setZoomLevel(100); setShowZoomBar(false); }}
+                                    className="absolute top-4 right-4 z-50 p-3 bg-black/40 text-white rounded-full backdrop-blur-xl border border-white/10"
                                 >
                                     <CloseIcon />
                                 </button>
 
-                                {/* --- Layout: เปลี่ยนเป็น Flex Row เพื่อแบ่งซ้ายขวา --- */}
-                                <div className="flex flex-col md:flex-row h-full">
+                                {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Dominant Area) --- */}
+                             {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Image Area) --- */}
+<div className="relative w-full md:w-[70%] h-[70vh] md:h-full bg-black flex-shrink-0 overflow-hidden group">
+  
+  {/* [1] ปุ่มเปิด-ปิดแถบซูม: ไว้ที่มุมขวาล่างตามเดิม */}
+  <button 
+    onClick={() => setShowZoomBar(!showZoomBar)}
+    className={`absolute bottom-6 right-6 z-[110] p-4 rounded-2xl transition-all duration-300 flex items-center gap-2 border ${
+      showZoomBar 
+      ? 'bg-[#7edad2] text-[#0a0a0a] border-[#7edad2] shadow-[0_0_20px_rgba(126,218,210,0.4)]' 
+      : 'bg-white/10 text-white border-white/10 backdrop-blur-md hover:bg-white/20'
+    }`}
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+    </svg>
+    <span className="text-[10px] font-black uppercase tracking-tighter">
+      {showZoomBar ? 'Hide' : 'Zoom'}
+    </span>
+  </button>
 
-                                    {/* ✅ ส่วนที่ 1: พื้นที่รูปภาพ (แก้ใหม่) */}
-                                    <div className="relative w-full md:w-3/4 h-[50vh] md:h-full bg-black border-r border-gray-800 overflow-hidden">
+  {/* [2] แถบหลอดซูม: แก้จาก bottom-6 เป็น bottom-24 เพื่อให้ลอยอยู่เหนือปุ่มกด */}
+  {showZoomBar && (
+    <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-4 bg-black/90 backdrop-blur-2xl px-5 py-3 rounded-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-bottom-4 duration-300 w-[90%] max-w-[320px] md:max-w-none md:w-auto">
+      <button 
+        onClick={() => setZoomLevel(prev => Math.max(100, prev - 50))}
+        className="text-white font-bold text-xl w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+      > − </button>
+      
+      <input 
+        type="range" min="100" max="300" step="50" 
+        value={zoomLevel}
+        onChange={(e) => setZoomLevel(parseInt(e.target.value))}
+        className="flex-1 md:w-48 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#7edad2]"
+      />
+      
+      <button 
+        onClick={() => setZoomLevel(prev => Math.min(300, prev + 50))}
+        className="text-white font-bold text-xl w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+      > + </button>
+      
+      <span className="text-[#7edad2] text-[10px] font-black min-w-[35px] text-right">
+        {zoomLevel}%
+      </span>
+    </div>
+  )}
 
-                                        {/* Wrapper สำหรับ Scroll: จัดการการเลื่อนเมื่อซูม */}
-                                        <div
-                                            className={`w-full h-full overflow-auto flex items-center justify-center custom-scrollbar ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
-                                            onClick={() => setIsZoomed(!isZoomed)}
-                                        >
-                                            {/* ตัวรูปภาพ */}
-                                            <div
-                                                className={`relative transition-all duration-300 ease-in-out flex-shrink-0 ${isZoomed
-                                                    ? 'w-[150%] h-[150%]' // ซูม: ขยายพื้นที่ 1.5 เท่า
-                                                    : 'w-full h-full p-4' // ปกติ: เต็มจอ + มีขอบนิดหน่อยให้ดูไม่อึดอัด
-                                                    }`}
-                                            >
-                                                {viewingItem.img ? (
-                                                    <Image
-                                                        src={viewingItem.img}
-                                                        alt={viewingItem.title}
-                                                        fill
-                                                        className="object-contain" // ✅ สำคัญ: จัดรูปให้อยู่ในกรอบเสมอ สัดส่วนไม่เพี้ยน
-                                                        priority
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                                        No Image
-                                                    </div>
-                                                )}
-                                            </div>
+  {/* [3] พื้นที่ Scroll รูปภาพ */}
+  <div className="w-full h-full overflow-auto custom-scrollbar">
+    <div
+      className="flex items-center justify-center min-w-full min-h-full transition-all duration-300 ease-out"
+      style={{ 
+        width: `${zoomLevel}%`, 
+        height: `${zoomLevel}%`,
+        cursor: zoomLevel > 100 ? 'grab' : 'default' 
+      }}
+    >
+      <div className="relative w-full h-full p-8 md:p-12">
+        <Image 
+          src={viewingItem.img} 
+          alt={viewingItem.title} 
+          fill 
+          className="object-contain" 
+          priority 
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* เงาดำขอบจอ Vignette (แสดงเฉพาะตอนไม่ซูม) */}
+  {zoomLevel === 100 && (
+    <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_100px_rgba(0,0,0,0.9)]"></div>
+  )}
+</div>
+
+                                {/* --- ส่วนที่ 2: เนื้อหา (เว้นบรรทัดตามเดิม + Read more) --- */}
+                                <div className="w-full md:w-[30%] bg-[#111] p-6 md:p-10 overflow-y-auto border-t md:border-t-0 md:border-l border-white/10 z-20 flex flex-col">
+                                    <div className="flex-1 text-left">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#7edad2] animate-pulse"></span>
+                                            <span className="text-[#7edad2] text-[10px] font-bold tracking-[0.2em] uppercase">Lab List</span>
                                         </div>
 
-                                        {/* ปุ่ม Hint ลอยอยู่ด้านล่าง */}
-                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white/80 text-xs px-4 py-1.5 rounded-full pointer-events-none border border-white/10">
-                                            {isZoomed ? 'คลิกเพื่อย่อ' : 'คลิกเพื่อซูม'}
-                                        </div>
-                                    </div>
+                                        <h2 className="text-xl md:text-2xl font-bold text-white mb-4 leading-tight">
+                                            {viewingItem.title}
+                                        </h2>
 
-                                    {/* ✅ ส่วนที่ 2: พื้นที่เนื้อหา (ลดลงเหลือ 1/4 หรือ 25%) 
-                   - ใส่ border-l เพื่อแบ่งเขต
-                */}
-                                    <div className="w-full md:w-1/4 bg-white p-6 md:p-8 overflow-y-auto border-l border-gray-100 flex flex-col shadow-[-10px_0_20px_rgba(0,0,0,0.05)] z-10">
-                                        <div>
-                                            <span className="inline-block px-3 py-1 rounded-full bg-[#7edad2]/10 text-[#7edad2] text-xs font-bold mb-4">
-                                                DETAILS
-                                            </span>
-                                            <h2 className="text-2xl font-bold text-gray-800 mb-4 leading-tight">
-                                                {viewingItem.title}
-                                            </h2>
-                                            <div className="w-10 h-1 bg-[#7edad2] rounded-full mb-6"></div>
-
-                                            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+                                        <div className="relative">
+                                            {/* whitespace-pre-wrap สำหรับรายการ LAB-26, 27... */}
+                                            <p className={`text-gray-400 text-sm md:text-base leading-relaxed whitespace-pre-wrap transition-all duration-500 ${!isDescExpanded ? 'line-clamp-[5] md:line-clamp-none' : ''}`}>
                                                 {viewingItem.description}
                                             </p>
-                                        </div>
 
-                                        {/* ปุ่ม Link (ถ้ามี) */}
-                                        {viewingItem.link && (
-                                            <div className="mt-8 pt-6 border-t border-gray-100">
-                                                <a
-                                                    href={viewingItem.link}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="block w-full text-center bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-[#7edad2] transition-colors shadow-lg shadow-gray-200"
-                                                >
-                                                    เปิดลิงก์เพิ่มเติม
-                                                </a>
-                                            </div>
-                                        )}
+                                            <button
+                                                onClick={() => setIsDescExpanded(!isDescExpanded)}
+                                                className="md:hidden text-[#7edad2] text-[11px] font-black mt-4 flex items-center gap-2 py-2 px-4 bg-white/5 rounded-lg border border-white/10 uppercase tracking-widest"
+                                            >
+                                                {isDescExpanded ? 'Close List ▲' : 'Open Lab List ▼'}
+                                            </button>
+                                        </div>
                                     </div>
 
+                                    {viewingItem.link && (
+                                        <div className="mt-8 pt-6 border-t border-white/5">
+                                            <a
+                                                href={viewingItem.link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 w-full bg-[#7edad2] text-[#0a0a0a] py-4 rounded-xl font-bold text-xs tracking-widest uppercase transition-transform active:scale-95 shadow-lg shadow-[#7edad2]/10"
+                                            >
+                                                Access Course
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
