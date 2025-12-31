@@ -624,80 +624,70 @@ export default function ExperienceEditor({ slug }) {
                                     <CloseIcon />
                                 </button>
 
-                                {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Dominant Area) --- */}
-                             {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Image Area) --- */}
-<div className="relative w-full md:w-[70%] h-[70vh] md:h-full bg-black flex-shrink-0 overflow-hidden group">
-  
-  {/* [1] ปุ่มเปิด-ปิดแถบซูม: ไว้ที่มุมขวาล่างตามเดิม */}
-  <button 
-    onClick={() => setShowZoomBar(!showZoomBar)}
-    className={`absolute bottom-6 right-6 z-[110] p-4 rounded-2xl transition-all duration-300 flex items-center gap-2 border ${
-      showZoomBar 
-      ? 'bg-[#7edad2] text-[#0a0a0a] border-[#7edad2] shadow-[0_0_20px_rgba(126,218,210,0.4)]' 
-      : 'bg-white/10 text-white border-white/10 backdrop-blur-md hover:bg-white/20'
-    }`}
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-    </svg>
-    <span className="text-[10px] font-black uppercase tracking-tighter">
-      {showZoomBar ? 'Hide' : 'Zoom'}
-    </span>
-  </button>
+                                {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
+                                <div className="relative w-full md:w-[70%] h-[70vh] md:h-full bg-black flex-shrink-0 overflow-hidden group">
 
-  {/* [2] แถบหลอดซูม: แก้จาก bottom-6 เป็น bottom-24 เพื่อให้ลอยอยู่เหนือปุ่มกด */}
-  {showZoomBar && (
-    <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-4 bg-black/90 backdrop-blur-2xl px-5 py-3 rounded-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-bottom-4 duration-300 w-[90%] max-w-[320px] md:max-w-none md:w-auto">
-      <button 
-        onClick={() => setZoomLevel(prev => Math.max(100, prev - 50))}
-        className="text-white font-bold text-xl w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
-      > − </button>
-      
-      <input 
-        type="range" min="100" max="300" step="50" 
-        value={zoomLevel}
-        onChange={(e) => setZoomLevel(parseInt(e.target.value))}
-        className="flex-1 md:w-48 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#7edad2]"
-      />
-      
-      <button 
-        onClick={() => setZoomLevel(prev => Math.min(300, prev + 50))}
-        className="text-white font-bold text-xl w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
-      > + </button>
-      
-      <span className="text-[#7edad2] text-[10px] font-black min-w-[35px] text-right">
-        {zoomLevel}%
-      </span>
-    </div>
-  )}
+                                    {/* [1] กลุ่มปุ่มซูม (+/-) : วางไว้มุมขวาล่างให้กดง่ายๆ */}
+                                    <div className="absolute bottom-6 right-6 z-[110] flex flex-col gap-2">
+                                        {/* ปุ่มซูมเข้า (+) */}
+                                        <button
+                                            onClick={() => setZoomLevel(prev => Math.min(300, prev + 50))}
+                                            className="p-4 bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 hover:bg-[#7edad2] hover:text-[#0a0a0a] transition-all shadow-xl active:scale-90"
+                                            title="Zoom In"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        </button>
 
-  {/* [3] พื้นที่ Scroll รูปภาพ */}
-  <div className="w-full h-full overflow-auto custom-scrollbar">
-    <div
-      className="flex items-center justify-center min-w-full min-h-full transition-all duration-300 ease-out"
-      style={{ 
-        width: `${zoomLevel}%`, 
-        height: `${zoomLevel}%`,
-        cursor: zoomLevel > 100 ? 'grab' : 'default' 
-      }}
-    >
-      <div className="relative w-full h-full p-8 md:p-12">
-        <Image 
-          src={viewingItem.img} 
-          alt={viewingItem.title} 
-          fill 
-          className="object-contain" 
-          priority 
-        />
-      </div>
-    </div>
-  </div>
+                                        {/* ปุ่มซูมออก (-) */}
+                                        <button
+                                            onClick={() => setZoomLevel(prev => Math.max(100, prev - 50))}
+                                            className="p-4 bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 hover:bg-red-500/80 transition-all shadow-xl active:scale-90"
+                                            title="Zoom Out"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+                                            </svg>
+                                        </button>
+                                    </div>
 
-  {/* เงาดำขอบจอ Vignette (แสดงเฉพาะตอนไม่ซูม) */}
-  {zoomLevel === 100 && (
-    <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_100px_rgba(0,0,0,0.9)]"></div>
-  )}
-</div>
+                                    {/* [2] ตัวเลขแสดงระดับการซูม (ลอยอยู่ตรงกลางล่างจางๆ) */}
+                                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[100] pointer-events-none">
+                                        <span className="text-white/30 text-[10px] font-black tracking-[0.3em] uppercase bg-white/5 px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
+                                            Scale: {zoomLevel}%
+                                        </span>
+                                    </div>
+
+                                    {/* [3] พื้นที่ Scroll รูปภาพ */}
+                                    <div className="w-full h-full overflow-auto custom-scrollbar">
+                                        <div
+                                            className="flex items-center justify-center min-w-full min-h-full transition-all duration-300 ease-out"
+                                            style={{
+                                                width: `${zoomLevel}%`,
+                                                height: `${zoomLevel}%`,
+                                                cursor: zoomLevel > 100 ? 'grab' : 'zoom-in'
+                                            }}
+                                            // คลิกที่รูปเพื่อสลับระหว่าง 100% กับ 200% ได้ด้วย
+                                            onClick={() => setZoomLevel(zoomLevel === 100 ? 200 : 100)}
+                                        >
+                                            <div className="relative w-full h-full p-8 md:p-12">
+                                                <Image
+                                                    src={viewingItem.img}
+                                                    alt={viewingItem.title}
+                                                    fill
+                                                    className="object-contain"
+                                                    priority
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* เงาดำขอบจอ Vignette (แสดงเฉพาะตอน 100%) */}
+                                    {zoomLevel === 100 && (
+                                        <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_120px_rgba(0,0,0,0.9)]"></div>
+                                    )}
+                                </div>
 
                                 {/* --- ส่วนที่ 2: เนื้อหา (เว้นบรรทัดตามเดิม + Read more) --- */}
                                 <div className="w-full md:w-[30%] bg-[#111] p-6 md:p-10 overflow-y-auto border-t md:border-t-0 md:border-l border-white/10 z-20 flex flex-col">
