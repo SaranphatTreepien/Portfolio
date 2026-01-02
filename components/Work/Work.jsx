@@ -221,13 +221,13 @@ export default function Work() {
   const tabData = [
     { category: "all" },
     { category: "Best" },        // ✅ 1. เพิ่ม Tab "Best" ตรงนี้ (ให้เป็นอันดับ 2 รองจาก all)
-    { category: "Certificate" }, 
-    
+    { category: "Certificate" },
+
     ...uniqueCategories.map((category) => ({ category }))
   ];
 
   // 3. แก้เงื่อนไขการกรอง (Filter)
- const filterWork = projects
+  const filterWork = projects
     .filter((item) => {
       if (tabValue === "all") return true;
       if (tabValue === "Best") return item.isBest === true; // ✅ 2. เพิ่ม Logic กรองเฉพาะงานที่มีดาว (isBest)
@@ -238,7 +238,7 @@ export default function Work() {
       // ✅ Logic การเรียงลำดับ (เอา Best ขึ้นก่อนเสมอ ในทุกๆ Tab)
       if (a.isBest === true && b.isBest !== true) return -1;
       if (a.isBest !== true && b.isBest === true) return 1;
-      
+
       // ถ้าสถานะเหมือนกัน ให้เรียงตามวันที่ (ใหม่สุดขึ้นก่อน)
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
@@ -353,6 +353,11 @@ export default function Work() {
   // ✅ [UPDATED] บันทึกข้อมูล (อัปโหลดรูปก่อน แล้วค่อยเซฟลง DB)
   const handleSaveProject = async (e) => {
     e.preventDefault();
+    // ✅ เช็คเพิ่มตรงนี้: ถ้า slug ว่าง หรือมีแต่ช่องว่าง
+    if (!formData.slug || formData.slug.trim() === "") {
+      showToast("กรุณาระบุ Slug สำหรับ URL ด้วยครับ", "error");
+      return; // หยุดการทำงาน ไม่ให้บันทึก
+    }
     setIsSaving(true);
 
     try {
@@ -779,8 +784,17 @@ export default function Work() {
                         <input required placeholder="เช่น 2569" readOnly className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
-                        <input required placeholder="eng-only-no-space" className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all" value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
+                        <label className="flex justify-between items-end mb-1">
+                          <span className="text-sm font-medium text-gray-700">Slug (URL)</span>
+                          <span className="text-xs text-red-500 font-normal">*ห้ามมีช่องว่าง</span>
+                        </label>
+                        <input
+                          required
+                          placeholder="eng-only-no-space"
+                          className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#7edad2]/20 outline-none border-gray-200 text-black transition-all"
+                          value={formData.slug}
+                          onChange={e => setFormData({ ...formData, slug: e.target.value.replace(/\s+/g, '') })} // เพิ่ม logic ป้องกันการพิมพ์ช่องว่าง
+                        />
                       </div>
                       {/* ✅ เพิ่มช่องวันที่ตรงนี้ (วางต่อจาก Grid ด้านบน) */}
                       <div>

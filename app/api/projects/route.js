@@ -39,40 +39,44 @@ export async function POST(request) {
       return NextResponse.json({ error: "Slug is required" }, { status: 400 });
     }
 
-    // แยก _id และ originalSlug ออกจากข้อมูลที่จะอัปเดต
     const { _id, originalSlug, ...updateData } = body;
     const newSlug = body.slug;
 
-    // 🔥 1. ตรวจสอบ Slug ซ้ำ
+    // 🔥 1. ตรวจสอบ Slug ซ้ำ (เหมือนเดิม)
     const existingProject = await db.collection(COLLECTION_NAME).findOne({ slug: newSlug });
-
     if (existingProject) {
-      // กรณี 1: สร้างงานใหม่ แต่ชื่อซ้ำ
       if (!originalSlug) {
         return NextResponse.json({ error: "Slug (URL) นี้ถูกใช้งานแล้ว โปรดตั้งชื่ออื่น" }, { status: 409 });
       }
-      // กรณี 2: แก้ไขงานเดิม แต่เปลี่ยนชื่อไปซ้ำกับคนอื่น
       if (originalSlug && newSlug !== originalSlug) {
         return NextResponse.json({ error: "Slug (URL) นี้ถูกใช้งานแล้ว โปรดตั้งชื่ออื่น" }, { status: 409 });
       }
     }
 
-    // 🔥 2. จัดการเรื่องวันที่ (Date Logic)
+    // 🔥 2. จัดการเรื่องวันที่ (เหมือนเดิม)
     if (body.createdAt) {
       updateData.createdAt = new Date(body.createdAt);
-    } else {
-      if (!originalSlug) {
-        updateData.createdAt = new Date();
-      }
+    } else if (!originalSlug) {
+      updateData.createdAt = new Date();
     }
 
-    // 🔥 3. เพิ่มเติม: บังคับให้ Checkbox เป็น Boolean (กันไว้ดีกว่าแก้)
-    updateData.isCertificate = Boolean(body.isCertificate);
-    updateData.isBest = Boolean(body.isBest);
+    // 🔥 3. ปรับปรุงใหม่: ตรวจสอบการมีอยู่ของฟิลด์ก่อนเซฟ
+    // เราจะไม่ใช้ Boolean(body.isBest) ตรงๆ เพราะถ้าค่าไม่มีมันจะกลายเป็น false
+    // เราจะเซฟเฉพาะตอนที่หน้า Dashboard ส่งค่านั้นมาจริงๆ เท่านั้น
+
+    if (Object.prototype.hasOwnProperty.call(body, 'isCertificate')) {
+      updateData.isCertificate = Boolean(body.isCertificate);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, 'isBest')) {
+      updateData.isBest = Boolean(body.isBest);
+    }
 
     // 🔥 4. บันทึกลง Database
     const filter = { slug: originalSlug || newSlug };
 
+    // ใช้ $set: updateData หมายถึง "อัปเดตเฉพาะฟิลด์ที่ส่งมา" 
+    // ค่าอื่นๆ ที่อยู่ใน DB อยู่แล้ว (เช่น isBest ที่ไม่ได้ส่งมาในรอบนี้) จะไม่หายไป
     await db.collection(COLLECTION_NAME).updateOne(
       filter,
       { $set: updateData },

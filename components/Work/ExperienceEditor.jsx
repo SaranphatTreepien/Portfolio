@@ -149,9 +149,6 @@ export default function ExperienceEditor({ slug }) {
             setIsLoading(false);
         }
     };
-
-
-
     const showToast = (message, type = "success") => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast({ ...toast, show: false }), 3000);
@@ -190,23 +187,31 @@ export default function ExperienceEditor({ slug }) {
         e.preventDefault();
         setIsSaving(true);
         try {
-            // 1. เช็คว่ามีการเปลี่ยนรูปไหม? ถ้ามีให้อัปโหลดใหม่ ถ้าไม่มีใช้ Link เดิม
+            // 1. เช็คเรื่องรูปภาพ
             let imageUrl = formData.img;
             if (selectedFile) {
                 imageUrl = await uploadToCloudinary(selectedFile);
             }
 
-            // 2. ส่งข้อมูลเข้า DB (ส่ง URL ไป)
+            // 2. เตรียมข้อมูลเข้า DB
             const payload = {
+                // ✅ ขั้นตอนสำคัญ: ดึงข้อมูลเดิมที่มีอยู่ในโปรเจกต์มาทั้งหมดก่อน (รวม isBest, isCertificate)
+                ...project,
+
+                // ✅ เอาค่าที่ได้จากฟอร์ม (Title, Description) มาทับค่าเดิม
                 ...formData,
-                img: imageUrl, // ใช้ URL ใหม่ (หรือเก่า)
-                slug,
+
+                img: imageUrl,
+                slug: slug,
                 originalSlug: slug
             };
 
+            // 3. บันทึกลง Database
             await saveToDatabase(payload, "อัปเดตข้อมูลปกเรียบร้อย");
 
-            setProject({ ...project, ...payload });
+            // 4. อัปเดต State ในหน้าจอให้มีค่าครบถ้วน
+            setProject(payload);
+
             setIsModalOpen(false);
         } catch (error) {
             console.error(error);
@@ -215,13 +220,11 @@ export default function ExperienceEditor({ slug }) {
             setIsSaving(false);
         }
     };
-
     const handleSaveItem = async (e) => {
         e.preventDefault();
         setIsSaving(true);
 
         try {
-            // 1. เช็คว่ามีการเปลี่ยนรูปไหม?
             let imageUrl = formData.img;
             if (selectedFile) {
                 imageUrl = await uploadToCloudinary(selectedFile);
@@ -624,70 +627,70 @@ export default function ExperienceEditor({ slug }) {
                                     <CloseIcon />
                                 </button>
 
- {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
-<div className="relative w-full md:w-[70%] h-[70vh] md:h-full bg-black flex-shrink-0 overflow-hidden group">
-  
-  {/* [1] กลุ่มปุ่มซูม (+/-) : วางไว้มุมขวาล่างให้กดง่ายๆ */}
-  <div className="absolute bottom-6 right-6 z-[110] flex flex-col gap-2">
-    {/* ปุ่มซูมเข้า (+) */}
-    <button 
-      onClick={() => setZoomLevel(prev => Math.min(300, prev + 50))}
-      className="p-4 bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 hover:bg-[#7edad2] hover:text-[#0a0a0a] transition-all shadow-xl active:scale-90"
-      title="Zoom In"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-      </svg>
-    </button>
+                                {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
+                                <div className="relative w-full md:w-[70%] h-[70vh] md:h-full bg-black flex-shrink-0 overflow-hidden group">
 
-    {/* ปุ่มซูมออก (-) */}
-    <button 
-      onClick={() => setZoomLevel(prev => Math.max(100, prev - 50))}
-      className="p-4 bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 hover:bg-red-500/80 transition-all shadow-xl active:scale-90"
-      title="Zoom Out"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
-      </svg>
-    </button>
-  </div>
+                                    {/* [1] กลุ่มปุ่มซูม (+/-) : วางไว้มุมขวาล่างให้กดง่ายๆ */}
+                                    <div className="absolute bottom-6 right-6 z-[110] flex flex-col gap-2">
+                                        {/* ปุ่มซูมเข้า (+) */}
+                                        <button
+                                            onClick={() => setZoomLevel(prev => Math.min(300, prev + 50))}
+                                            className="p-4 bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 hover:bg-[#7edad2] hover:text-[#0a0a0a] transition-all shadow-xl active:scale-90"
+                                            title="Zoom In"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        </button>
 
-  {/* [2] ตัวเลขแสดงระดับการซูม (ลอยอยู่ตรงกลางล่างจางๆ) */}
-  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[100] pointer-events-none">
-    <span className="text-white/30 text-[10px] font-black tracking-[0.3em] uppercase bg-white/5 px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
-      Scale: {zoomLevel}%
-    </span>
-  </div>
+                                        {/* ปุ่มซูมออก (-) */}
+                                        <button
+                                            onClick={() => setZoomLevel(prev => Math.max(100, prev - 50))}
+                                            className="p-4 bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 hover:bg-red-500/80 transition-all shadow-xl active:scale-90"
+                                            title="Zoom Out"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+                                            </svg>
+                                        </button>
+                                    </div>
 
-  {/* [3] พื้นที่ Scroll รูปภาพ */}
-  <div className="w-full h-full overflow-auto custom-scrollbar">
-    <div
-      className="flex items-center justify-center min-w-full min-h-full transition-all duration-300 ease-out"
-      style={{ 
-        width: `${zoomLevel}%`, 
-        height: `${zoomLevel}%`,
-        cursor: zoomLevel > 100 ? 'grab' : 'zoom-in' 
-      }}
-      // คลิกที่รูปเพื่อสลับระหว่าง 100% กับ 200% ได้ด้วย
-      onClick={() => setZoomLevel(zoomLevel === 100 ? 200 : 100)}
-    >
-      <div className="relative w-full h-full p-8 md:p-12">
-        <Image 
-          src={viewingItem.img} 
-          alt={viewingItem.title} 
-          fill 
-          className="object-contain" 
-          priority 
-        />
-      </div>
-    </div>
-  </div>
+                                    {/* [2] ตัวเลขแสดงระดับการซูม (ลอยอยู่ตรงกลางล่างจางๆ) */}
+                                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[100] pointer-events-none">
+                                        <span className="text-white/30 text-[10px] font-black tracking-[0.3em] uppercase bg-white/5 px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
+                                            Scale: {zoomLevel}%
+                                        </span>
+                                    </div>
 
-  {/* เงาดำขอบจอ Vignette (แสดงเฉพาะตอน 100%) */}
-  {zoomLevel === 100 && (
-    <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_120px_rgba(0,0,0,0.9)]"></div>
-  )}
-</div>
+                                    {/* [3] พื้นที่ Scroll รูปภาพ */}
+                                    <div className="w-full h-full overflow-auto custom-scrollbar">
+                                        <div
+                                            className="flex items-center justify-center min-w-full min-h-full transition-all duration-300 ease-out"
+                                            style={{
+                                                width: `${zoomLevel}%`,
+                                                height: `${zoomLevel}%`,
+                                                cursor: zoomLevel > 100 ? 'grab' : 'zoom-in'
+                                            }}
+                                            // คลิกที่รูปเพื่อสลับระหว่าง 100% กับ 200% ได้ด้วย
+                                            onClick={() => setZoomLevel(zoomLevel === 100 ? 200 : 100)}
+                                        >
+                                            <div className="relative w-full h-full p-8 md:p-12">
+                                                <Image
+                                                    src={viewingItem.img}
+                                                    alt={viewingItem.title}
+                                                    fill
+                                                    className="object-contain"
+                                                    priority
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* เงาดำขอบจอ Vignette (แสดงเฉพาะตอน 100%) */}
+                                    {zoomLevel === 100 && (
+                                        <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_120px_rgba(0,0,0,0.9)]"></div>
+                                    )}
+                                </div>
 
                                 {/* --- ส่วนที่ 2: เนื้อหา (เว้นบรรทัดตามเดิม + Read more) --- */}
                                 <div className="w-full md:w-[30%] bg-[#111] p-6 md:p-10 overflow-y-auto border-t md:border-t-0 md:border-l border-white/10 z-20 flex flex-col">
