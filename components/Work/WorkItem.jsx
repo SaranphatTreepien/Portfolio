@@ -27,10 +27,10 @@ const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate, 
 
           {/* ✅ Badge Theme: Rose Pink (แดงชมพู) */}
           {/* ✅ Badge Theme: Rose Pink + Active Hover Effects */}
-         {/* ✅ Badge Theme: Solid Gold (พื้นเหลือง) + Active Hover Effects */}
-{isBest && (
-  <div className="absolute bottom-4 left-4 z-20">
-    <div className="
+          {/* ✅ Badge Theme: Solid Gold (พื้นเหลือง) + Active Hover Effects */}
+          {isBest && (
+            <div className="absolute bottom-4 left-4 z-20">
+              <div className="
       relative overflow-hidden cursor-default
       flex items-center gap-1.5 px-3 py-1.5 rounded-full 
       
@@ -47,16 +47,16 @@ const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate, 
       group-hover:shadow-[0_0_20px_0px_rgba(250,204,21,0.8)] /* เงาฟุ้งกระจาย */
     ">
 
-      {/* ✨ Shine Effect: แสงวิบวับวิ่งผ่าน (สีขาวจางๆ) */}
-      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-[200%] bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-1000 ease-in-out w-full h-full skew-x-12" />
+                {/* ✨ Shine Effect: แสงวิบวับวิ่งผ่าน (สีขาวจางๆ) */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-[200%] bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-1000 ease-in-out w-full h-full skew-x-12" />
 
-      {/* ⭐ Icon: ดาวสีเข้ม หมุนดุ๊กดิ๊กตอน Hover */}
-      <FiStar className="fill-yellow-950 text-yellow-950 w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
+                {/* ⭐ Icon: ดาวสีเข้ม หมุนดุ๊กดิ๊กตอน Hover */}
+                <FiStar className="fill-yellow-950 text-yellow-950 w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
 
-   
-    </div>
-  </div>
-)}
+
+              </div>
+            </div>
+          )}
 
           {/* Image */}
           <Image

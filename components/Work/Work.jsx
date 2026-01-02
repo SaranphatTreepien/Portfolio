@@ -497,7 +497,15 @@ export default function Work() {
 
 
 
-  if (loading) return <div className="pt-24 text-center animate-pulse text-[##7edad2]">กำลังโหลดข้อมูล...</div>;
+  if (loading) return (
+    <div className="pt-24 flex flex-col items-center justify-center gap-3">
+      {/* ไอคอนหมุนๆ สีเขียวมินต์ */}
+      <div className="w-8 h-8 border-4 border-[#7edad2]/20 border-t-[#7edad2] rounded-full animate-spin"></div>
+      <div className="text-center animate-pulse text-[#7edad2] font-semibold tracking-wide">
+        กำลังโหลดข้อมูล...
+      </div>
+    </div>
+  );
 
   return (
     <section className="pt-24 min-h-[1000px]" id="work">
