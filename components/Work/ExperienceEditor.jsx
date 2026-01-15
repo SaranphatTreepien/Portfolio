@@ -685,72 +685,55 @@ export default function ExperienceEditor({ slug }) {
                                 </button>
 
                                 {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
-                                <div className="relative w-full md:w-[70%] h-[70vh] md:h-full bg-black flex-shrink-0 overflow-hidden group">
+                                {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
+                                <div className="relative w-full md:w-[70%] h-[50vh] md:h-full bg-[#050505] flex-shrink-0 overflow-hidden group">
 
-                                    {/* [1] กลุ่มปุ่มซูม (+/-) : วางไว้มุมขวาล่างให้กดง่ายๆ */}
-                                    <div className="absolute bottom-6 right-6 z-[110] flex flex-col gap-2">
-                                        {/* ปุ่มซูมเข้า (+) */}
-                                        <button
-                                            onClick={() => setZoomLevel(prev => Math.min(300, prev + 50))}
-                                            className="p-4 bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 hover:bg-[#7edad2] hover:text-[#0a0a0a] transition-all shadow-xl active:scale-90"
-                                            title="Zoom In"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                                            </svg>
-                                        </button>
+                                    {/* ปุ่ม Zoom controls (ถ้ามี) วางตรงนี้ */}
 
-                                        {/* ปุ่มซูมออก (-) */}
-                                        <button
-                                            onClick={() => setZoomLevel(prev => Math.max(100, prev - 50))}
-                                            className="p-4 bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/10 hover:bg-red-500/80 transition-all shadow-xl active:scale-90"
-                                            title="Zoom Out"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    {/* [2] ตัวเลขแสดงระดับการซูม (ลอยอยู่ตรงกลางล่างจางๆ) */}
-                                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[100] pointer-events-none">
-                                        <span className="text-white/30 text-[10px] font-black tracking-[0.3em] uppercase bg-white/5 px-4 py-2 rounded-full backdrop-blur-sm border border-white/5">
-                                            Scale: {zoomLevel}%
-                                        </span>
-                                    </div>
-
-                                    {/* [3] พื้นที่ Scroll รูปภาพ */}
-                                    <div className="w-full h-full overflow-auto custom-scrollbar bg-[#050505]">
+                                    {/* พื้นที่ Scroll รูปภาพ */}
+                                    <div className="w-full h-full overflow-y-auto overflow-x-hidden custom-scrollbar snap-y snap-mandatory">
                                         <div
-                                            className="flex flex-col items-center min-w-full min-h-full gap-8 p-8 md:p-12" // เปลี่ยนจาก flex-row/justify-center เป็น flex-col
-                                            style={{ width: `${zoomLevel}%` }}
+                                            className="flex flex-col items-center min-w-full min-h-full py-8 md:py-12 gap-4 md:gap-8"
+                                            style={{ width: `${zoomLevel}%`, transition: zoomLevel === 100 ? 'width 0.3s' : 'none' }}
                                         >
-                                            {/* ✅ ปรับตรงนี้: Loop แสดงรูปภาพทั้งหมด */}
-                                            {Array.isArray(viewingItem.img) ? (
+                                            {Array.isArray(viewingItem.img) && viewingItem.img.length > 0 ? (
                                                 viewingItem.img.map((url, index) => (
-                                                    <div key={index} className="relative w-full aspect-video md:aspect-auto md:h-[80vh] flex-shrink-0">
-                                                        <Image
-                                                            src={url}
-                                                            alt={`${viewingItem.title}-${index}`}
-                                                            fill
-                                                            className="object-contain"
-                                                            priority={index === 0}
-                                                        />
+                                                    <div
+                                                        key={index}
+                                                        // ✅ แก้ไขบรรทัดนี้: บังคับความสูง h-[50vh] สำหรับมือถือ และ h-[85vh] สำหรับจอคอม
+                                                        className="relative w-full shrink-0 snap-center flex items-center justify-center p-2 h-[50vh] md:h-[85vh]"
+                                                    >
+                                                        <div className="relative w-full h-full rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/50">
+                                                            <Image
+                                                                src={url}
+                                                                alt={`${viewingItem.title}-${index + 1}`}
+                                                                fill
+                                                                className="object-contain"
+                                                                priority={index === 0}
+                                                            />
+                                                        </div>
+
+                                                        {/* ตัวเลขบอกลำดับภาพ */}
+                                                        {viewingItem.img.length > 1 && zoomLevel === 100 && (
+                                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-white/80 px-4 py-1.5 rounded-full text-sm font-medium border border-white/10 pointer-events-none z-20">
+                                                                {index + 1} / {viewingItem.img.length}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))
                                             ) : (
-                                                // กันเหนียว: ถ้าข้อมูลเก่าใน DB ยังเป็น string (รูปเดียว) ก็ให้โชว์แบบเดิม
-                                                <div className="relative w-full h-full">
-                                                    <Image src={viewingItem.img} alt={viewingItem.title} fill className="object-contain" priority />
+                                                // Fallback กรณีมีรูปเดียว หรือเป็น string
+                                                <div className="relative w-full h-[50vh] md:h-[85vh] p-4 flex items-center justify-center">
+                                                    <Image
+                                                        src={Array.isArray(viewingItem.img) ? (viewingItem.img[0] || "") : viewingItem.img}
+                                                        alt={viewingItem.title}
+                                                        fill
+                                                        className="object-contain"
+                                                    />
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-
-                                    {/* เงาดำขอบจอ Vignette (แสดงเฉพาะตอน 100%) */}
-                                    {zoomLevel === 100 && (
-                                        <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_120px_rgba(0,0,0,0.9)]"></div>
-                                    )}
                                 </div>
 
                                 {/* --- ส่วนที่ 2: เนื้อหา (เว้นบรรทัดตามเดิม + Read more) --- */}
