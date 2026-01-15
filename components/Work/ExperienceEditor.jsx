@@ -23,8 +23,10 @@ const Spinner = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="ht
 export default function ExperienceEditor({ slug }) {
     const router = useRouter();
     // ✅ 1. เพิ่ม State สำหรับเก็บไฟล์ที่เลือกรออัปโหลด
+    const [selectedFiles, setSelectedFiles] = useState([]); // เก็บ File objects
     const [selectedFile, setSelectedFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [imagePreviews, setImagePreviews] = useState([]);
     // --- State ---
     const [project, setProject] = useState(null);
     const [items, setItems] = useState([]);
@@ -46,14 +48,22 @@ export default function ExperienceEditor({ slug }) {
     const [isDescExpanded, setIsDescExpanded] = useState(false);
     // --- ✅ [ใหม่ 1] เพิ่ม State สำหรับเช็คสถานะการลาก ---
     const [isDragging, setIsDragging] = useState(false);
-    const processFile = (file) => {
-        if (!file) return;
-        if (!file.type.startsWith("image/")) {
+    const processFiles = (files) => {
+        if (!files || files.length === 0) return;
+
+        const newFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
+
+        if (newFiles.length === 0) {
             alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
             return;
         }
-        setSelectedFile(file);
-        setImagePreview(URL.createObjectURL(file));
+
+        // ✅ เพิ่มไฟล์ใหม่เข้าไปต่อจากไฟล์เดิม
+        setSelectedFiles(prev => [...prev, ...newFiles]);
+
+        // สร้าง Preview URLs สำหรับไฟล์ที่เพิ่มมาใหม่
+        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        setImagePreviews(prev => [...prev, ...newPreviews]);
     };
     // --- ✅ [ใหม่ 3] useEffect สำหรับดักจับ Ctrl+V (Paste) ---
     useEffect(() => {
@@ -89,10 +99,7 @@ export default function ExperienceEditor({ slug }) {
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragging(false);
-        const files = e.dataTransfer.files;
-        if (files && files.length > 0) {
-            processFile(files[0]);
-        }
+        processFiles(e.dataTransfer.files); // ส่งทั้งหมดที่ลากมา
     };
     // เพิ่ม state นี้ไว้เก็บรูปที่จะโชว์ใน Modal 
     // --- Load Data ---
@@ -103,8 +110,7 @@ export default function ExperienceEditor({ slug }) {
     // ✅ 2. ฟังก์ชันจัดการเมื่อเลือกไฟล์ (โชว์ Preview ทันที แต่ยังไม่อัปโหลด)
     // --- ฟังก์ชันเดิม ---
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        processFile(file); // เปลี่ยนมาใช้ฟังก์ชันกลาง
+        processFiles(e.target.files); // ส่งทั้งหมดที่เลือก
     };
 
     // ✅ 3. ฟังก์ชันอัปโหลดไป Cloudinary
@@ -225,28 +231,56 @@ export default function ExperienceEditor({ slug }) {
         setIsSaving(true);
 
         try {
-            let imageUrl = formData.img;
-            if (selectedFile) {
-                imageUrl = await uploadToCloudinary(selectedFile);
+            // --- ส่วนที่ 1: จัดการเรื่องรูปภาพ ---
+
+            // ดึงรูปเดิมที่มีอยู่แล้วใน DB มาตั้งต้น (ป้องกันรูปเก่าหาย)
+            // ถ้าเป็น Array อยู่แล้วก็ใช้เลย ถ้าเป็น string ก็จับใส่ [] ถ้าไม่มีก็เป็น []
+            let finalImageUrls = Array.isArray(formData.img)
+                ? [...formData.img]
+                : (formData.img ? [formData.img] : []);
+
+            // ถ้ามีการเลือกรูปใหม่ (รออัปโหลด)
+            if (selectedFiles && selectedFiles.length > 0) {
+                // อัปโหลดทุกรูปพร้อมกันด้วย Promise.all
+                const uploadPromises = selectedFiles.map(file => uploadToCloudinary(file));
+                const newUploadedUrls = await Promise.all(uploadPromises);
+
+                // เอา URL ใหม่ที่ได้จาก Cloudinary ไปต่อท้ายรูปเดิม
+                finalImageUrls = [...finalImageUrls, ...newUploadedUrls];
             }
 
-            // 2. เตรียมข้อมูลใหม่
-            const newItemData = { ...formData, img: imageUrl };
+            // --- ส่วนที่ 2: เตรียมข้อมูล Item ---
+
+            // สร้าง Object ข้อมูลใหม่ โดยเปลี่ยนช่อง img ให้เป็น Array (finalImageUrls)
+            const newItemData = { ...formData, img: finalImageUrls };
 
             let newItems = [...items];
             if (editingItemIndex !== null) {
+                // กรณี "แก้ไข": แทนที่ตำแหน่งเดิม
                 newItems[editingItemIndex] = newItemData;
             } else {
+                // กรณี "เพิ่มใหม่": เอาไว้บนสุด
                 newItems = [newItemData, ...items];
             }
 
-            // 3. บันทึกลง DB
-            await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "บันทึกเนื้อหาเรียบร้อย");
+            // --- ส่วนที่ 3: บันทึกลง Database ---
+
+            await saveToDatabase(
+                { slug, items: newItems, originalSlug: slug },
+                "บันทึกเนื้อหาเรียบร้อย"
+            );
+
+            // --- ส่วนที่ 4: อัปเดต UI และล้างค่า ---
 
             setItems(newItems);
             setIsModalOpen(false);
+
+            // ⚠️ สำคัญ: อย่าลืมล้างค่าไฟล์ที่เลือกไว้ด้วย เพื่อไม่ให้ติดไปตอนเพิ่ม Item ถัดไป
+            setSelectedFiles([]);
+            setImagePreviews([]);
+
         } catch (error) {
-            console.error(error);
+            console.error("Save Error:", error);
             showToast("เกิดข้อผิดพลาดในการบันทึก", "error");
         } finally {
             setIsSaving(false);
@@ -425,15 +459,20 @@ export default function ExperienceEditor({ slug }) {
                                     </div>
                                 )}
                                 <div className="relative w-full h-56 bg-gray-50 rounded-2xl overflow-hidden mb-5 border border-gray-100">
-                                    {item.img ? <Image
-                                        src={item.img}
-                                        alt="item"
-                                        fill
-                                        // ✅ เพิ่มบรรทัดนี้ครับ สำคัญมาก!
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                        className="object-cover group-hover:scale-110 transition-transform duration-700"
-                                    /> : <div className="flex items-center justify-center h-full text-gray-300 text-sm">No Image</div>}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    {/* ✅ ปรับการเช็คเงื่อนไขตรงนี้ */}
+                                    {item.img && (Array.isArray(item.img) ? item.img.length > 0 : item.img !== "") ? (
+                                        <Image
+                                            src={Array.isArray(item.img) ? item.img[0] : item.img} // ถ้าเป็น Array เอาตัวแรก ถ้าเป็น string ใช้ตัวนั้นเลย
+                                            alt={item.title || "item"}
+                                            fill
+                                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                    ) : (
+                                        /* กรณีไม่มีรูปเลย ให้แสดง Placeholder หรือสีพื้นหลังว่างๆ */
+                                        <div className="flex items-center justify-center h-full text-gray-300">
+                                            <PhotoIcon className="w-10 h-10" />
+                                        </div>
+                                    )}
                                 </div>
                                 <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-1 group-hover:text-[#7edad2] transition-colors">{item.title}</h3>
                                 <p className="text-gray-500 text-xs md:text-sm line-clamp-3 ...">{item.description}</p>
@@ -538,25 +577,23 @@ export default function ExperienceEditor({ slug }) {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold mb-2 text-gray-700">รูปภาพ</label>
+                                        <label className="block text-sm font-bold mb-2 text-gray-700">รูปภาพ (อัปโหลดได้หลายรูป)</label>
                                         <label
-                                            // เพิ่ม Event Handlers สำหรับ Drag & Drop ที่ Label นี้
                                             onDragOver={handleDragOver}
                                             onDragLeave={handleDragLeave}
                                             onDrop={handleDrop}
                                             className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-2xl cursor-pointer transition-all group relative overflow-hidden
-                                        ${isDragging
-                                                    ? "border-[#7edad2] bg-[#7edad2]/10 scale-[1.02]" // สไตล์ตอนลากของเข้ามา
+            ${isDragging
+                                                    ? "border-[#7edad2] bg-[#7edad2]/10 scale-[1.02]"
                                                     : "border-gray-300 bg-gray-50 hover:bg-[#7edad2]/5 hover:border-[#7edad2]"
-                                                }
-                                    `}
+                                                }`}
                                         >
                                             <div className="flex flex-col items-center justify-center pt-5 pb-6 relative z-10">
                                                 <svg className={`w-8 h-8 mb-3 transition-colors ${isDragging ? "text-[#7edad2]" : "text-gray-400 group-hover:text-[#7edad2]"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                                 </svg>
                                                 <p className="mb-1 text-sm text-gray-500 group-hover:text-[#7edad2] font-medium">
-                                                    {isDragging ? "วางรูปภาพที่นี่" : "คลิกเพื่ออัปโหลดรูปภาพ หรือลากไฟล์มาวาง"}
+                                                    {isDragging ? "วางรูปภาพที่นี่" : "คลิกเพื่ออัปโหลด หรือลากหลายรูปมาวาง"}
                                                 </p>
                                                 <p className="text-xs text-gray-400">หรือกด <span className="bg-gray-200 px-1 rounded text-gray-600">Ctrl + V</span> เพื่อวางรูป</p>
                                             </div>
@@ -565,29 +602,49 @@ export default function ExperienceEditor({ slug }) {
                                                 type="file"
                                                 className="hidden"
                                                 accept="image/*"
+                                                multiple // ✅ เพิ่มให้เลือกได้หลายรูป
                                                 onChange={handleFileChange}
                                             />
                                         </label>
 
-                                        {/* Preview */}
-                                        {(imagePreview || formData.img) && (
-                                            <div className="mt-4 relative h-40 w-full rounded-xl overflow-hidden shadow-md border animate-in fade-in zoom-in duration-300">
-                                                <Image
-                                                    src={imagePreview || formData.img}
-                                                    alt="preview"
-                                                    fill
-                                                    className="object-contain bg-gray-100"
-                                                />
-                                                {/* ปุ่มลบรูป preview (Optional) */}
-                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded cursor-pointer hover:bg-red-500 transition-colors"
-                                                    onClick={() => {
-                                                        setImagePreview(null);
-                                                        setSelectedFile(null);
-                                                        // ถ้าต้องการลบรูปเก่าด้วย uncomment บรรทัดล่าง
-                                                        // setFormData({ ...formData, img: "" });
-                                                    }}>
-                                                    เปลี่ยนรูปใหม่
-                                                </div>
+                                        {/* ✅ Preview Multi-Images: แสดงทั้งรูปเก่าใน DB และรูปใหม่ที่กำลังจะเพิ่ม */}
+                                        {(imagePreviews.length > 0 || (Array.isArray(formData.img) && formData.img.length > 0)) && (
+                                            <div className="mt-4 grid grid-cols-3 gap-3">
+
+                                                {/* 1. แสดงรูปเก่าที่มีอยู่ใน Database */}
+                                                {Array.isArray(formData.img) && formData.img.map((url, idx) => (
+                                                    <div key={`old-${idx}`} className="relative h-24 rounded-lg overflow-hidden border group/item">
+                                                        <Image src={url} alt="old-preview" fill className="object-cover" />
+                                                        {/* ปุ่มลบรูปเก่า */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, img: formData.img.filter((_, i) => i !== idx) })}
+                                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:scale-110 transition-transform opacity-0 group-hover/item:opacity-100"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-[8px] text-white text-center py-0.5">Existing</div>
+                                                    </div>
+                                                ))}
+
+                                                {/* 2. แสดงรูปใหม่ที่เพิ่งเลือก (รออัปโหลด) */}
+                                                {imagePreviews.map((url, idx) => (
+                                                    <div key={`new-${idx}`} className="relative h-24 rounded-lg overflow-hidden border-2 border-[#7edad2] group/item">
+                                                        <Image src={url} alt="new-preview" fill className="object-cover" />
+                                                        {/* ปุ่มลบรูปใหม่ */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+                                                                setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
+                                                            }}
+                                                            className="absolute top-1 right-1 bg-gray-800 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:scale-110 transition-transform"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-[#7edad2]/80 text-[8px] text-black font-bold text-center py-0.5 uppercase">New</div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
                                     </div>
@@ -663,26 +720,30 @@ export default function ExperienceEditor({ slug }) {
                                     </div>
 
                                     {/* [3] พื้นที่ Scroll รูปภาพ */}
-                                    <div className="w-full h-full overflow-auto custom-scrollbar">
+                                    <div className="w-full h-full overflow-auto custom-scrollbar bg-[#050505]">
                                         <div
-                                            className="flex items-center justify-center min-w-full min-h-full transition-all duration-300 ease-out"
-                                            style={{
-                                                width: `${zoomLevel}%`,
-                                                height: `${zoomLevel}%`,
-                                                cursor: zoomLevel > 100 ? 'grab' : 'zoom-in'
-                                            }}
-                                            // คลิกที่รูปเพื่อสลับระหว่าง 100% กับ 200% ได้ด้วย
-                                            onClick={() => setZoomLevel(zoomLevel === 100 ? 200 : 100)}
+                                            className="flex flex-col items-center min-w-full min-h-full gap-8 p-8 md:p-12" // เปลี่ยนจาก flex-row/justify-center เป็น flex-col
+                                            style={{ width: `${zoomLevel}%` }}
                                         >
-                                            <div className="relative w-full h-full p-8 md:p-12">
-                                                <Image
-                                                    src={viewingItem.img}
-                                                    alt={viewingItem.title}
-                                                    fill
-                                                    className="object-contain"
-                                                    priority
-                                                />
-                                            </div>
+                                            {/* ✅ ปรับตรงนี้: Loop แสดงรูปภาพทั้งหมด */}
+                                            {Array.isArray(viewingItem.img) ? (
+                                                viewingItem.img.map((url, index) => (
+                                                    <div key={index} className="relative w-full aspect-video md:aspect-auto md:h-[80vh] flex-shrink-0">
+                                                        <Image
+                                                            src={url}
+                                                            alt={`${viewingItem.title}-${index}`}
+                                                            fill
+                                                            className="object-contain"
+                                                            priority={index === 0}
+                                                        />
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                // กันเหนียว: ถ้าข้อมูลเก่าใน DB ยังเป็น string (รูปเดียว) ก็ให้โชว์แบบเดิม
+                                                <div className="relative w-full h-full">
+                                                    <Image src={viewingItem.img} alt={viewingItem.title} fill className="object-contain" priority />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
