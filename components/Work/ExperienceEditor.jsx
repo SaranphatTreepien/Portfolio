@@ -68,23 +68,36 @@ export default function ExperienceEditor({ slug }) {
     // --- ✅ [ใหม่ 3] useEffect สำหรับดักจับ Ctrl+V (Paste) ---
     useEffect(() => {
         const handlePaste = (e) => {
-            if (!isModalOpen) return; // ทำงานเฉพาะตอนเปิด Modal
-            const items = e.clipboardData?.items;
-            if (!items) return;
+            // 1. ตรวจสอบว่าเปิด Modal อยู่หรือไม่
+            if (!isModalOpen) return;
 
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf("image") !== -1) {
-                    const file = items[i].getAsFile();
-                    processFile(file);
-                    e.preventDefault(); // ป้องกันการ paste รูปซ้ำใน text area (ถ้ามี)
-                    break;
+            const clipboardItems = e.clipboardData?.items;
+            if (!clipboardItems) return;
+
+            // สร้าง Array เพื่อเก็บไฟล์รูปภาพที่พบใน Clipboard
+            const filesToProcess = [];
+
+            for (let i = 0; i < clipboardItems.length; i++) {
+                // 2. เช็คว่าสิ่งที่ Paste มามีประเภทเป็น "image"
+                if (clipboardItems[i].type.indexOf("image") !== -1) {
+                    const file = clipboardItems[i].getAsFile();
+                    if (file) {
+                        filesToProcess.push(file);
+                    }
                 }
+            }
+
+            // 3. ถ้าเจอรูปภาพ ให้หยุดการทำงานปกติของ Browser และส่งไปประมวลผล
+            if (filesToProcess.length > 0) {
+                e.preventDefault();
+                // ส่งไฟล์เข้าไปในรูปแบบ Array เพื่อให้ตรงกับที่ processFiles ต้องการ
+                processFiles(filesToProcess);
             }
         };
 
         window.addEventListener("paste", handlePaste);
         return () => window.removeEventListener("paste", handlePaste);
-    }, [isModalOpen]);
+    }, [isModalOpen, processFiles]); // เพิ่ม processFiles เข้าไปใน dependencies
     // --- ✅ [ใหม่ 4] Drag Event Handlers ---
     const handleDragOver = (e) => {
         e.preventDefault();
