@@ -145,7 +145,7 @@ const Hero = () => {
               {/* 2. Learning Button */}
               <ScrollLink to="Learning" smooth duration={500} offset={-50}>
                 <button className="h-[50px] sm:h-[56px] px-6 sm:px-8 rounded-full border-2 border-white lg:border-accent text-white lg:text-accent font-bold hover:bg-white/10 lg:hover:bg-accent lg:hover:text-white transition-all duration-300">
-                  My Learning
+                  My Experience
                 </button>
               </ScrollLink>
 

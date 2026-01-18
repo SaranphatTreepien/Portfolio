@@ -513,7 +513,7 @@ export default function Work() {
 
         {/* --- Header & ปุ่ม Admin --- */}
         <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 gap-4">
-          <AnimatedText text="My Learning" textStyles="h2" />
+          <AnimatedText text="My Experience" textStyles="h2" />
 
           {!isAdmin ? (
             <button onClick={() => setIsAuthModalOpen(true)} className="text-xs text-gray-400 hover:text-[#00ff99] transition-colors">
