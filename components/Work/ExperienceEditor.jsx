@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
+import { PhotoIcon } from "@heroicons/react/24/outline";
 
 
 const ADMIN_PASSWORD = "1234";
