@@ -1,7 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+/* ✅ เพิ่มตรงนี้ */
+html {
+  scroll-behavior: smooth;
+}
  @layer base {
    body {
      @apply font-secondary text-base text-secondary;

@@ -13,13 +13,7 @@ import Footer from "@/components/Footer";
 
 const Home = () => {
   //implement locomotive scroll
-  useEffect(() => {
-    const loadLocomotiveScroll = async () => {
-      const LocomotiveScroll = (await import("locomotive-scroll")).default;
-      new LocomotiveScroll();
-    };
-    loadLocomotiveScroll();
-  }, []);
+ 
   return (
     <>
       <Hero />
