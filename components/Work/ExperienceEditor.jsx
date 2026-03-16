@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 
 
-const ADMIN_PASSWORD = "1234";
+// รหัสผ่านอยู่ใน .env.local (ADMIN_PASSWORD) — เช็คที่ server เท่านั้น
 
 // --- Icons ---
 // ... icons เดิม ...
@@ -365,14 +365,24 @@ export default function ExperienceEditor({ slug }) {
         setImagePreviews([]);        // ✅ Reset previews
         setIsModalOpen(true);
     };
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        if (passwordInput === ADMIN_PASSWORD) {
-            setIsAdmin(true);
-            setIsAuthModalOpen(false);
-            showToast("เข้าสู่ระบบ Admin สำเร็จ");
-        } else {
-            alert("รหัสผ่านไม่ถูกต้อง");
+        try {
+            const res = await fetch("/api/admin-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: passwordInput }),
+            });
+            if (res.ok) {
+                setIsAdmin(true);
+                setIsAuthModalOpen(false);
+                setPasswordInput("");
+                showToast("เข้าสู่ระบบ Admin สำเร็จ");
+            } else {
+                showToast("รหัสผ่านไม่ถูกต้อง", "error");
+            }
+        } catch (error) {
+            showToast("เกิดข้อผิดพลาด กรุณาลองใหม่", "error");
         }
     };
 

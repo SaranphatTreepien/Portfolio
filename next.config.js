@@ -3,13 +3,16 @@ const nextConfig = {
   images: {
     // รูปแบบไฟล์ที่รองรับ (ของเดิม)
     formats: ['image/avif', 'image/webp'],
-    
-    // ✅ เพิ่มส่วนนี้ครับ: อนุญาตโดเมน Cloudinary
+
+    // ✅ เพิ่ม quality 100 สำหรับรูปที่ต้องการคมชัด
+    qualities: [100, 75, 70],
+
+    // อนุญาตโดเมน Cloudinary
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
-        pathname: '**', // อนุญาตทุกโฟลเดอร์/ทุกรูป
+        pathname: '**',
       },
     ],
   },

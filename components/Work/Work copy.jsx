@@ -17,6 +17,7 @@ const BackupIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" vi
 const CheckCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-[#00ff99]"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>);
 const XCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-red-500"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" /></svg>);
 const SkullIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-red-600"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>);
+const ChevronDownIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>);
 
 // --- Animation Variants ---
 const cardVariants = {
@@ -51,6 +52,8 @@ const modalVariants = {
   exit: { opacity: 0, scale: 0.8, y: 50, transition: { duration: 0.2 } }
 };
 
+
+
 export default function Work() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,80 +64,59 @@ export default function Work() {
   const [tabValue, setTabValue] = useState("all");
   const [visibleItems, setVisibleItems] = useState(6);
 
+  // ✅ State สำหรับขยายปีต่างๆ
+  const [isYearExpanded, setIsYearExpanded] = useState(false);
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-
-  // ✅ [NEW] State สำหรับปุ่มล้างบาง
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
-  // ✅ [NEW] State สำหรับจัดการรูปภาพ (เพิ่มใหม่)
-  const [selectedFile, setSelectedFile] = useState(null); // เก็บไฟล์ดิบรออัปโหลด
-  const [imagePreview, setImagePreview] = useState("");   // เก็บ URL รูปตัวอย่าง
-
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [isWipingData, setIsWipingData] = useState(false);
-
   const [passwordInput, setPasswordInput] = useState("");
-
   const [editingProject, setEditingProject] = useState(null);
-  const [isDragging, setIsDragging] = useState(false); // ✅ เพิ่ม state เพื่อทำ Effect ตอนลากไฟล์เข้ามา
-  // ✅ 1. สร้างฟังก์ชันกลางสำหรับจัดการไฟล์ (ใช้ร่วมกันทั้ง เลือกไฟล์, ลากวาง, ก๊อปวาง)
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleProcessFile = (file) => {
     if (!file) return;
-
-    // เช็คว่าเป็นรูปภาพหรือไม่
     if (!file.type.startsWith("image/")) {
       showToast("กรุณาเลือกไฟล์รูปภาพเท่านั้น", "error");
       return;
     }
-
-    setSelectedFile(file); // เก็บไฟล์สำหรับอัปโหลด
-    setImagePreview(URL.createObjectURL(file)); // สร้างพรีวิว
+    setSelectedFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
-  // ✅ 2. ดักจับการกด Paste (Ctrl+V)
   useEffect(() => {
     const handlePaste = (e) => {
-      // ทำงานเฉพาะตอน Modal เปิดอยู่
       if (!isFormModalOpen) return;
-
       const items = e.clipboardData?.items;
       if (!items) return;
-
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.indexOf("image") !== -1) {
           const file = items[i].getAsFile();
-          handleProcessFile(file); // เรียกใช้ฟังก์ชันกลาง
-          break; // เอาแค่รูปแรกที่เจอ
+          handleProcessFile(file);
+          break;
         }
       }
     };
-
     window.addEventListener("paste", handlePaste);
     return () => window.removeEventListener("paste", handlePaste);
   }, [isFormModalOpen]);
 
-  // ✅ 3. ฟังก์ชันสำหรับ Drag & Drop
-  const handleDragOver = (e) => {
-    e.preventDefault(); // สำคัญ! ต้องใส่เพื่อบอก Browser ว่ายอมให้วางไฟล์ได้
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = (e) => { e.preventDefault(); setIsDragging(false); };
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleProcessFile(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
     }
   };
+
   const [formData, setFormData] = useState({
     title: "",
     category: "2569",
@@ -142,64 +124,54 @@ export default function Work() {
     img: "",
     createdAt: "",
     link: "",
-    isCertificate: false,// ✅ เพิ่มตรงนี้
-    isBest: false // ✅ [เพิ่ม] ค่าเริ่มต้นสำหรับ Best Project
+    isCertificate: false,
+    isBest: false,
+    isCloud: false,   // ✅ ใหม่
+    isNetwork: false, // ✅ ใหม่
   });
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-  // ✅ เพิ่ม useEffect นี้:
-  useEffect(() => {
-    // รีเซ็ตจำนวนที่แสดงเป็น 6 ทุกครั้งที่เปลี่ยน Tab
-    setVisibleItems(6);
-  }, [tabValue]);
-  // ✅ ฟังก์ชันแสดง Toast
+  useEffect(() => { fetchProjects(); }, []);
+  useEffect(() => { setVisibleItems(6); }, [tabValue]);
+
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000);
   };
-  // ✅ [NEW] ฟังก์ชันจัดการการ Restore (อัปโหลดไฟล์)
+
   const handleRestore = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!confirm(`⚠️ คุณแน่ใจหรือไม่ที่จะ "กู้คืนข้อมูล" จากไฟล์ ${file.name}? ข้อมูลปัจจุบันจะถูกเขียนทับ`)) {
-      e.target.value = null; // Clear file input
+      e.target.value = null;
       return;
     }
-
     const reader = new FileReader();
     reader.onload = async (event) => {
       setIsRestoring(true);
       try {
         const data = JSON.parse(event.target.result);
-
-        // ส่งข้อมูล JSON ไปให้ API ใหม่ (API ที่ชื่อว่า /api/restoreDBMongo)
         const res = await fetch('/api/restoreDBMongo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
-
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
           throw new Error(errorData.error || "Restore failed");
         }
-
-        await fetchProjects(); // ดึงข้อมูลใหม่มาแสดงผล
+        await fetchProjects();
         showToast("กู้คืนข้อมูลสำเร็จ! ฐานข้อมูลถูกอัปเดตแล้ว", "success");
       } catch (error) {
-        console.error("Restore Error:", error);
         showToast(error.message || "เกิดข้อผิดพลาดในการกู้คืนข้อมูล", "error");
       } finally {
         setIsRestoring(false);
-        e.target.value = null; // ล้าง input file
+        e.target.value = null;
       }
     };
     reader.readAsText(file);
   };
+
   const fetchProjects = async () => {
     try {
       const res = await fetch('/api/projects');
@@ -207,42 +179,41 @@ export default function Work() {
       const data = await res.json();
       setProjects(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
       setProjects([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 1. หาปีที่มีทั้งหมด (เหมือนเดิม)
   const uniqueCategories = Array.from(new Set(projects.map((item) => item.category))).sort().reverse();
 
-  // 2. สร้าง Tabs: เริ่มด้วย all -> แทรก Certificate -> ตามด้วยปีต่างๆ
+  // ✅ Tab structure ใหม่: แทรก Cloud และ Network หลัง Best
   const tabData = [
     { category: "all" },
-    { category: "Best" },        // ✅ 1. เพิ่ม Tab "Best" ตรงนี้ (ให้เป็นอันดับ 2 รองจาก all)
+    { category: "Best" },
+    { category: "Cloud", isGroup: true },    // ✅ กลุ่ม Cloud
+    { category: "Network", isGroup: true },  // ✅ กลุ่ม Network
     { category: "Certificate" },
-
     ...uniqueCategories.map((category) => ({ category }))
   ];
 
-  // 3. แก้เงื่อนไขการกรอง (Filter)
+  // ✅ Logic filter ใหม่: รองรับ Cloud, Network
   const filterWork = projects
     .filter((item) => {
       if (tabValue === "all") return true;
-      if (tabValue === "Best") return item.isBest === true; // ✅ 2. เพิ่ม Logic กรองเฉพาะงานที่มีดาว (isBest)
+      if (tabValue === "Best") return item.isBest === true;
       if (tabValue === "Certificate") return item.isCertificate === true;
+      if (tabValue === "Cloud") return item.isCloud === true;
+      if (tabValue === "Network") return item.isNetwork === true;
+      if (tabValue === "Community") return item.isCommunity === true;
       return item.category === tabValue;
     })
     .sort((a, b) => {
-      // ✅ Logic การเรียงลำดับ (เอา Best ขึ้นก่อนเสมอ ในทุกๆ Tab)
       if (a.isBest === true && b.isBest !== true) return -1;
       if (a.isBest !== true && b.isBest === true) return 1;
-
-      // ถ้าสถานะเหมือนกัน ให้เรียงตามวันที่ (ใหม่สุดขึ้นก่อน)
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
-  // --- Handlers ---
+
   const handleLogin = (e) => {
     e.preventDefault();
     if (passwordInput === ADMIN_PASSWORD) {
@@ -253,84 +224,53 @@ export default function Work() {
       showToast("รหัสผ่านไม่ถูกต้อง", "error");
     }
   };
+
   const handleDateChange = (e) => {
     const newDate = e.target.value;
-
-    // ถ้ามีการเลือกวันที่
     if (newDate) {
-      const yearAD = parseInt(newDate.split("-")[0]); // ดึงปี ค.ศ. (ตัวหน้าสุด)
-      const yearBE = yearAD + 543; // แปลงเป็น พ.ศ.
-
-      setFormData({
-        ...formData,
-        createdAt: newDate,
-        category: yearBE.toString() // อัปเดตช่อง Category อัตโนมัติ
-      });
+      const yearAD = parseInt(newDate.split("-")[0]);
+      const yearBE = yearAD + 543;
+      setFormData({ ...formData, createdAt: newDate, category: yearBE.toString() });
     } else {
-      // ถ้าลบวันที่ออก ก็แค่อัปเดตวันที่เป็นค่าว่าง
       setFormData({ ...formData, createdAt: newDate });
     }
   };
-  // ✅ ปรับปรุง handleFileChange เดิม ให้มาเรียกใช้ฟังก์ชันกลาง
-  const handleFileChangeRevised = (e) => {
-    if (e.target.files?.[0]) {
-      handleProcessFile(e.target.files[0]);
-    }
-  };
 
-  // ✅ [UPDATED] ฟังก์ชันอัปโหลด (ใช้ Env Variables)
   const uploadToCloudinary = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    // ดึงค่าจาก .env.local
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", file);
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET;
-
-    formData.append("upload_preset", uploadPreset);
-    formData.append("cloud_name", cloudName);
-
+    formDataUpload.append("upload_preset", uploadPreset);
+    formDataUpload.append("cloud_name", cloudName);
     try {
       const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
         method: "POST",
-        body: formData,
+        body: formDataUpload,
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || "Upload failed");
-
-      return data.secure_url; // คืนค่า URL รูปภาพ
+      return data.secure_url;
     } catch (error) {
-      console.error("Cloudinary Error:", error);
       throw error;
     }
   };
+
   const openAddModal = () => {
     setEditingProject(null);
     const today = new Date();
     const dateString = today.toISOString().split('T')[0];
     const currentThaiYear = (today.getFullYear() + 543).toString();
-
     setFormData({
-      title: "",
-      category: currentThaiYear,
-      slug: "",
-      img: "",
-      createdAt: dateString,
-      link: "",
-      isCertificate: false,
-      isBest: false // ✅ [เพิ่ม] Reset ค่า
+      title: "", category: currentThaiYear, slug: "", img: "",
+      createdAt: dateString, link: "", isCertificate: false, isBest: false,
+      isCloud: false, isNetwork: false, isCommunity: false, // ✅ ใหม่
     });
-
-    // เคลียร์รูป
     setSelectedFile(null);
     setImagePreview("");
-
     setIsFormModalOpen(true);
   };
 
-  // 3. อัปเดตฟังก์ชัน openEditModal (ดึงค่าเดิมมาใส่)
-  // ✅ [UPDATED] ดึงรูปเดิมมาโชว์ เมื่อเปิด Modal แก้ไข
   const openEditModal = (project) => {
     setEditingProject(project);
     setFormData({
@@ -341,63 +281,47 @@ export default function Work() {
       createdAt: project.createdAt ? new Date(project.createdAt).toISOString().split('T')[0] : "",
       link: project.link || "",
       isCertificate: project.isCertificate || false,
-      isBest: project.isBest || false // ✅ [เพิ่ม] ดึงค่าเดิมมาใส่
+      isBest: project.isBest || false,
+      isCloud: project.isCloud || false,
+      isNetwork: project.isNetwork || false,
+      isCommunity: project.isCommunity || false, // ✅ ใหม่
     });
-
-    // โชว์รูปเดิม
     setImagePreview(project.img);
-    setSelectedFile(null); // เคลียร์ไฟล์ใหม่ เพราะยังไม่ได้เลือก
-
+    setSelectedFile(null);
     setIsFormModalOpen(true);
   };
-  // ✅ [UPDATED] บันทึกข้อมูล (อัปโหลดรูปก่อน แล้วค่อยเซฟลง DB)
+
   const handleSaveProject = async (e) => {
     e.preventDefault();
-    // ✅ เช็คเพิ่มตรงนี้: ถ้า slug ว่าง หรือมีแต่ช่องว่าง
     if (!formData.slug || formData.slug.trim() === "") {
       showToast("กรุณาระบุ Slug สำหรับ URL ด้วยครับ", "error");
-      return; // หยุดการทำงาน ไม่ให้บันทึก
+      return;
     }
     setIsSaving(true);
-
     try {
-      let finalImageUrl = formData.img; // เริ่มต้นด้วยรูปเดิม
-
-      // 1. เช็คว่า user เลือกไฟล์ใหม่มาไหม?
+      let finalImageUrl = formData.img;
       if (selectedFile) {
-        // ถ้ามีไฟล์ใหม่ ให้อัปโหลดไป Cloudinary ก่อน
         finalImageUrl = await uploadToCloudinary(selectedFile);
       }
-
-      // 2. เตรียมข้อมูลส่งเข้า MongoDB (ตอนนี้ img จะเป็น URL แล้ว)
-      const payload = {
-        ...formData,
-        img: finalImageUrl
-      };
-
+      const payload = { ...formData, img: finalImageUrl };
       if (editingProject) {
         payload.originalSlug = editingProject.slug;
       }
-
-      // 3. ส่งข้อมูลไป API (ส่วนนี้เหมือนเดิม)
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-
       if (res.ok) {
         await fetchProjects();
         setTimeout(() => {
           setIsFormModalOpen(false);
           setIsSaving(false);
           setEditingProject(null);
-          // Reset ค่าทั้งหมด
-          setFormData({ title: "", category: "2569", slug: "", img: "", createdAt: "", link: "", isCertificate: false });
+          setFormData({ title: "", category: "2569", slug: "", img: "", createdAt: "", link: "", isCertificate: false, isBest: false, isCloud: false, isNetwork: false, isCommunity: false });
           setSelectedFile(null);
           setImagePreview("");
-
           showToast(editingProject ? "แก้ไขงานสำเร็จ!" : "เพิ่มงานใหม่สำเร็จ!", "success");
         }, 800);
       } else {
@@ -409,7 +333,6 @@ export default function Work() {
         setIsSaving(false);
       }
     } catch (error) {
-      console.error(error);
       showToast(error.message || "เกิดข้อผิดพลาดในการบันทึก", "error");
       setIsSaving(false);
     }
@@ -435,41 +358,27 @@ export default function Work() {
     }
   };
 
-  // ✅ [NEW] ฟังก์ชันล้างข้อมูลทั้งหมด
-  // ✅ [FIXED] ฟังก์ชันล้างข้อมูลทั้งหมด
   const handleWipeDatabase = async () => {
-    if (deleteConfirmationText !== "CONFIRM-DELETE") {
-      return;
-    }
-
+    if (deleteConfirmationText !== "CONFIRM-DELETE") return;
     setIsWipingData(true);
     try {
-      // ❌ ของเดิม: เรียกผิดไฟล์
-      // const res = await fetch(`/api/projects?slug=DELETE_ALL_DATA_PERMANENTLY`, { method: 'DELETE' });
-
-      // ✅ ของใหม่: เรียกไฟล์ resetDBMongo โดยตรง
-      const res = await fetch(`/api/resetDBMongo`, {
-        method: 'DELETE'
-      });
-
+      const res = await fetch(`/api/resetDBMongo`, { method: 'DELETE' });
       if (res.ok) {
-        setProjects([]); // เคลียร์หน้าจอ
+        setProjects([]);
         setIsDeleteAllModalOpen(false);
         setDeleteConfirmationText("");
         showToast("ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว", "success");
       } else {
-        // อ่าน Error จาก API เพื่อ debug ง่ายขึ้น
         const errorData = await res.json().catch(() => ({}));
-        console.error("Reset Failed:", errorData);
         throw new Error(errorData.error || "Wipe failed");
       }
     } catch (error) {
-      console.error(error);
       showToast("เกิดข้อผิดพลาดในการล้างข้อมูล", "error");
     } finally {
       setIsWipingData(false);
     }
   };
+
   const handleBackup = async () => {
     if (!confirm("ต้องการสำรองข้อมูล (Backup) ทั้งหมดใช่หรือไม่?")) return;
     setIsBackingUp(true);
@@ -499,7 +408,6 @@ export default function Work() {
 
   if (loading) return (
     <div className="pt-24 flex flex-col items-center justify-center gap-3">
-      {/* ไอคอนหมุนๆ สีเขียวมินต์ */}
       <div className="w-8 h-8 border-4 border-[#7edad2]/20 border-t-[#7edad2] rounded-full animate-spin"></div>
       <div className="text-center animate-pulse text-[#7edad2] font-semibold tracking-wide">
         กำลังโหลดข้อมูล...
@@ -528,8 +436,6 @@ export default function Work() {
               >
                 Admin Mode
               </motion.span>
-
-              {/* ✅ [NEW] ปุ่มลับ! (Reset DB) - ทำให้มองเห็นยากๆ (Opacity 10% -> 100% on hover) */}
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 0.1 }}
@@ -540,7 +446,6 @@ export default function Work() {
               >
                 [RESET DB]
               </motion.button>
-              {/* ✅ [NEW] ปุ่ม Restore (เป็นปุ่มซ่อน Input File) */}
               <motion.label
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -549,14 +454,7 @@ export default function Work() {
               >
                 {isRestoring ? <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span> : <BackupIcon className="rotate-180" />}
                 <span>Restore</span>
-                <input
-                  type="file"
-                  id="restore-file-input"
-                  accept=".json"
-                  onChange={handleRestore}
-                  disabled={isRestoring}
-                  className="hidden"
-                />
+                <input type="file" id="restore-file-input" accept=".json" onChange={handleRestore} disabled={isRestoring} className="hidden" />
               </motion.label>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -568,7 +466,6 @@ export default function Work() {
                 {isBackingUp ? <span className="animate-spin h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full"></span> : <BackupIcon />}
                 <span>Backup</span>
               </motion.button>
-
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -581,15 +478,61 @@ export default function Work() {
           )}
         </div>
 
-        {/* --- Tabs --- */}
+        {/* --- ✅ Tabs: แสดงตลอด --- */}
         <Tabs value={tabValue} onValueChange={setTabValue} className="w-full flex flex-col">
-          <TabsList className="max-w-max h-full mb-[30px] flex flex-col md:flex-row gap-4 md:gap-0 mx-auto md:mx-0">
-            {tabData.map((item, index) => (
-              <TabsTrigger key={index} value={item.category} className="capitalize w-[120px]">
-                {item.category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="mb-[30px] flex items-center flex-wrap gap-2">
+            <TabsList className="h-full bg-transparent p-0 flex flex-wrap gap-1 border border-gray-200 rounded-full px-2 py-1">
+
+              {/* Tab หลัก: All, Best, Cloud, Network, Certificate */}
+              {[
+                { value: "all", label: "All" },
+                { value: "Best", label: "⭐ Best" },
+                { value: "Cloud", label: "☁️ Cloud" },
+                { value: "Network", label: "🌐 Network" },
+                { value: "Certificate", label: "📜 Certificate" },
+                { value: "Community", label: "🤝 Community" },
+              ].map((item) => (
+                <TabsTrigger key={item.value} value={item.value} className="rounded-full px-4 text-sm whitespace-nowrap">
+                  {item.label}
+                </TabsTrigger>
+              ))}
+
+              {/* ปุ่มเพิ่มเติม → ขยายปีต่างๆ */}
+              <button
+                onClick={() => setIsYearExpanded(prev => !prev)}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap
+                  ${isYearExpanded
+                    ? "bg-gray-700 text-white"
+                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+              >
+                <span>เพิ่มเติม</span>
+                <motion.span animate={{ rotate: isYearExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDownIcon />
+                </motion.span>
+              </button>
+
+              {/* ปีต่างๆ ขยายออกมา */}
+              <AnimatePresence>
+                {isYearExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden flex"
+                  >
+                    {uniqueCategories.map((c) => (
+                      <TabsTrigger key={c} value={c} className="rounded-full px-4 text-sm whitespace-nowrap">
+                        {c}
+                      </TabsTrigger>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+            </TabsList>
+          </div>
 
           <TabsContent value={tabValue} className="w-full">
             {filterWork.length === 0 ? (
@@ -610,13 +553,11 @@ export default function Work() {
                         whileHover="hover"
                         className={`relative group rounded-3xl overflow-hidden ${isDeleting ? "ring-4 ring-red-500 shadow-2xl shadow-red-500/50" : ""}`}
                       >
-                        {/* Slug Badge */}
                         <div className="absolute top-14 left-4 z-20 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300">
                           <span className="text-[10px] tracking-wider font-mono text-white/90 bg-black/60 px-2 py-1 rounded backdrop-blur-md border border-white/10 shadow-sm">
                             /{item.slug}
                           </span>
                         </div>
-
                         {isDeleting && (
                           <div className="absolute inset-0 z-50 bg-red-500/20 backdrop-blur-[2px] flex items-center justify-center">
                             <div className="bg-white/90 p-3 rounded-full shadow-lg">
@@ -625,8 +566,6 @@ export default function Work() {
                           </div>
                         )}
                         <WorkItem {...item} />
-
-                        {/* Buttons */}
                         {isAdmin && !isDeleting && (
                           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10 translate-y-2 group-hover:translate-y-0">
                             <motion.button
@@ -637,7 +576,6 @@ export default function Work() {
                             >
                               <PencilIcon />
                             </motion.button>
-
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
@@ -649,7 +587,7 @@ export default function Work() {
                           </div>
                         )}
                       </motion.div>
-                    )
+                    );
                   })}
                 </AnimatePresence>
               </motion.div>
@@ -714,7 +652,7 @@ export default function Work() {
             )}
           </AnimatePresence>
 
-          {/* ✅ [NEW] Delete All Warning Modal */}
+          {/* Delete All Warning Modal */}
           <AnimatePresence>
             {isDeleteAllModalOpen && (
               <div className="fixed inset-0 bg-red-950/80 z-[10000] flex items-center justify-center p-4 backdrop-blur-md">
@@ -725,9 +663,7 @@ export default function Work() {
                   exit="exit"
                   className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border-4 border-red-500 text-center relative overflow-hidden"
                 >
-                  {/* Background warning stripes */}
                   <div className="absolute top-0 left-0 w-full h-4 bg-[repeating-linear-gradient(45deg,#ef4444,#ef4444_10px,#b91c1c_10px,#b91c1c_20px)]"></div>
-
                   <div className="flex flex-col items-center gap-4 mt-4">
                     <SkullIcon />
                     <h3 className="text-3xl font-black text-red-600 uppercase tracking-widest">Danger Zone</h3>
@@ -736,7 +672,6 @@ export default function Work() {
                       การกระทำนี้ <u className="font-bold">ไม่สามารถกู้คืนได้</u>
                     </p>
                   </div>
-
                   <div className="mt-6">
                     <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">พิมพ์ "CONFIRM-DELETE" เพื่อยืนยัน</label>
                     <input
@@ -747,7 +682,6 @@ export default function Work() {
                       onChange={e => setDeleteConfirmationText(e.target.value)}
                     />
                   </div>
-
                   <div className="flex justify-between gap-3 mt-8">
                     <button onClick={() => setIsDeleteAllModalOpen(false)} className="w-full py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
                     <button
@@ -784,12 +718,12 @@ export default function Work() {
                   <form onSubmit={handleSaveProject} className="flex flex-col gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อโปรเจกต์ (Title)</label>
-                      <input required className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                      <input required className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">ปี (Category)</label>
-                        <input required placeholder="เช่น 2569" readOnly className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
+                        <input required readOnly className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
                       </div>
                       <div>
                         <label className="flex justify-between items-end mb-1">
@@ -799,24 +733,23 @@ export default function Work() {
                         <input
                           required
                           placeholder="eng-only-no-space"
-                          className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[#7edad2]/20 outline-none border-gray-200 text-black transition-all"
+                          className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all"
                           value={formData.slug}
-                          onChange={e => setFormData({ ...formData, slug: e.target.value.replace(/\s+/g, '') })} // เพิ่ม logic ป้องกันการพิมพ์ช่องว่าง
+                          onChange={e => setFormData({ ...formData, slug: e.target.value.replace(/\s+/g, '') })}
                         />
                       </div>
-                      {/* ✅ เพิ่มช่องวันที่ตรงนี้ (วางต่อจาก Grid ด้านบน) */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ (Date)</label>
                         <input
                           type="date"
                           required
-                          className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all"
+                          className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all"
                           value={formData.createdAt}
-
-                          // ✅ เปลี่ยนตรงนี้: เรียกใช้ฟังก์ชันใหม่
                           onChange={handleDateChange}
                         />
                       </div>
+
+                      {/* Certificate checkbox */}
                       <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 cursor-pointer" onClick={() => setFormData({ ...formData, isCertificate: !formData.isCertificate })}>
                         <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isCertificate ? "bg-[#7edad2] border-[#7edad2]" : "border-gray-300 bg-white"}`}>
                           {formData.isCertificate && (
@@ -826,19 +759,12 @@ export default function Work() {
                           )}
                         </div>
                         <span className="text-gray-700 font-small select-none">Certificate/Award🏆</span>
-
-                        {/* Input ซ่อนไว้แต่ทำงานจริง */}
-                        <input
-                          type="checkbox"
-                          className="hidden"
-                          checked={formData.isCertificate}
-                          onChange={(e) => setFormData({ ...formData, isCertificate: e.target.checked })}
-                        />
                       </div>
-                      {/* 2. ปุ่ม Best Project (เพิ่มใหม่ ⭐) */}
+
+                      {/* Best Project button */}
                       <div
                         className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all select-none
-                            ${formData.isBest
+                          ${formData.isBest
                             ? "bg-yellow-50 border-yellow-400 text-yellow-600 shadow-sm"
                             : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
                           }`}
@@ -855,22 +781,76 @@ export default function Work() {
                         )}
                         <span className="font-medium text-sm">Best Project</span>
                       </div>
-                      {/* ... จบส่วนที่เพิ่ม ... */}
-                    </div>
-                    <div>
-                      {/* ... ส่วน Label ... */}
-                      <label className="block text-sm font-medium text-gray-700 mb-1">รูปปก (Image)</label>
 
-                      {/* ✅ ส่วนอัปโหลดที่แก้ใหม่ */}
+                      {/* ✅ Cloud checkbox */}
+                      <div
+                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all select-none
+                          ${formData.isCloud
+                            ? "bg-sky-50 border-sky-400 text-sky-600"
+                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                          }`}
+                        onClick={() => setFormData({ ...formData, isCloud: !formData.isCloud })}
+                      >
+                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isCloud ? "bg-sky-400 border-sky-400" : "border-gray-300 bg-white"}`}>
+                          {formData.isCloud && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="font-medium text-sm select-none">☁️ Cloud</span>
+                      </div>
+
+                      {/* ✅ Network checkbox */}
+                      <div
+                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all select-none
+                          ${formData.isNetwork
+                            ? "bg-emerald-50 border-emerald-400 text-emerald-600"
+                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                          }`}
+                        onClick={() => setFormData({ ...formData, isNetwork: !formData.isNetwork })}
+                      >
+                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isNetwork ? "bg-emerald-400 border-emerald-400" : "border-gray-300 bg-white"}`}>
+                          {formData.isNetwork && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="font-medium text-sm select-none">🌐 Network</span>
+                      </div>
+
+                      {/* ✅ Community checkbox */}
+                      <div
+                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all select-none
+                          ${formData.isCommunity
+                            ? "bg-purple-50 border-purple-400 text-purple-600"
+                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                          }`}
+                        onClick={() => setFormData({ ...formData, isCommunity: !formData.isCommunity })}
+                      >
+                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isCommunity ? "bg-purple-400 border-purple-400" : "border-gray-300 bg-white"}`}>
+                          {formData.isCommunity && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="font-medium text-sm select-none">🤝 Community</span>
+                      </div>
+                    </div>
+
+                    {/* Image upload */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">รูปปก (Image)</label>
                       <motion.div
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        // เพิ่ม Event Handlers สำหรับ Drag & Drop
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer relative group ${isDragging
-                          ? "border-[#7edad2] bg-[#7edad2]/10 scale-105" // สีตอนลากไฟล์เข้ามา
+                          ? "border-[#7edad2] bg-[#7edad2]/10 scale-105"
                           : "border-gray-300 hover:bg-gray-50"
                           }`}
                       >
@@ -878,10 +858,8 @@ export default function Work() {
                           type="file"
                           accept="image/*"
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                          // เปลี่ยนไปใช้ฟังก์ชันกลาง handleProcessFile
                           onChange={(e) => handleProcessFile(e.target.files[0])}
                         />
-
                         {imagePreview ? (
                           <div className="relative">
                             <img src={imagePreview} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
@@ -894,7 +872,6 @@ export default function Work() {
                             <div>
                               <span className="text-[#7edad2] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง
                             </div>
-                            {/* เพิ่มข้อความแนะนำ Ctrl+V */}
                             <div className="text-xs text-gray-300">
                               หรือกด <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">Ctrl</kbd> + <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">V</kbd> เพื่อวางรูป
                             </div>
@@ -902,7 +879,8 @@ export default function Work() {
                         )}
                       </motion.div>
                     </div>
-                    {/* ✅ ช่องกรอกลิงก์ (Link) */}
+
+                    {/* Link input */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         แนบลิงก์ผลงาน (Link / URL) <span className="text-xs text-gray-400 font-normal">(ไม่บังคับ)</span>
@@ -910,20 +888,20 @@ export default function Work() {
                       <input
                         type="url"
                         placeholder="https://www.instagram.com/..."
-                        className="border p-3 rounded-xl w-full bg-gray-50 focus:ring-2 ring-[##7edad2]/20 outline-none border-gray-200 text-black transition-all placeholder:text-gray-300"
+                        className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all placeholder:text-gray-300"
                         value={formData.link}
                         onChange={e => setFormData({ ...formData, link: e.target.value })}
                       />
                     </div>
+
                     <div className="flex justify-end gap-3 mt-6 border-t pt-4">
                       <button type="button" onClick={() => setIsFormModalOpen(false)} className="px-6 py-2.5 text-gray-500 hover:bg-gray-100 rounded-xl font-medium transition-colors">ยกเลิก</button>
-
                       <motion.button
                         type="submit"
                         disabled={isSaving}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`px-8 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 min-w-[140px] justify-center ${isSaving ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-[##7edad2] text-black hover:bg-[##7edad2] shadow-[#00ff99]/20"}`}
+                        className={`px-8 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 min-w-[140px] justify-center ${isSaving ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-[#7edad2] text-black hover:bg-[#6bcbc0]"}`}
                       >
                         {isSaving ? (
                           <>

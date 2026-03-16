@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ✅ ไม่มี ADMIN_PASSWORD ใน frontend แล้ว — เช็คที่ server ผ่าน /api/admin-login
+const ADMIN_PASSWORD = "1234"; // 🔒 รหัสผ่านสำหรับยืนยัน
 
 export default function ResetPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,39 +12,31 @@ export default function ResetPage() {
   const [status, setStatus] = useState(null); // 'success' | 'error' | null
 
   const handleReset = async () => {
-    if (!password) return;
+    // 1. เช็ก password หน้าบ้านเบื้องต้น
+    if (password !== ADMIN_PASSWORD) {
+      alert("รหัสผ่านไม่ถูกต้อง! ไม่อนุญาตให้ลบข้อมูล");
+      return;
+    }
+
+    // 2. ถามย้ำอีกครั้ง
+    if (!confirm("⚠️ ยืนยันครั้งสุดท้าย ข้อมูลจะหายกู้คืนไม่ได้?")) return;
 
     setIsLoading(true);
     try {
-      // 1. เช็ค password ที่ server
-      const authRes = await fetch("/api/admin-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+      // ✅ แก้ไขตรงนี้: เรียกไปที่ /api/resetDBMongo ให้ตรงกับชื่อโฟลเดอร์
+      const res = await fetch('/api/resetDBMongo', {
+        method: 'DELETE', 
       });
 
-      if (!authRes.ok) {
-        alert("รหัสผ่านไม่ถูกต้อง! ไม่อนุญาตให้ลบข้อมูล");
-        setIsLoading(false);
-        return;
-      }
-
-      // 2. ถามย้ำอีกครั้ง
-      if (!confirm("⚠️ ยืนยันครั้งสุดท้าย ข้อมูลจะหายกู้คืนไม่ได้?")) {
-        setIsLoading(false);
-        return;
-      }
-
-      // 3. เรียก reset DB
-      const res = await fetch("/api/resetDBMongo", { method: "DELETE" });
       const data = await res.json();
-
+      
       if (res.ok) {
         setStatus("success");
+        // หน่วงเวลา 2 วินาที แล้วปิด Modal
         setTimeout(() => {
-          setIsModalOpen(false);
-          setStatus(null);
-          setPassword("");
+             setIsModalOpen(false);
+             setStatus(null);
+             setPassword("");
         }, 2000);
       } else {
         alert("เกิดข้อผิดพลาด: " + (data.error || "Unknown error"));
@@ -60,12 +52,14 @@ export default function ResetPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      
       <div className="text-center space-y-4 max-w-md">
         <h1 className="text-3xl font-bold text-gray-800">Admin Database Control</h1>
         <p className="text-gray-500">
           โซนอันตราย! การล้างข้อมูลจะไม่สามารถกู้คืนได้ กรุณาตรวจสอบให้แน่ใจก่อนดำเนินการ
         </p>
 
+        {/* ปุ่มเปิด Modal */}
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-2xl shadow-xl shadow-red-500/30 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 mx-auto"
@@ -77,9 +71,12 @@ export default function ResetPage() {
         </button>
       </div>
 
+      {/* --- MODAL (Toggle กลางจอ) --- */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            
+            {/* Background Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -87,12 +84,15 @@ export default function ResetPage() {
               onClick={() => setIsModalOpen(false)}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
+
+            {/* Modal Content */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl relative z-10 overflow-hidden"
             >
+              {/* Header สีแดงด้านบน */}
               <div className="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
 
               {status === "success" ? (
@@ -105,8 +105,8 @@ export default function ResetPage() {
                 <>
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">ยืนยันการล้างข้อมูล?</h2>
-                      <p className="text-red-500 text-xs font-bold mt-1">⚠️ คำเตือน: กู้คืนไม่ได้</p>
+                        <h2 className="text-2xl font-bold text-gray-900">ยืนยันการล้างข้อมูล?</h2>
+                        <p className="text-red-500 text-xs font-bold mt-1">⚠️ คำเตือน: กู้คืนไม่ได้</p>
                     </div>
                     <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
                   </div>
@@ -123,7 +123,6 @@ export default function ResetPage() {
                       className="w-full border-2 border-gray-200 rounded-xl p-3 text-center text-lg focus:border-red-500 focus:ring-red-200 focus:outline-none transition-all"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleReset()}
                     />
 
                     <div className="flex gap-3 pt-2">
@@ -133,18 +132,19 @@ export default function ResetPage() {
                       >
                         ยกเลิก
                       </button>
+                      
                       <button
                         onClick={handleReset}
                         disabled={isLoading || !password}
                         className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                       >
                         {isLoading ? (
-                          <>
-                            <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                            กำลังลบ...
-                          </>
+                            <>
+                                <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                                กำลังลบ...
+                            </>
                         ) : (
-                          "ยืนยันการลบ"
+                            "ยืนยันการลบ"
                         )}
                       </button>
                     </div>
