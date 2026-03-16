@@ -1,6 +1,7 @@
 import { Inter, Bebas_Neue } from 'next/font/google'
 import './globals.css'
-import { Analytics } from '@vercel/analytics/react' // 1. เพิ่มบรรทัดนี้เข้าไปครับ
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next' // ✅ เพิ่มตรงนี้
 
 const inter = Inter({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -27,7 +28,8 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning={true}
       >
         {children}
-        <Analytics /> {/* 2. เพิ่มบรรทัดนี้เข้าไปตรงนี้ครับ */}
+        <Analytics />
+        <SpeedInsights /> {/* ✅ เพิ่มตรงนี้ */}
       </body>
     </html>
   )
