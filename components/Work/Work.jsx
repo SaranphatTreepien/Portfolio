@@ -66,8 +66,15 @@ export default function Work() {
   // ✅ State สำหรับขยายปีต่างๆ
   const [isYearExpanded, setIsYearExpanded] = useState(false);
 
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    // ✅ เช็ค session ทันทีตอน load — ไม่ต้อง login ซ้ำถ้าเพิ่ง login ไป
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("isAdmin") === "true";
+    }
+    return false;
+  });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState(false); // ✅ loading state สำหรับปุ่ม login
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
@@ -215,6 +222,7 @@ export default function Work() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoginLoading(true);
     try {
       const res = await fetch("/api/admin-login", {
         method: "POST",
@@ -223,6 +231,7 @@ export default function Work() {
       });
       if (res.ok) {
         setIsAdmin(true);
+        sessionStorage.setItem("isAdmin", "true"); // ✅ cache ไว้ ไม่ต้อง login ซ้ำในแท็บเดิม
         setIsAuthModalOpen(false);
         setPasswordInput("");
         showToast("เข้าสู่ระบบ Admin สำเร็จ!");
@@ -231,6 +240,8 @@ export default function Work() {
       }
     } catch (error) {
       showToast("เกิดข้อผิดพลาด กรุณาลองใหม่", "error");
+    } finally {
+      setIsLoginLoading(false);
     }
   };
 
@@ -547,19 +558,19 @@ export default function Work() {
             {filterWork.length === 0 ? (
               <div className="text-center text-gray-500 py-10">ยังไม่มีข้อมูลในหมวดนี้</div>
             ) : (
-              <motion.div layout className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
                 <AnimatePresence mode="popLayout">
                   {filterWork.slice(0, visibleItems).map((item, index) => {
                     const isDeleting = deletingId === item.slug;
                     return (
                       <motion.div
-                        layout
                         key={item._id || item.slug || index}
-                        variants={cardVariants}
-                        initial="hidden"
-                        animate={isDeleting ? { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } } : "visible"}
-                        exit="exit"
-                        whileHover="hover"
+                        initial={isAdmin ? false : { opacity: 0, y: 16 }}
+                        animate={isDeleting
+                          ? { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } }
+                          : isAdmin ? {} : { opacity: 1, y: 0, transition: { duration: 0.25, delay: index < 6 ? index * 0.04 : 0 } }
+                        }
+                        exit={isAdmin ? {} : { opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
                         className={`relative group rounded-3xl overflow-hidden ${isDeleting ? "ring-4 ring-red-500 shadow-2xl shadow-red-500/50" : ""}`}
                       >
                         <div className="absolute top-14 left-4 z-20 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300">
@@ -577,29 +588,25 @@ export default function Work() {
                         <WorkItem {...item} />
                         {isAdmin && !isDeleting && (
                           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10 translate-y-2 group-hover:translate-y-0">
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                            <button
                               onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
-                              className="p-2.5 bg-white text-blue-500 rounded-full shadow-lg hover:bg-blue-500 hover:text-white border border-blue-100"
+                              className="p-2.5 bg-white text-blue-500 rounded-full shadow-lg hover:bg-blue-500 hover:text-white border border-blue-100 transition-all"
                             >
                               <PencilIcon />
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
+                            </button>
+                            <button
                               onClick={(e) => { e.stopPropagation(); handleDeleteProject(item.slug); }}
-                              className="p-2.5 bg-white text-red-500 rounded-full shadow-lg hover:bg-red-500 hover:text-white border border-red-100"
+                              className="p-2.5 bg-white text-red-500 rounded-full shadow-lg hover:bg-red-500 hover:text-white border border-red-100 transition-all"
                             >
                               <TrashIcon />
-                            </motion.button>
+                            </button>
                           </div>
                         )}
                       </motion.div>
                     );
                   })}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             )}
             {visibleItems < filterWork.length && (
               <div className="flex justify-center mt-12">
@@ -653,7 +660,9 @@ export default function Work() {
                     <input type="password" autoFocus placeholder="Password" className="border border-gray-300 p-2 rounded-lg w-full mb-4 text-center text-gray-800 outline-none focus:border-[#00ff99] transition-colors" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
                     <div className="flex justify-between gap-2">
                       <button type="button" onClick={() => setIsAuthModalOpen(false)} className="text-gray-500 text-sm hover:text-gray-700">Cancel</button>
-                      <button type="submit" className="bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors">Unlock</button>
+                      <button type="submit" disabled={isLoginLoading} className="bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors disabled:opacity-60 flex items-center gap-2">
+                        {isLoginLoading ? <><span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span> กำลังตรวจสอบ...</> : "Unlock"}
+                      </button>
                     </div>
                   </form>
                 </motion.div>
