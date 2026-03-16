@@ -178,7 +178,7 @@ const Hero = () => {
           </div>
 
           {/* --- Image Area (Right Side) --- */}
-          <div className="w-full lg:w-[45%] z-10 relative h-[400px] sm:h-[500px] lg:h-[750px] flex justify-center lg:justify-end items-center lg:items-end order-1 lg:order-2 animate-fade-in-up mb-8 lg:mb-0">
+          <div className="w-full lg:w-[45%] z-10 relative h-[400px] sm:h-[500px] lg:h-[750px] flex justify-center lg:justify-end items-center lg:items-end order-1 lg:order-2 mb-8 lg:mb-0">
             <div className="relative w-[300px] h-[340px] sm:w-[400px] sm:h-[460px] lg:w-[550px] lg:h-[650px]">
 
               {/* Glow */}
@@ -220,7 +220,8 @@ const Hero = () => {
                   priority
                   className="object-contain lg:object-bottom hover:-translate-y-2 transition-transform duration-500"
                   alt="Saranphat Profile"
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  sizes="(max-width: 640px) 300px, (max-width: 1024px) 400px, 550px"
+                  placeholder="empty"
                 />
               </div>
 
@@ -254,11 +255,10 @@ const Hero = () => {
           group relative overflow-hidden
           bg-white/60 backdrop-blur-2xl 
           border border-white/40
-          rounded-2xl p-8 h-full flex flex-col
+          rounded-2xl p-8 min-h-[200px] flex flex-col
           shadow-[0_8px_30px_rgb(0,0,0,0.04)]
           hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)]
           hover:-translate-y-2 transition-all duration-500
-          /* เพิ่มเส้นขอบเงาๆ เพื่อให้ตัดกับพื้นหลัง */
           ring-1 ring-white/50
         "
               >

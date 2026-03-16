@@ -38,15 +38,16 @@ const About = () => {
               <div className="w-[90%] h-[90%] bg-accent absolute -left-4 -top-4 -z-10 rounded-tl-[20px] rounded-br-[20px]"></div>
 
               {/* Image Container */}
-              <div className="rounded-tl-[20px] rounded-br-[20px] rounded-tr-[80px] rounded-bl-[80px] overflow-hidden bg-[#e5f8f6] shadow-2xl border-4 border-white">
+              <div className="rounded-tl-[20px] rounded-br-[20px] rounded-tr-[80px] rounded-bl-[80px] overflow-hidden bg-[#e5f8f6] shadow-2xl border-4 border-white aspect-[3/4]">
                 <Image
                   src="/assets/about/dev3.png"
                   width={420}
                   height={560}
-                  quality={100}
+                  quality={85}
                   priority
                   alt="Max Saranphat"
-                  className="object-cover object-center transform hover:scale-105 transition-transform duration-500"
+                  className="object-cover object-center w-full h-full transform hover:scale-105 transition-transform duration-500"
+                  placeholder="empty"
                 />
               </div>
             </div>
