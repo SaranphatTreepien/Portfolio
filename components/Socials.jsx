@@ -16,7 +16,7 @@ const socials = [
   { icon: <FaLinkedinIn />, path: "https://www.linkedin.com/in/saranphat-treepien-4284402b2" },
   // เปลี่ยนตรงนี้
   { icon: <BsFileEarmarkPersonFill />, path: "/resume", title: "Resume" }, // ไอคอนรูปเอกสารมีตัวคน
-  { icon: <FaFilePdf />, path: "/cv", title: "CV" },                 // ไอคอน PDF ชัดเจน
+  // { icon: <FaFilePdf />, path: "/cv", title: "CV" },                 // ไอคอน PDF ชัดเจน
 ];
 
 const Socials = ({ containerStyles, iconStyles }) => {

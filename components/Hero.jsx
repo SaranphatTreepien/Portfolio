@@ -162,7 +162,8 @@ const Hero = () => {
                 ">
                   <FiFileText className="text-lg sm:text-xl group-hover:scale-110 transition-transform duration-300" />
                   <span className="font-bold tracking-wide text-xs sm:text-sm uppercase whitespace-nowrap">
-                    Resume <span className="text-accent lg:text-accent mx-1">/</span> CV
+                    Resume <span className="text-accent lg:text-accent mx-1"></span> 
+                     {/* Resume <span className="text-accent lg:text-accent mx-1">/</span> CV */}
                   </span>
                   <FiArrowRight className="text-lg opacity-0 -translate-x-2 w-0 group-hover:w-auto group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                 </button>

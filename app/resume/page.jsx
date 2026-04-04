@@ -29,7 +29,7 @@ import Confetti from "react-confetti";
 const ADMIN_PASSWORD = "1234";
 
 // --- 📂 ตั้งค่า Path ไฟล์ PDF ---
-const RESUME_PATH = "/assets/document/Resume_ศรัณย์ภัทร_ตรีเพียร.pdf";
+const RESUME_PATH = "/assets/document/Saranphat_Treepian_Resume.pdf";
 const CV_PATH = "/assets/document/CV_Saranphat_Treepien.pdf";
 
 // ✨ Component ช่วยไฮไลท์ข้อความ (คลิกแล้วจะส่ง event ไปบอก Parent ว่าขอแก้)
@@ -89,8 +89,8 @@ export default function ResumePage() {
 
   // 📝 Form State
   const [form, setForm] = useState({
-    firstName: "ศรัณย์ภัทร",
-    lastName: "ตรีเพียร",
+    firstName: "Saranphat",
+    lastName: "Treepian",
     emailSender: "saranphat.tre289@gmail.com",
     position: "",
     company: "",
@@ -113,7 +113,61 @@ export default function ResumePage() {
 
   const [isManualEdit, setIsManualEdit] = useState(false);
   const textareaRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [pdfThumbReady, setPdfThumbReady] = useState(false);
 
+  useEffect(() => {
+    let renderTask = null;
+    let cancelled = false;
+
+    const renderThumb = async () => {
+      try {
+        const pdfjsLib = await import("pdfjs-dist");
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/build/pdf.worker.mjs",
+          import.meta.url,
+        ).toString();
+
+        const pdf = await pdfjsLib.getDocument(RESUME_PATH).promise;
+        if (cancelled) return; // ✅ ถ้า unmount แล้วให้หยุด
+
+        const page = await pdf.getPage(1);
+        if (cancelled) return;
+
+        const scale = 2;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = canvasRef.current;
+        if (!canvas || cancelled) return;
+
+        // ✅ Clear canvas ก่อน render ใหม่
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        // ✅ เก็บ renderTask ไว้ cancel ได้
+        renderTask = page.render({ canvasContext: ctx, viewport });
+
+        await renderTask.promise;
+
+        if (!cancelled) setPdfThumbReady(true);
+      } catch (err) {
+        if (err?.name !== "RenderingCancelledException") {
+          console.error("PDF render error:", err);
+        }
+      }
+    };
+
+    renderThumb();
+
+    // ✅ Cleanup: cancel เมื่อ component unmount หรือ re-render
+    return () => {
+      cancelled = true;
+      if (renderTask) renderTask.cancel();
+    };
+  }, []);
   useEffect(() => {
     if (typeof window !== "undefined") {
       setWindowSize({ width: window.innerWidth, height: window.innerHeight });
@@ -483,7 +537,7 @@ ${form.phone}`;
         </Link>
 
         {/* ปุ่มไปหน้า Resume */}
-        <Link href="/cv">
+        {/* <Link href="/cv">
           <motion.button
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.95 }}
@@ -491,7 +545,7 @@ ${form.phone}`;
           >
             <FaFileAlt className="text-sm" /> ไปที่หน้า CV<span>→</span>
           </motion.button>
-        </Link>
+        </Link> */}
       </nav>
 
       <div className="max-w-4xl mx-auto">
@@ -1218,8 +1272,9 @@ ${form.phone}`;
               className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4"
               onClick={() => setLightbox(false)}
             >
+              {/* ใช้ canvas เดิม scale ขึ้น */}
               <img
-                src="/assets/document/resume.png"
+                src={canvasRef.current?.toDataURL()}
                 className="max-h-[90vh] rounded shadow-2xl"
               />
             </motion.div>
@@ -1297,12 +1352,20 @@ ${form.phone}`;
                 🔍 คลิกเพื่อขยาย
               </span>
             </div>
-            <img
-              src="/assets/document/resume.png"
-              alt="Resume Preview"
-              className="w-full h-auto rounded-lg object-cover"
-              onError={(e) => (e.target.style.display = "none")}
+
+            {/* ✅ Canvas แทนรูป — render จาก PDF อัตโนมัติ */}
+            <canvas
+              ref={canvasRef}
+              className="w-full h-auto rounded-lg"
+              style={{ display: pdfThumbReady ? "block" : "none" }}
             />
+
+            {/* Loading placeholder */}
+            {!pdfThumbReady && (
+              <div className="w-full h-64 flex items-center justify-center text-gray-400 animate-pulse">
+                ⏳ กำลังโหลด Resume...
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
