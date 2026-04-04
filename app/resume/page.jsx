@@ -506,18 +506,38 @@ ${form.phone}`;
         </div>
 
         {/* Action Buttons */}
+        <div className="flex flex-col items-center gap-3 mb-12">
+          {/* แถวบน: Download + Share */}
+          <div className="flex justify-center gap-3">
+            <motion.button
+              onClick={() => setShowDownloadAlert(true)}
+              className="flex items-center gap-2 px-5 py-3 bg-[#f8fafc] text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-white transition-all"
+              whileHover={{ scale: 1.05, y: -2 }}
+            >
+              <FaDownload /> RESUME PDF
+            </motion.button>
 
-        <div className="flex justify-center gap-6 mb-12">
+            <motion.button
+              onClick={handleShareFile}
+              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#7edad2] to-[#5fb3a9] text-white rounded-full shadow-md hover:opacity-90 transition-all"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <FaShare /> แชร์ PDF
+            </motion.button>
+          </div>
+
+          {/* แถวล่าง: Admin */}
           <motion.button
             onClick={handleAdminClick}
-            className={`flex items-center gap-3 px-6 py-3 rounded-full shadow-lg transition-all border ${
+            className={`flex items-center gap-3 px-6 py-2.5 rounded-full shadow-sm transition-all border text-sm ${
               isAdmin
                 ? showForm
                   ? "bg-[#f8fafc] text-[#7edad2] border-[#7edad2]"
                   : "bg-gradient-to-r from-[#7edad2] to-[#6ccbc2] text-white border-transparent"
-                : "bg-gray-200 text-gray-500 border-transparent hover:bg-gray-300"
+                : "bg-gray-100 text-gray-400 border-transparent hover:bg-gray-200"
             }`}
-            whileHover={{ scale: 1.05, y: -2 }}
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.95 }}
           >
             {isAdmin ? (
@@ -527,30 +547,14 @@ ${form.phone}`;
                 </>
               ) : (
                 <>
-                  <SiGmail className="text-xl" /> สร้างอีเมลสมัครงาน
+                  <SiGmail className="text-lg" /> สร้างอีเมลสมัครงาน
                 </>
               )
             ) : (
               <>
-                <FaLock /> Admin Only
+                <FaLock className="text-xs" /> Admin Only
               </>
             )}
-          </motion.button>
-
-          <motion.button
-            onClick={() => setShowDownloadAlert(true)}
-            className="flex items-center gap-3 px-6 py-3 bg-[#f8fafc] text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-white transition-all"
-            whileHover={{ scale: 1.05, y: -2 }}
-          >
-            <FaDownload /> RESUME PDF
-          </motion.button>
-          <motion.button
-            onClick={handleShareFile}
-            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#7edad2] to-[#5fb3a9] text-white rounded-full shadow-md border border-transparent hover:opacity-90 transition-all"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <FaShare /> แชร์ PDF
           </motion.button>
         </div>
 
