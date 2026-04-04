@@ -25,7 +25,7 @@ import {
 } from "react-icons/fa";
 import { MdEmail, MdDateRange } from "react-icons/md";
 import Confetti from "react-confetti";
-// --- ⚙️ ตั้งรหัสผ่าน Admin ---
+// --- ⚙️ ตั้งรหัสผ่าน Admin ---ชชชช
 const ADMIN_PASSWORD = "1234";
 
 // --- 📂 ตั้งค่า Path ไฟล์ PDF ---
