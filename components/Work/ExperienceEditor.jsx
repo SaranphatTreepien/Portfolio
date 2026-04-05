@@ -48,6 +48,11 @@ export default function ExperienceEditor({ slug }) {
     const [isDescExpanded, setIsDescExpanded] = useState(false);
     // --- ✅ [ใหม่ 1] เพิ่ม State สำหรับเช็คสถานะการลาก ---
     const [isDragging, setIsDragging] = useState(false);
+
+    useEffect(() => {
+        setIsDescExpanded(false);
+    }, [viewingItem]);
+
     const processFiles = (files) => {
         if (!files || files.length === 0) return;
 
@@ -420,26 +425,26 @@ export default function ExperienceEditor({ slug }) {
                         </button>
                     </div>
                 )}
-                <div className="max-w-5xl mx-auto bg-gradient-to-b from-gray-900 to-gray-800 p-6 md:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden text-white border border-gray-700">
+                <div className="max-w-5xl mx-auto bg-gradient-to-b from-gray-900 to-gray-800 p-4 md:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden text-white border border-gray-700">
 
                     {/* Background Glow */}
                     <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#7edad2]/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-                    <div className="relative w-full h-[250px] md:h-[450px] rounded-2xl overflow-hidden mb-8 shadow-inner bg-black/40 border border-white/5">
+                    <div className="relative w-full h-[420px] md:h-[520px] rounded-2xl overflow-hidden mb-6 shadow-inner bg-black/40 border border-white/5">
                         {project.img ? <Image src={project.img} alt={project.title} fill className="object-contain p-4" /> : <div className="flex items-center justify-center h-full text-gray-500">ไม่มีรูปภาพ</div>}
                     </div>
 
-                    <div className="flex items-center gap-3 mb-6">
-                        <span className="bg-[#7edad2]/20 text-[#7edad2] px-4 py-1.5 rounded-full text-sm font-bold tracking-wide border border-[#7edad2]/30 shadow-[0_0_15px_rgba(126,218,210,0.2)]">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="bg-[#7edad2]/20 text-[#7edad2] px-4 py-1.5 rounded-full text-[10px] md:text-sm font-bold tracking-wide border border-[#7edad2]/30 shadow-[0_0_15px_rgba(126,218,210,0.2)]">
                             {project.category || "General"}
                         </span>
                     </div>
 
-                    <h1 className="text-2xl md:text-4xl font-bold text-white mb-6 leading-tight tracking-tight drop-shadow-sm break-words">
+                    <h1 className="text-[10px] md:text-4xl font-bold text-white mb-4 leading-tight tracking-tight drop-shadow-sm break-words">
                         {project.title}
                     </h1>
 
-                    <div className="text-gray-200 whitespace-pre-wrap break-words leading-loose text-base md:text-lg font-light border-l-4 border-[#7edad2] pl-6">
+                    <div className="text-gray-200 whitespace-pre-wrap break-words leading-relaxed text-[10px] md:text-lg font-light border-l-4 border-[#7edad2] pl-4 md:pl-6">
                         {project.description || "ยังไม่มีรายละเอียด..."}
                     </div>
                 </div>
@@ -724,7 +729,7 @@ export default function ExperienceEditor({ slug }) {
 
                                 {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
                                 {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
-                                <div className="relative w-full md:w-[70%] h-[50vh] md:h-full bg-[#050505] flex-shrink-0 overflow-hidden group">
+                                <div className="relative w-full md:w-[70%] h-[64vh] md:h-full bg-[#050505] flex-shrink-0 overflow-hidden group">
 
                                     {/* ปุ่ม Zoom controls (ถ้ามี) วางตรงนี้ */}
 
@@ -739,7 +744,7 @@ export default function ExperienceEditor({ slug }) {
                                                     <div
                                                         key={index}
                                                         // ✅ แก้ไขบรรทัดนี้: บังคับความสูง h-[50vh] สำหรับมือถือ และ h-[85vh] สำหรับจอคอม
-                                                        className="relative w-full shrink-0 snap-center flex items-center justify-center p-2 h-[50vh] md:h-[85vh]"
+                                                        className="relative w-full shrink-0 snap-center flex items-center justify-center p-2 h-[64vh] md:h-[85vh]"
                                                     >
                                                         <div className="relative w-full h-full rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/50">
                                                             <Image
@@ -761,7 +766,7 @@ export default function ExperienceEditor({ slug }) {
                                                 ))
                                             ) : (
                                                 // Fallback กรณีมีรูปเดียว หรือเป็น string
-                                                <div className="relative w-full h-[50vh] md:h-[85vh] p-4 flex items-center justify-center">
+                                                <div className="relative w-full h-[64vh] md:h-[85vh] p-4 flex items-center justify-center">
                                                     <Image
                                                         src={Array.isArray(viewingItem.img) ? (viewingItem.img[0] || "") : viewingItem.img}
                                                         alt={viewingItem.title}
@@ -775,30 +780,30 @@ export default function ExperienceEditor({ slug }) {
                                 </div>
 
                                 {/* --- ส่วนที่ 2: เนื้อหา --- */}
-                                <div className="w-full md:w-[30%] bg-[#111] p-6 md:p-10 overflow-y-auto border-t md:border-t-0 md:border-l border-white/10 z-20 flex flex-col">
+                                <div className="w-full md:w-[30%] bg-[#111] px-4 py-4 md:p-10 overflow-y-auto border-t md:border-t-0 md:border-l border-white/10 z-20 flex flex-col">
                                     <div className="flex-1 text-left">
-                                        <div className="flex items-center gap-2 mb-3">
+                                        <div className="flex items-center gap-2 mb-2">
                                             <span className="w-1.5 h-1.5 rounded-full bg-[#7edad2] animate-pulse"></span>
                                             <span className="text-[#7edad2] text-[10px] font-bold tracking-[0.2em] uppercase">Content</span>
                                         </div>
 
-                                        <h2 className="text-xl md:text-2xl font-bold text-white mb-4 leading-tight">
+                                        <h2 className="text-[10px] md:text-2xl font-extrabold text-white mb-2 leading-tight tracking-tight">
                                             {viewingItem.title}
                                         </h2>
 
                                         <div className="relative">
                                             {viewingItem.description ? (
-                                                <p className={`text-gray-400 text-sm md:text-base leading-relaxed whitespace-pre-wrap transition-all duration-500 ${!isDescExpanded ? 'line-clamp-[5] md:line-clamp-none' : ''}`}>
+                                                <p className={`text-gray-400 text-xs md:text-base leading-snug whitespace-pre-wrap transition-all duration-500 ${isDescExpanded ? 'line-clamp-none' : 'line-clamp-1 md:line-clamp-none'}`}>
                                                     {viewingItem.description}
                                                 </p>
                                             ) : (
-                                                <p className="text-gray-600 text-sm italic">ไม่มีรายละเอียด</p>
+                                                <p className="text-gray-600 text-xs italic">ไม่มีรายละเอียด</p>
                                             )}
 
                                             {viewingItem.description && (
                                                 <button
                                                     onClick={() => setIsDescExpanded(!isDescExpanded)}
-                                                    className="md:hidden text-[#7edad2] text-[11px] font-black mt-4 flex items-center gap-2 py-2 px-4 bg-white/5 rounded-lg border border-white/10 uppercase tracking-widest"
+                                                    className="md:hidden text-[#7edad2] text-[10px] font-black mt-3 flex items-center gap-2 py-1.5 px-3 bg-white/5 rounded-lg border border-white/10 uppercase tracking-widest"
                                                 >
                                                     {isDescExpanded ? 'ย่อ ▲' : 'อ่านเพิ่ม ▼'}
                                                 </button>
@@ -807,12 +812,12 @@ export default function ExperienceEditor({ slug }) {
                                     </div>
 
                                     {viewingItem.link && (
-                                        <div className="mt-8 pt-6 border-t border-white/5">
+                                        <div className="mt-4 pt-4 border-t border-white/5">
                                             <a
                                                 href={viewingItem.link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center justify-center gap-2 w-full bg-[#7edad2] text-[#0a0a0a] py-4 rounded-xl font-bold text-xs tracking-widest uppercase transition-transform active:scale-95 shadow-lg shadow-[#7edad2]/10"
+                                                className="flex items-center justify-center gap-2 w-full bg-[#7edad2] text-[#0a0a0a] py-3 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-transform active:scale-95 shadow-lg shadow-[#7edad2]/10"
                                             >
                                                 เปิดลิงก์
                                             </a>
