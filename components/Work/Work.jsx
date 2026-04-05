@@ -399,7 +399,7 @@ export default function Work() {
           <div className="flex items-center mb-[30px]">
             <TabsList className="w-full md:w-auto max-w-full h-auto flex flex-row flex-wrap items-center justify-center md:justify-start gap-1 p-2 rounded-[28px] border-[#7edad2]/80 shadow-[0_0_0_1px_rgba(126,218,210,0.35),0_0_18px_rgba(126,218,210,0.22)] mx-auto md:mx-0">
               {tabData.map((item, index) => (
-                <TabsTrigger key={index} value={item.category} className="capitalize w-auto min-w-[96px] px-4">
+                <TabsTrigger key={index} value={item.category} className="capitalize w-auto min-w-[96px] px-4 border border-[#7edad2]/45 data-[state=active]:border-[#7edad2]">
                   {item.label}
                 </TabsTrigger>
               ))}
@@ -409,7 +409,7 @@ export default function Work() {
                 <button
                   type="button"
                   onClick={handleToggleYears}
-                  className="inline-flex items-center justify-center gap-1 whitespace-nowrap h-[40px] rounded-full px-4 text-sm font-medium transition-all text-gray-500 hover:text-[#00ff99] hover:bg-[#00ff99]/10"
+                  className="inline-flex items-center justify-center gap-1 whitespace-nowrap h-[40px] rounded-full px-4 text-sm font-medium transition-all text-gray-500 hover:text-[#00ff99] hover:bg-[#00ff99]/10 border border-[#7edad2]/45"
                 >
                   <span>{isYearsCollapsed ? `Years(${yearCategories.length})` : 'Hide'}</span>
                   <svg

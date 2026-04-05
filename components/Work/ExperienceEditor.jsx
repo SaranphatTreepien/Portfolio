@@ -430,8 +430,16 @@ export default function ExperienceEditor({ slug }) {
                     {/* Background Glow */}
                     <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#7edad2]/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-                    <div className="relative w-full h-[46vh] md:h-[560px] rounded-[20px] overflow-hidden mb-6 shadow-inner bg-black/40 border border-white/5">
-                        {project.img ? <Image src={project.img} alt={project.title} fill className="object-contain px-1 py-[10px] md:p-4" /> : <div className="flex items-center justify-center h-full text-gray-500">ไม่มีรูปภาพ</div>}
+                    <div className="w-full mb-6 rounded-[20px] overflow-hidden shadow-inner bg-black/40 border border-white/5">
+                        {project.img ? (
+                            <img
+                                src={project.img}
+                                alt={project.title}
+                                className="block w-full h-auto object-contain"
+                            />
+                        ) : (
+                            <div className="flex items-center justify-center h-[280px] text-gray-500">ไม่มีรูปภาพ</div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-3 mb-4">

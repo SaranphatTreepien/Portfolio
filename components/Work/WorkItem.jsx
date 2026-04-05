@@ -14,10 +14,10 @@ const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate, 
     : null;
 
   return (
-    <div className="group block h-full select-none">
+    <div className="group block h-full select-none rounded-[2rem] border border-[#7edad2]/35 p-3 bg-white transition-colors duration-300 hover:border-[#7edad2]/60">
 
       {/* --- 1. Image Card --- */}
-      <Link href={`/work/${slug}`} className="block w-full overflow-hidden rounded-[2rem]">
+      <Link href={`/work/${slug}`} className="block w-full overflow-hidden rounded-[1.6rem]">
         <div className="relative w-full h-[320px] bg-gray-100 overflow-hidden">
 
           {/* Badge Top Left (Category - ของเดิม) */}
