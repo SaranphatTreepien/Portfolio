@@ -430,8 +430,8 @@ export default function ExperienceEditor({ slug }) {
                     {/* Background Glow */}
                     <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#7edad2]/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-                    <div className="relative w-full h-[420px] md:h-[520px] rounded-2xl overflow-hidden mb-6 shadow-inner bg-black/40 border border-white/5">
-                        {project.img ? <Image src={project.img} alt={project.title} fill className="object-contain p-4" /> : <div className="flex items-center justify-center h-full text-gray-500">ไม่มีรูปภาพ</div>}
+                    <div className="relative w-full h-[46vh] md:h-[560px] rounded-[20px] overflow-hidden mb-6 shadow-inner bg-black/40 border border-white/5">
+                        {project.img ? <Image src={project.img} alt={project.title} fill className="object-contain px-1 py-[10px] md:p-4" /> : <div className="flex items-center justify-center h-full text-gray-500">ไม่มีรูปภาพ</div>}
                     </div>
 
                     <div className="flex items-center gap-3 mb-4">
@@ -440,11 +440,11 @@ export default function ExperienceEditor({ slug }) {
                         </span>
                     </div>
 
-                    <h1 className="text-[10px] md:text-4xl font-bold text-white mb-4 leading-tight tracking-tight drop-shadow-sm break-words">
+                    <h1 className="text-[14px] md:text-4xl font-bold text-white mb-4 leading-tight tracking-tight drop-shadow-sm break-words">
                         {project.title}
                     </h1>
 
-                    <div className="text-gray-200 whitespace-pre-wrap break-words leading-relaxed text-[10px] md:text-lg font-light border-l-4 border-[#7edad2] pl-4 md:pl-6">
+                    <div className="text-gray-200 whitespace-pre-wrap break-words leading-relaxed text-[14px] md:text-lg font-light border-l-4 border-[#7edad2] pl-4 md:pl-6">
                         {project.description || "ยังไม่มีรายละเอียด..."}
                     </div>
                 </div>
