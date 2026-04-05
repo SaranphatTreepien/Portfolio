@@ -11,7 +11,6 @@ import { FiTrendingUp, FiCpu, FiGlobe, FiZap } from "react-icons/fi";
 import { FiFileText, FiArrowRight } from "react-icons/fi";
 
 // components
-import RotatingShape from "./RotatingShape";
 import Header from "./Header";
 
 // ข้อมูลการ์ด
@@ -43,20 +42,33 @@ const stats = [
 ];
 
 const Hero = () => {
+
   return (
     <section className="relative w-full min-h-screen overflow-hidden flex flex-col font-sans" id="Home">
 
-      {/* --- 1. Noise Texture Overlay (เพิ่มความมีมิติ) --- */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] mix-blend-overlay"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
-      </div>
-
       {/* --- Background Layers --- */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent to-[#005f5f] lg:from-white lg:to-gray-50 -z-20 transition-colors duration-300">
-        <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1.5px,transparent_1.5px)] lg:bg-[radial-gradient(#cbd5e1_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-20 lg:opacity-60 mix-blend-overlay lg:mix-blend-normal"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-accent to-[#005f5f] lg:from-white lg:to-gray-50 -z-20">
+        {/* Static gradient orbs */}
+        <div 
+          className="absolute w-[600px] h-[600px] rounded-full opacity-30 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(126,218,210,0.4) 0%, transparent 70%)',
+            top: '20%',
+            right: '10%',
+          }}
+        ></div>
+        <div 
+          className="absolute w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(0,168,168,0.3) 0%, transparent 70%)',
+            bottom: '10%',
+            left: '5%',
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1.5px,transparent_1.5px)] lg:bg-[radial-gradient(#cbd5e1_1.5px,transparent_1.5px)] [background-size:32px_32px] opacity-15 lg:opacity-40"></div>
       </div>
 
-      {/* --- 2. Tech Elements (Binary / Code Symbols) --- */}
+      {/* --- Tech Elements (Binary / Code Symbols) --- */}
       <div className="hidden lg:block absolute top-20 left-10 font-mono text-accent/5 text-8xl font-bold select-none z-0 rotate-12 pointer-events-none">
         {"< />"}
       </div>
@@ -80,10 +92,9 @@ const Hero = () => {
           <div className="w-full lg:w-[50%] text-center lg:text-left z-20 order-2 lg:order-1 flex flex-col items-center lg:items-start space-y-6 mb-10 lg:mb-32">
 
             {/* Badge */}
-            <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <span className="inline-flex items-center gap-2 py-2 px-5 rounded-full bg-white/10 border border-white/20 lg:bg-accent/5 lg:border-accent/10 backdrop-blur-md shadow-sm">
+            <div>
+              <span className="inline-flex items-center gap-2 py-2 px-5 rounded-full bg-white/10 border border-white/20 lg:bg-accent/5 lg:border-accent/10 backdrop-blur-sm shadow-sm">
                 <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                 </span>
                 <span className="text-white lg:text-accent font-semibold tracking-wide text-xs sm:text-sm uppercase">
@@ -93,23 +104,20 @@ const Hero = () => {
             </div>
 
             {/* Main Title */}
-            <h1
-              className="text-4xl sm:text-6xl md:text-7xl xl:text-8xl font-black leading-none tracking-tight animate-fade-in-up"
-              style={{ animationDelay: '0.2s' }}
-            >
+            <h1 className="text-4xl sm:text-6xl md:text-7xl xl:text-8xl font-black leading-none tracking-tight">
               {/* บรรทัดที่ 1 */}
               <span className="block text-white lg:text-gray-800 drop-shadow-lg lg:drop-shadow-none">
                 I'M COMPUTER
               </span>
 
-              {/* บรรทัดที่ 2: ลบ mt-2 ออก เพื่อให้ขยับขึ้นไปชิดข้างบน */}
+              {/* บรรทัดที่ 2 */}
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white/80 to-white/60 lg:from-accent lg:via-emerald-500 lg:to-teal-600 pb-2">
                 ENGINEERING
               </span>
             </h1>
 
             {/* Type Animation */}
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold h-[40px] flex justify-center lg:justify-start items-center text-white/90 lg:text-gray-500 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold h-[40px] flex justify-center lg:justify-start items-center text-white/90 lg:text-gray-500">
               <span className="mr-3 font-medium">Currently </span>
               <TypeAnimation
                 sequence={[
@@ -127,52 +135,42 @@ const Hero = () => {
             </div>
 
             {/* Description */}
-            <p className="text-white/80 lg:text-gray-500 max-w-[90%] sm:max-w-[550px] text-sm sm:text-lg leading-relaxed font-normal animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <p className="text-white/80 lg:text-gray-500 max-w-[90%] sm:max-w-[550px] text-sm sm:text-lg leading-relaxed font-normal">
               Passionate about exploring <strong className="text-white lg:text-accent font-bold">Data, Networks, AI</strong>, and <strong className="text-white lg:text-accent font-bold">AIoT</strong>. Turning complex problems into elegant, intelligent solutions.
             </p>
 
             {/* Buttons Area */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-4 w-full pt-4 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+            <div className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-4 w-full pt-4">
 
               {/* 1. Contact Button */}
               <ScrollLink to="Contact" smooth duration={500} offset={-50}>
-                <button className="group relative h-[50px] sm:h-[56px] px-6 sm:px-8 rounded-full bg-white text-accent lg:bg-accent lg:text-white font-bold overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-accent/50">
-                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></span>
-                  <span className="relative z-10 flex items-center gap-2">Contact Me <span className="text-lg">➔</span></span>
+                <button className="h-[50px] sm:h-[56px] px-6 sm:px-8 rounded-full bg-white text-accent lg:bg-accent lg:text-white font-bold shadow-lg">
+                  <span className="flex items-center gap-2">Contact Me <span className="text-lg">➔</span></span>
                 </button>
               </ScrollLink>
 
               {/* 2. Learning Button */}
               <ScrollLink to="Learning" smooth duration={500} offset={-50}>
-                <button className="h-[50px] sm:h-[56px] px-6 sm:px-8 rounded-full border-2 border-white lg:border-accent text-white lg:text-accent font-bold hover:bg-white/10 lg:hover:bg-accent lg:hover:text-white transition-all duration-300">
+                <button className="h-[50px] sm:h-[56px] px-6 sm:px-8 rounded-full border-2 border-white lg:border-accent text-white lg:text-accent font-bold">
                   My Experience
                 </button>
               </ScrollLink>
 
               {/* 3. Resume Button */}
               <Link href="/resume" passHref>
-                <button className="
-                  group flex items-center gap-2 sm:gap-3 
-                  h-[50px] sm:h-[56px] px-6 sm:px-8 rounded-full 
-                  border-2 border-white/30 lg:border-gray-300 
-                  text-white lg:text-gray-600 font-bold 
-                  bg-white/5 lg:bg-transparent backdrop-blur-sm
-                  hover:bg-white hover:text-accent lg:hover:border-accent lg:hover:text-accent
-                  transition-all duration-300 ease-in-out relative overflow-hidden
-                ">
-                  <FiFileText className="text-lg sm:text-xl group-hover:scale-110 transition-transform duration-300" />
+                <button className="flex items-center gap-2 sm:gap-3 h-[50px] sm:h-[56px] px-6 sm:px-8 rounded-full border-2 border-white/30 lg:border-gray-300 text-white lg:text-gray-600 font-bold bg-white/5 lg:bg-transparent backdrop-blur-sm">
+                  <FiFileText className="text-lg sm:text-xl" />
                   <span className="font-bold tracking-wide text-xs sm:text-sm uppercase whitespace-nowrap">
-                    Resume <span className="text-accent lg:text-accent mx-1"></span> 
-                     {/* Resume <span className="text-accent lg:text-accent mx-1">/</span> CV */}
+                    Resume
                   </span>
-                  <FiArrowRight className="text-lg opacity-0 -translate-x-2 w-0 group-hover:w-auto group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                  <FiArrowRight className="text-lg" />
                 </button>
               </Link>
 
             </div>
 
             {/* Socials */}
-            <div className="flex items-center gap-6 pt-4 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+            <div className="flex items-center gap-6 pt-4">
               <SocialLink href="https://github.com/SaranphatTreepien" icon={<FaGithub />} label="GitHub" />
               <SocialLink href="https://www.linkedin.com/in/saranphat-treepien-4284402b2" icon={<FaLinkedin />} label="LinkedIn" />
             </div>
@@ -182,114 +180,64 @@ const Hero = () => {
           <div className="w-full lg:w-[45%] z-10 relative h-[400px] sm:h-[500px] lg:h-[750px] flex justify-center lg:justify-end items-center lg:items-end order-1 lg:order-2 mb-8 lg:mb-0">
             <div className="relative w-[300px] h-[340px] sm:w-[400px] sm:h-[460px] lg:w-[550px] lg:h-[650px]">
 
-              {/* Glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/20 blur-[80px] rounded-full -z-10 animate-pulse-slow"></div>
+              {/* Glow effect */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/15 blur-[40px] rounded-full -z-10"></div>
 
               {/* Decorative Geometric Shapes */}
               <div className="absolute inset-0 z-0 pointer-events-none">
-                <FloatingElement className="top-[-15%] -left-[10%] opacity-100 animate-float-slow">
+                {/* Curved line shape */}
+                <div className="absolute top-[-15%] -left-[10%] opacity-80">
                   <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M10 80 C 10 80, 20 20, 50 20 C 80 20, 80 50, 50 50 C 20 50, 20 80, 90 90" stroke="white" strokeWidth="3" strokeLinecap="round" strokeDasharray="6 6" />
                   </svg>
-                </FloatingElement>
+                </div>
 
-                <FloatingElement className="bottom-[30%] -left-[5%] opacity-100 animate-float-delayed delay-500">
-                  <div className="w-8 h-8 border-[3px] border-white animate-[spin_20s_linear_infinite] shadow-lg"></div>
-                </FloatingElement>
-
-                <FloatingElement className="bottom-[40%] -right-[8%] opacity-100 animate-float-slow delay-200">
-                  <svg width="50" height="50" viewBox="0 0 100 100" fill="none" className="animate-[spin_25s_linear_infinite] drop-shadow-md">
-                    <path d="M50 5 L93 25 L93 75 L50 95 L7 75 L7 25 Z" stroke="white" strokeWidth="3" />
-                  </svg>
-                </FloatingElement>
-
-                {/* Orbiting Circle */}
-                <div className="absolute top-[40%] left-[5%] z-20">
-                  <div className="relative w-[60px] h-[60px] flex items-center justify-center animate-[spin_3s_linear_infinite]">
-                    <div className="absolute top-0 w-5 h-5 rounded-full border-[3px] border-white bg-white/20 shadow-[0_0_15px_rgba(255,255,255,0.6)]"></div>
-                    <div className="absolute bottom-0 w-2 h-2 rounded-full bg-white opacity-80"></div>
-                    <div className="absolute inset-0 rounded-full border border-white/20"></div>
-                  </div>
+                {/* Circle accent */}
+                <div className="absolute top-[15%] -right-4 lg:top-[10%] lg:right-[0%] opacity-90">
+                  <div className="w-12 h-12 rounded-full border-[3px] border-white/60"></div>
                 </div>
               </div>
 
               {/* Profile Image */}
-              <div className="relative w-full h-full drop-shadow-2xl filter hover:brightness-105 transition-all duration-500 z-10">
+              <div className="relative w-full h-full drop-shadow-2xl z-10">
                 <Image
                   src="/assets/hero/dev3.png"
                   fill
                   priority
-                  className="object-contain lg:object-bottom hover:-translate-y-2 transition-transform duration-500"
+                  quality={85}
+                  className="object-contain lg:object-bottom"
                   alt="Saranphat Profile"
                   sizes="(max-width: 640px) 300px, (max-width: 1024px) 400px, 550px"
                   placeholder="empty"
                 />
               </div>
 
-              <FloatingElement className="top-[15%] -right-4 lg:top-[10%] lg:right-[0%] animate-float-medium delay-700">
-                <RotatingShape
-                  content={<Image src="/assets/hero/shape-2.svg" width={40} height={40} alt="shape2" className="brightness-0 invert drop-shadow-lg" />}
-                  direction="right" duration={5}
-                />
-              </FloatingElement>
-
             </div>
           </div>
         </div>
 
-        {/* --- 3. Scroll Down Indicator (เพิ่มการโต้ตอบ) --- */}
-        <div className="hidden lg:flex absolute bottom-32 left-1/2 -translate-x-1/2 z-20 flex-col items-center animate-fade-in-up delay-700 pointer-events-none">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-2 font-semibold">Scroll</span>
-          <div className="w-[26px] h-[44px] rounded-full border-2 border-gray-300 flex justify-center p-1.5 shadow-sm bg-white/20 backdrop-blur-sm">
-            <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce"></div>
-          </div>
-        </div>
-
-        {/* --- 4. Cards Section (Glassmorphism Style) --- */}
-        {/* --- 4. Cards Section (Premium Glass Style) --- */}
+        {/* --- Cards Section --- */}
         <div className="relative z-30 w-full mt-4 lg:-mt-20 pb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((item, index) => (
               <div
                 key={index}
-                className="
-          group relative overflow-hidden
-          bg-white/60 backdrop-blur-2xl 
-          border border-white/40
-          rounded-2xl p-8 min-h-[200px] flex flex-col
-          shadow-[0_8px_30px_rgb(0,0,0,0.04)]
-          hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)]
-          hover:-translate-y-2 transition-all duration-500
-          ring-1 ring-white/50
-        "
+                className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-8 min-h-[200px] flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
               >
-                {/* Decorative Background Blob (แสงจางๆ ด้านหลังการ์ด) */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/20 rounded-full blur-3xl group-hover:bg-accent/30 transition-all duration-500"></div>
-
                 {/* Icon Wrapper */}
-                <div className="
-          relative z-10 w-14 h-14 rounded-2xl 
-          bg-gradient-to-br from-white/80 to-white/40 
-          shadow-sm border border-white/50
-          flex items-center justify-center mb-6 
-          group-hover:scale-110 group-hover:rotate-3 
-          transition-transform duration-500 ease-out
-        ">
-                  <div className="text-accent text-2xl group-hover:text-accent-dark transition-colors duration-300">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/80 to-white/40 shadow-sm border border-white/50 flex items-center justify-center mb-6">
+                  <div className="text-accent text-2xl">
                     {item.icon}
                   </div>
                 </div>
 
                 {/* Content */}
-                <h3 className="relative z-10 text-xl font-bold text-gray-800 mb-3 group-hover:text-accent transition-colors duration-300">
+                <h3 className="text-xl font-bold text-gray-800 mb-3">
                   {item.title}
                 </h3>
-                <p className="relative z-10 text-gray-500 text-sm leading-relaxed flex-grow font-medium">
+                <p className="text-gray-500 text-sm leading-relaxed flex-grow font-medium">
                   {item.description}
                 </p>
-
-                {/* Bottom Border Highlight on Hover */}
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
               </div>
             ))}
           </div>
@@ -307,16 +255,10 @@ const SocialLink = ({ href, icon, label }) => (
     target="_blank"
     rel="noopener noreferrer"
     aria-label={label}
-    className="text-white/70 lg:text-gray-400 hover:text-white lg:hover:text-accent text-3xl transition-all duration-300 hover:scale-110 hover:rotate-6"
+    className="text-white/70 lg:text-gray-400 text-3xl"
   >
     {icon}
   </a>
-);
-
-const FloatingElement = ({ children, className }) => (
-  <div className={`absolute z-20 hover:scale-110 transition-transform duration-300 ${className}`}>
-    {children}
-  </div>
 );
 
 export default Hero;

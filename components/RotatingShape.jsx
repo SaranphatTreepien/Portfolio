@@ -15,7 +15,7 @@ const RotatingShape = ({ content, direction, duration }) => {
   },
 };
   return (
-    <motion.div variants={rotateAnimation} animate="animate">
+    <motion.div variants={rotateAnimation} animate="animate" style={{ willChange: "transform" }}>
       {content}
     </motion.div>
   );

@@ -34,6 +34,26 @@ module.exports = {
   		boxShadow: {
   			custom: '0px 14px 54px rgba(0,0,0,0.1)'
   		},
+		keyframes: {
+			'fade-in-up': {
+				'0%': { 
+					opacity: '0', 
+					transform: 'translateY(20px)' 
+				},
+				'100%': { 
+					opacity: '1', 
+					transform: 'translateY(0)' 
+				}
+			},
+			shimmer: {
+				'0%': { transform: 'translateX(-100%)' },
+				'100%': { transform: 'translateX(200%)' }
+			}
+		},
+		animation: {
+			'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+			'shimmer': 'shimmer 2s ease-in-out',
+		}
   	}
   },
   plugins: [require("tailwindcss-animate")],

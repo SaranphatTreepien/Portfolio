@@ -42,14 +42,13 @@ const cardVariants = {
 };
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.8, y: 50 },
+  hidden: { opacity: 0, scale: 0.95 },
   visible: {
     opacity: 1,
     scale: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 300, damping: 25 }
+    transition: { duration: 0.2, ease: "easeOut" }
   },
-  exit: { opacity: 0, scale: 0.8, y: 50, transition: { duration: 0.2 } }
+  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15 } }
 };
 
 
@@ -663,23 +662,39 @@ export default function Work() {
           )}
 
           {/* Admin Login Modal */}
-          {isAuthModalOpen && createPortal(
-            <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center backdrop-blur-sm p-4">
-              <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden">
-                <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">Admin Login</h3>
-                <form onSubmit={handleLogin}>
-                  <input type="password" autoFocus placeholder="Password" className="border border-gray-300 p-2 rounded-lg w-full mb-4 text-center text-gray-800 outline-none focus:border-[#00ff99] transition-colors" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
-                  <div className="flex justify-between gap-2">
-                    <button type="button" onClick={() => setIsAuthModalOpen(false)} className="text-gray-500 text-sm hover:text-gray-700">Cancel</button>
-                    <button type="submit" disabled={isLoginLoading} className="bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors disabled:opacity-60 flex items-center gap-2">
-                      {isLoginLoading ? <><span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span> กำลังตรวจสอบ...</> : "Unlock"}
-                    </button>
-                  </div>
-                </form>
-              </motion.div>
-            </div>,
-            document.body
-          )}
+          <AnimatePresence>
+            {isAuthModalOpen && createPortal(
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4"
+                style={{ willChange: 'opacity' }}
+              >
+                <motion.div 
+                  variants={modalVariants} 
+                  initial="hidden" 
+                  animate="visible" 
+                  exit="exit" 
+                  className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden"
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">Admin Login</h3>
+                  <form onSubmit={handleLogin}>
+                    <input type="password" autoFocus placeholder="Password" className="border border-gray-300 p-2 rounded-lg w-full mb-4 text-center text-gray-800 outline-none focus:border-[#00ff99] transition-colors" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
+                    <div className="flex justify-between gap-2">
+                      <button type="button" onClick={() => setIsAuthModalOpen(false)} className="text-gray-500 text-sm hover:text-gray-700">Cancel</button>
+                      <button type="submit" disabled={isLoginLoading} className="bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors disabled:opacity-60 flex items-center gap-2">
+                        {isLoginLoading ? <><span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span> กำลังตรวจสอบ...</> : "Unlock"}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              </motion.div>,
+              document.body
+            )}
+          </AnimatePresence>
 
           {/* Delete All Warning Modal */}
           {isDeleteAllModalOpen && createPortal(
