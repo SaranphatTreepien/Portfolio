@@ -25,8 +25,7 @@ import {
 } from "react-icons/fa";
 import { MdEmail, MdDateRange } from "react-icons/md";
 import Confetti from "react-confetti";
-// --- ⚙️ ตั้งรหัสผ่าน Admin ---ชชชช
-const ADMIN_PASSWORD = "1234";
+// --- ⚙️ ตั้งรหัสผ่าน Admin ---
 
 // --- 📂 ตั้งค่า Path ไฟล์ PDF ---
 const RESUME_PATH = "/assets/document/Saranphat_Treepian_Resume.pdf";
@@ -327,16 +326,28 @@ ${form.phone}`;
   const removePdf = (index) =>
     setAttachedPdfs((prev) => prev.filter((_, i) => i !== index));
 
-  const handleVerifyPassword = (e) => {
+  const handleVerifyPassword = async (e) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
+    try {
+      const response = await fetch("/api/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: passwordInput }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || "รหัสผ่านผิด");
+      }
+
       setIsAdmin(true);
       setShowAuthModal(false);
       setShowForm(true);
       setPasswordInput("");
       showToast("🔓 ปลดล็อกเรียบร้อย");
-    } else {
-      showToast("❌ รหัสผ่านผิด");
+    } catch (error) {
+      showToast(`❌ ${error.message || "รหัสผ่านผิด"}`);
     }
   };
 

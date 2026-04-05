@@ -10,7 +10,7 @@ const footerLinks = [
     items: [
       { name: "Home", href: "#home" },
       { name: "About Me", href: "#about" },
-      { name: "My Work", href: "#work" },
+      { name: "My Experience", href: "#work" },
     ]
   }
 ];

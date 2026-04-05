@@ -7,9 +7,6 @@ import { createPortal } from "react-dom";
 import AnimatedText from "../AnimatedText";
 import WorkItem from "./WorkItem";
 
-// --- 🔒 รหัสผ่าน Admin ---
-const ADMIN_PASSWORD = "Admin@1234";
-
 // --- Icons ---
 const TrashIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>);
 const PencilIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>);
@@ -52,6 +49,7 @@ export default function Work() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [isYearsCollapsed, setIsYearsCollapsed] = useState(true);
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -128,16 +126,48 @@ export default function Work() {
   };
 
   // --- Tabs data ---
-  const uniqueCategories = Array.from(new Set(projects.map((item) => item.category))).sort().reverse();
-  const tabData = [
+  const isYearCategory = (value) => /^\d{4}$/.test(String(value || "").trim());
+  const uniqueYearCategories = Array.from(
+    new Set(
+      projects
+        .map((item) => String(item.category || "").trim())
+        .filter(isYearCategory)
+    )
+  ).sort((a, b) => Number(b) - Number(a));
+  
+  // แยกหมวดหมู่พิเศษกับปี
+  const specialCategories = [
     { category: "all", label: "All" },
     { category: "Best", label: "⭐ Best" },
     { category: "Cloud", label: "☁️ Cloud" },
     { category: "Network", label: "🌐 Network" },
     { category: "Certificate", label: "📜 Certificate" },
     { category: "Community", label: "🤝 Community" },
-    ...uniqueCategories.map((c) => ({ category: c, label: c })),
   ];
+  
+  const yearCategories = uniqueYearCategories.map((c) => ({ category: c, label: c }));
+  const canCollapseYears = yearCategories.length > 0;
+
+  const handleToggleYears = () => {
+    setIsYearsCollapsed((prev) => {
+      const next = !prev;
+
+      // เมื่อซ่อนปีทั้งหมด ถ้ากำลังอยู่แท็บปีให้กลับไป All
+      if (next && isYearCategory(tabValue)) {
+        setTabValue("all");
+      }
+
+      return next;
+    });
+  };
+  
+  // แสดงปีตามสถานะการหุบ/ขยาย
+  const displayedYears = (() => {
+    if (!canCollapseYears || !isYearsCollapsed) return yearCategories;
+    return [];
+  })();
+  
+  const tabData = [...specialCategories, ...displayedYears];
 
   const filterWork = projects
     .filter((item) => {
@@ -158,14 +188,23 @@ export default function Work() {
   // --- Auth & CRUD handlers ---
   const handleLogin = (e) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      setIsAuthModalOpen(false);
-      setPasswordInput("");
-      showToast("เข้าสู่ระบบ Admin สำเร็จ!");
-    } else {
-      showToast("รหัสผ่านไม่ถูกต้อง", "error");
-    }
+    fetch("/api/admin-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: passwordInput }),
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "รหัสผ่านไม่ถูกต้อง");
+
+        setIsAdmin(true);
+        setIsAuthModalOpen(false);
+        setPasswordInput("");
+        showToast("เข้าสู่ระบบ Admin สำเร็จ!");
+      })
+      .catch((error) => {
+        showToast(error.message || "รหัสผ่านไม่ถูกต้อง", "error");
+      });
   };
 
   const handleDateChange = (e) => {
@@ -357,13 +396,36 @@ export default function Work() {
 
         {/* --- Tabs --- */}
         <Tabs value={tabValue} onValueChange={setTabValue} className="w-full flex flex-col">
-          <TabsList className="max-w-max h-full mb-[30px] flex flex-col md:flex-row gap-4 md:gap-0 mx-auto md:mx-0">
-            {tabData.map((item, index) => (
-              <TabsTrigger key={index} value={item.category} className="capitalize w-[120px]">
-                {item.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="flex items-center mb-[30px]">
+            <TabsList className="w-full md:w-auto max-w-full h-auto flex flex-row flex-wrap items-center justify-center md:justify-start gap-1 p-2 rounded-[28px] border-[#7edad2]/80 shadow-[0_0_0_1px_rgba(126,218,210,0.35),0_0_18px_rgba(126,218,210,0.22)] mx-auto md:mx-0">
+              {tabData.map((item, index) => (
+                <TabsTrigger key={index} value={item.category} className="capitalize w-auto min-w-[96px] px-4">
+                  {item.label}
+                </TabsTrigger>
+              ))}
+
+              {/* ปุ่มหุบ/ขยายปีให้อยู่ใน bar เดียวกับ Tabs */}
+              {canCollapseYears && (
+                <button
+                  type="button"
+                  onClick={handleToggleYears}
+                  className="inline-flex items-center justify-center gap-1 whitespace-nowrap h-[40px] rounded-full px-4 text-sm font-medium transition-all text-gray-500 hover:text-[#00ff99] hover:bg-[#00ff99]/10"
+                >
+                  <span>{isYearsCollapsed ? `Years(${yearCategories.length})` : 'Hide'}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className={`w-4 h-4 transition-transform ${isYearsCollapsed ? '' : 'rotate-180'}`}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+              )}
+            </TabsList>
+          </div>
 
           <TabsContent value={tabValue} className="w-full">
             {filterWork.length === 0 ? (
