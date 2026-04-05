@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createPortal } from "react-dom";
 import AnimatedText from "../AnimatedText";
 import WorkItem from "./WorkItem";
+import ProjectFormModal from "./ProjectFormModal";
 
 // รหัสผ่านอยู่ใน .env.local (ADMIN_PASSWORD) — เช็คที่ server เท่านั้น
 
@@ -85,7 +86,8 @@ export default function Work() {
   const [editingProject, setEditingProject] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleProcessFile = (file) => {
+  // ✅ ใช้ useCallback เพื่อ optimize และป้องกัน re-render ที่ไม่จำเป็น
+  const handleProcessFile = useCallback((file) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       showToast("กรุณาเลือกไฟล์รูปภาพเท่านั้น", "error");
@@ -93,7 +95,7 @@ export default function Work() {
     }
     setSelectedFile(file);
     setImagePreview(URL.createObjectURL(file));
-  };
+  }, []);
 
   useEffect(() => {
     const handlePaste = (e) => {
@@ -112,16 +114,37 @@ export default function Work() {
     return () => window.removeEventListener("paste", handlePaste);
   }, [isFormModalOpen]);
 
-  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
-  const handleDragLeave = (e) => { e.preventDefault(); setIsDragging(false); };
-  const handleDrop = (e) => {
+  // ✅ ใช้ useCallback สำหรับ drag handlers เพื่อไม่ให้สร้างฟังก์ชันใหม่ทุกครั้ง
+  const handleDragOver = useCallback((e) => { e.preventDefault(); setIsDragging(true); }, []);
+  const handleDragLeave = useCallback((e) => { e.preventDefault(); setIsDragging(false); }, []);
+  const handleDrop = useCallback((e) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleProcessFile(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
     }
-  };
+  }, [handleProcessFile]);
+
+  // ✅ ใช้ useCallback สำหรับ date change handler
+  const handleDateChange = useCallback((e) => {
+    const newDate = e.target.value;
+    if (newDate) {
+      const yearAD = parseInt(newDate.split("-")[0]);
+      const yearBE = yearAD + 543;
+      setFormData(prev => ({ ...prev, createdAt: newDate, category: yearBE.toString() }));
+    } else {
+      setFormData(prev => ({ ...prev, createdAt: newDate }));
+    }
+  }, []);
+
+  // ✅ ใช้ useCallback สำหรับ close modal
+  const handleCloseFormModal = useCallback(() => {
+    setIsFormModalOpen(false);
+    setEditingProject(null);
+    setSelectedFile(null);
+    setImagePreview("");
+  }, []);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -245,17 +268,6 @@ export default function Work() {
     }
   };
 
-  const handleDateChange = (e) => {
-    const newDate = e.target.value;
-    if (newDate) {
-      const yearAD = parseInt(newDate.split("-")[0]);
-      const yearBE = yearAD + 543;
-      setFormData({ ...formData, createdAt: newDate, category: yearBE.toString() });
-    } else {
-      setFormData({ ...formData, createdAt: newDate });
-    }
-  };
-
   const uploadToCloudinary = async (file) => {
     const formDataUpload = new FormData();
     formDataUpload.append("file", file);
@@ -284,10 +296,11 @@ export default function Work() {
     setFormData({
       title: "", category: currentThaiYear, slug: "", img: "",
       createdAt: dateString, link: "", isCertificate: false, isBest: false,
-      isCloud: false, isNetwork: false, isCommunity: false, // ✅ ใหม่
+      isCloud: false, isNetwork: false, isCommunity: false,
     });
     setSelectedFile(null);
     setImagePreview("");
+    // ✅ Instant open - ไม่มี delay เลย
     setIsFormModalOpen(true);
   };
 
@@ -624,320 +637,113 @@ export default function Work() {
         </Tabs>
       </div>
 
-      {/* --- Portals --- */}
-      {typeof document !== 'undefined' && createPortal(
+      {/* --- ✅ Optimized Portals - render เฉพาะเมื่อจำเป็น --- */}
+      {typeof document !== 'undefined' && (
         <>
-          {/* Toast Notification */}
-          <AnimatePresence>
-            {toast.show && (
-              <motion.div
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1, transition: { type: "spring" } }}
-                exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                className="fixed bottom-6 right-6 z-[10000] cursor-pointer"
-                onClick={() => setToast({ ...toast, show: false })}
-              >
-                <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${toast.type === "success" ? "bg-black/80 border-[#00ff99]/50 shadow-[#00ff99]/20" : "bg-black/80 border-red-500/50 shadow-red-500/20"}`}>
-                  {toast.type === "success" ? <CheckCircleIcon /> : <XCircleIcon />}
-                  <div>
-                    <h4 className={`font-bold text-sm ${toast.type === "success" ? "text-white" : "text-red-400"}`}>
-                      {toast.type === "success" ? "สำเร็จ" : "ข้อผิดพลาด"}
-                    </h4>
-                    <p className="text-xs text-gray-300">{toast.message}</p>
-                  </div>
+          {/* Toast Notification - แยก portal เพื่อไม่ให้กระทบกัน */}
+          {toast.show && createPortal(
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1, transition: { type: "spring" } }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              className="fixed bottom-6 right-6 z-[10000] cursor-pointer"
+              onClick={() => setToast({ ...toast, show: false })}
+            >
+              <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${toast.type === "success" ? "bg-black/80 border-[#00ff99]/50 shadow-[#00ff99]/20" : "bg-black/80 border-red-500/50 shadow-red-500/20"}`}>
+                {toast.type === "success" ? <CheckCircleIcon /> : <XCircleIcon />}
+                <div>
+                  <h4 className={`font-bold text-sm ${toast.type === "success" ? "text-white" : "text-red-400"}`}>
+                    {toast.type === "success" ? "สำเร็จ" : "ข้อผิดพลาด"}
+                  </h4>
+                  <p className="text-xs text-gray-300">{toast.message}</p>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </motion.div>,
+            document.body
+          )}
 
           {/* Admin Login Modal */}
-          <AnimatePresence>
-            {isAuthModalOpen && (
-              <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center backdrop-blur-sm p-4">
-                <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden">
-                  <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">Admin Login</h3>
-                  <form onSubmit={handleLogin}>
-                    <input type="password" autoFocus placeholder="Password" className="border border-gray-300 p-2 rounded-lg w-full mb-4 text-center text-gray-800 outline-none focus:border-[#00ff99] transition-colors" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
-                    <div className="flex justify-between gap-2">
-                      <button type="button" onClick={() => setIsAuthModalOpen(false)} className="text-gray-500 text-sm hover:text-gray-700">Cancel</button>
-                      <button type="submit" disabled={isLoginLoading} className="bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors disabled:opacity-60 flex items-center gap-2">
-                        {isLoginLoading ? <><span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span> กำลังตรวจสอบ...</> : "Unlock"}
-                      </button>
-                    </div>
-                  </form>
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
-
-          {/* Delete All Warning Modal */}
-          <AnimatePresence>
-            {isDeleteAllModalOpen && (
-              <div className="fixed inset-0 bg-red-950/80 z-[10000] flex items-center justify-center p-4 backdrop-blur-md">
-                <motion.div
-                  variants={modalVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border-4 border-red-500 text-center relative overflow-hidden"
-                >
-                  <div className="absolute top-0 left-0 w-full h-4 bg-[repeating-linear-gradient(45deg,#ef4444,#ef4444_10px,#b91c1c_10px,#b91c1c_20px)]"></div>
-                  <div className="flex flex-col items-center gap-4 mt-4">
-                    <SkullIcon />
-                    <h3 className="text-3xl font-black text-red-600 uppercase tracking-widest">Danger Zone</h3>
-                    <p className="text-gray-600 text-sm">
-                      คุณกำลังจะ <span className="font-bold text-red-600">ลบข้อมูลทั้งหมด</span> ในฐานข้อมูล <br />
-                      การกระทำนี้ <u className="font-bold">ไม่สามารถกู้คืนได้</u>
-                    </p>
-                  </div>
-                  <div className="mt-6">
-                    <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">พิมพ์ "CONFIRM-DELETE" เพื่อยืนยัน</label>
-                    <input
-                      type="text"
-                      className="border-2 border-red-200 bg-red-50 p-3 rounded-xl w-full text-center font-bold text-red-600 focus:outline-none focus:border-red-500 placeholder:text-red-200"
-                      placeholder="CONFIRM-DELETE"
-                      value={deleteConfirmationText}
-                      onChange={e => setDeleteConfirmationText(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex justify-between gap-3 mt-8">
-                    <button onClick={() => setIsDeleteAllModalOpen(false)} className="w-full py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
-                    <button
-                      onClick={handleWipeDatabase}
-                      disabled={deleteConfirmationText !== "CONFIRM-DELETE" || isWipingData}
-                      className="w-full py-3 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                    >
-                      {isWipingData ? "กำลังล้างข้อมูล..." : "ลบทั้งหมดเดี๋ยวนี้"}
+          {isAuthModalOpen && createPortal(
+            <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center backdrop-blur-sm p-4">
+              <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden">
+                <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">Admin Login</h3>
+                <form onSubmit={handleLogin}>
+                  <input type="password" autoFocus placeholder="Password" className="border border-gray-300 p-2 rounded-lg w-full mb-4 text-center text-gray-800 outline-none focus:border-[#00ff99] transition-colors" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
+                  <div className="flex justify-between gap-2">
+                    <button type="button" onClick={() => setIsAuthModalOpen(false)} className="text-gray-500 text-sm hover:text-gray-700">Cancel</button>
+                    <button type="submit" disabled={isLoginLoading} className="bg-black text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors disabled:opacity-60 flex items-center gap-2">
+                      {isLoginLoading ? <><span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span> กำลังตรวจสอบ...</> : "Unlock"}
                     </button>
                   </div>
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
+                </form>
+              </motion.div>
+            </div>,
+            document.body
+          )}
 
-          {/* Form Modal (Add/Edit) */}
-          <AnimatePresence>
-            {isFormModalOpen && (
-              <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm">
-                <motion.div
-                  variants={modalVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative"
-                >
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                      {editingProject ? <><PencilIcon /> แก้ไขโปรเจกต์</> : "+ เพิ่มโปรเจกต์ใหม่"}
-                    </h3>
-                    <button onClick={() => setIsFormModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors text-2xl">&times;</button>
-                  </div>
-
-                  <form onSubmit={handleSaveProject} className="flex flex-col gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อโปรเจกต์ (Title)</label>
-                      <input required className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">ปี (Category)</label>
-                        <input required readOnly className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="flex justify-between items-end mb-1">
-                          <span className="text-sm font-medium text-gray-700">Slug (URL)</span>
-                          <span className="text-xs text-red-500 font-normal">*ห้ามมีช่องว่าง</span>
-                        </label>
-                        <input
-                          required
-                          placeholder="eng-only-no-space"
-                          className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all"
-                          value={formData.slug}
-                          onChange={e => setFormData({ ...formData, slug: e.target.value.replace(/\s+/g, '') })}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">วันที่ (Date)</label>
-                        <input
-                          type="date"
-                          required
-                          className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all"
-                          value={formData.createdAt}
-                          onChange={handleDateChange}
-                        />
-                      </div>
-
-                      {/* Certificate checkbox */}
-                      <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 cursor-pointer" onClick={() => setFormData({ ...formData, isCertificate: !formData.isCertificate })}>
-                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isCertificate ? "bg-[#7edad2] border-[#7edad2]" : "border-gray-300 bg-white"}`}>
-                          {formData.isCertificate && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="text-gray-700 font-small select-none">Certificate/Award🏆</span>
-                      </div>
-
-                      {/* Best Project button */}
-                      <div
-                        className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all select-none
-                          ${formData.isBest
-                            ? "bg-yellow-50 border-yellow-400 text-yellow-600 shadow-sm"
-                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
-                          }`}
-                        onClick={() => setFormData({ ...formData, isBest: !formData.isBest })}
-                      >
-                        {formData.isBest ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-yellow-500 animate-pulse">
-                            <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.563.045.797.777.385 1.178l-4.154 4.045a.563.563 0 00-.153.518l1.268 5.443c.129.554-.474.975-.92.68l-4.665-2.923a.563.563 0 00-.606 0L6.92 21.24c-.445.295-1.05-.126-.92-.68l1.268-5.443a.563.563 0 00-.153-.518L2.96 10.575c-.412-.401-.178-1.133.386-1.178l5.518-.442a.563.563 0 00.474-.345L11.48 3.5z" />
-                          </svg>
-                        )}
-                        <span className="font-medium text-sm">Best Project</span>
-                      </div>
-
-                      {/* ✅ Cloud checkbox */}
-                      <div
-                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all select-none
-                          ${formData.isCloud
-                            ? "bg-sky-50 border-sky-400 text-sky-600"
-                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
-                          }`}
-                        onClick={() => setFormData({ ...formData, isCloud: !formData.isCloud })}
-                      >
-                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isCloud ? "bg-sky-400 border-sky-400" : "border-gray-300 bg-white"}`}>
-                          {formData.isCloud && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="font-medium text-sm select-none">☁️ Cloud</span>
-                      </div>
-
-                      {/* ✅ Network checkbox */}
-                      <div
-                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all select-none
-                          ${formData.isNetwork
-                            ? "bg-emerald-50 border-emerald-400 text-emerald-600"
-                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
-                          }`}
-                        onClick={() => setFormData({ ...formData, isNetwork: !formData.isNetwork })}
-                      >
-                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isNetwork ? "bg-emerald-400 border-emerald-400" : "border-gray-300 bg-white"}`}>
-                          {formData.isNetwork && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="font-medium text-sm select-none">🌐 Network</span>
-                      </div>
-
-                      {/* ✅ Community checkbox */}
-                      <div
-                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all select-none
-                          ${formData.isCommunity
-                            ? "bg-purple-50 border-purple-400 text-purple-600"
-                            : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
-                          }`}
-                        onClick={() => setFormData({ ...formData, isCommunity: !formData.isCommunity })}
-                      >
-                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isCommunity ? "bg-purple-400 border-purple-400" : "border-gray-300 bg-white"}`}>
-                          {formData.isCommunity && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="font-medium text-sm select-none">🤝 Community</span>
-                      </div>
-                    </div>
-
-                    {/* Image upload */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">รูปปก (Image)</label>
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer relative group ${isDragging
-                          ? "border-[#7edad2] bg-[#7edad2]/10 scale-105"
-                          : "border-gray-300 hover:bg-gray-50"
-                          }`}
-                      >
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                          onChange={(e) => handleProcessFile(e.target.files[0])}
-                        />
-                        {imagePreview ? (
-                          <div className="relative">
-                            <img src={imagePreview} alt="preview" className="h-40 mx-auto rounded-lg object-contain shadow-sm" />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-bold text-sm pointer-events-none">
-                              เปลี่ยนรูป
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-gray-400 text-sm py-8 pointer-events-none flex flex-col items-center gap-1">
-                            <div>
-                              <span className="text-[#7edad2] font-bold">คลิกเพื่อเลือกรูป</span> หรือลากไฟล์มาวาง
-                            </div>
-                            <div className="text-xs text-gray-300">
-                              หรือกด <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">Ctrl</kbd> + <kbd className="font-sans border border-gray-200 rounded px-1 bg-white text-gray-500">V</kbd> เพื่อวางรูป
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    </div>
-
-                    {/* Link input */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        แนบลิงก์ผลงาน (Link / URL) <span className="text-xs text-gray-400 font-normal">(ไม่บังคับ)</span>
-                      </label>
-                      <input
-                        type="url"
-                        placeholder="https://www.instagram.com/..."
-                        className="border p-3 rounded-xl w-full bg-gray-50 outline-none border-gray-200 text-black transition-all placeholder:text-gray-300"
-                        value={formData.link}
-                        onChange={e => setFormData({ ...formData, link: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="flex justify-end gap-3 mt-6 border-t pt-4">
-                      <button type="button" onClick={() => setIsFormModalOpen(false)} className="px-6 py-2.5 text-gray-500 hover:bg-gray-100 rounded-xl font-medium transition-colors">ยกเลิก</button>
-                      <motion.button
-                        type="submit"
-                        disabled={isSaving}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`px-8 py-2.5 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 min-w-[140px] justify-center ${isSaving ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-[#7edad2] text-black hover:bg-[#6bcbc0]"}`}
-                      >
-                        {isSaving ? (
-                          <>
-                            <span className="animate-spin h-5 w-5 border-2 border-gray-600 border-t-transparent rounded-full"></span>
-                            <span>บันทึก...</span>
-                          </>
-                        ) : (
-                          editingProject ? "บันทึกการแก้ไข" : "เพิ่มงานใหม่"
-                        )}
-                      </motion.button>
-                    </div>
-                  </form>
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
+          {/* Delete All Warning Modal */}
+          {isDeleteAllModalOpen && createPortal(
+            <div className="fixed inset-0 bg-red-950/80 z-[10000] flex items-center justify-center p-4 backdrop-blur-md">
+              <motion.div
+                variants={modalVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border-4 border-red-500 text-center relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-4 bg-[repeating-linear-gradient(45deg,#ef4444,#ef4444_10px,#b91c1c_10px,#b91c1c_20px)]"></div>
+                <div className="flex flex-col items-center gap-4 mt-4">
+                  <SkullIcon />
+                  <h3 className="text-3xl font-black text-red-600 uppercase tracking-widest">Danger Zone</h3>
+                  <p className="text-gray-600 text-sm">
+                    คุณกำลังจะ <span className="font-bold text-red-600">ลบข้อมูลทั้งหมด</span> ในฐานข้อมูล <br />
+                    การกระทำนี้ <u className="font-bold">ไม่สามารถกู้คืนได้</u>
+                  </p>
+                </div>
+                <div className="mt-6">
+                  <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">พิมพ์ "CONFIRM-DELETE" เพื่อยืนยัน</label>
+                  <input
+                    type="text"
+                    className="border-2 border-red-200 bg-red-50 p-3 rounded-xl w-full text-center font-bold text-red-600 focus:outline-none focus:border-red-500 placeholder:text-red-200"
+                    placeholder="CONFIRM-DELETE"
+                    value={deleteConfirmationText}
+                    onChange={e => setDeleteConfirmationText(e.target.value)}
+                  />
+                </div>
+                <div className="flex justify-between gap-3 mt-8">
+                  <button onClick={() => setIsDeleteAllModalOpen(false)} className="w-full py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">ยกเลิก</button>
+                  <button
+                    onClick={handleWipeDatabase}
+                    disabled={deleteConfirmationText !== "CONFIRM-DELETE" || isWipingData}
+                    className="w-full py-3 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    {isWipingData ? "กำลังล้างข้อมูล..." : "ลบทั้งหมดเดี๋ยวนี้"}
+                  </button>
+                </div>
+              </motion.div>
+            </div>,
+            document.body
+          )}
         </>
-        , document.body)}
+      )}
+
+      {/* ✅ Form Modal - Pre-mounted, แค่ toggle visibility */}
+      <ProjectFormModal
+        isOpen={isFormModalOpen}
+        onClose={handleCloseFormModal}
+        editingProject={editingProject}
+        formData={formData}
+        setFormData={setFormData}
+        imagePreview={imagePreview}
+        isSaving={isSaving}
+        isDragging={isDragging}
+        onSubmit={handleSaveProject}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onFileSelect={handleProcessFile}
+        onDateChange={handleDateChange}
+      />
     </section>
   );
 }
