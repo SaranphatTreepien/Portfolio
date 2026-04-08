@@ -539,7 +539,7 @@ ${form.phone}`;
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
   const shareMessage =
-  "สวัสดีครับ ผมศรัณย์ภัทร\nขออนุญาตส่ง Resume เพื่อพิจารณาครับ 🙇‍♂️📄";
+  "สวัสดีครับ ผมศรัณย์ภัทร ตรีเพียร\nขออนุญาตส่ง Resume เพื่อพิจารณาครับผม 🙇‍♂️📄";
   // แชร์ผ่าน Web Share API (สำหรับแอปอื่นๆ)
   const handleShareFile = async (fileName = getResumeExportFileName()) => {
     try {
@@ -636,7 +636,7 @@ ${form.phone}`;
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <FaShare /> แชร์ปกติ
+                <FaShare /> SHARE PDF
               </motion.button>
             </div>
           </div>
