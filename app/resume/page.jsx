@@ -22,12 +22,10 @@ import {
   FaFileUpload,
   FaPencilAlt,
   FaShare,
-  FaLine,
   FaFacebookMessenger,
 } from "react-icons/fa";
 import { MdEmail, MdDateRange } from "react-icons/md";
 import { FaLine as SiLine } from "react-icons/fa6";
-import { RiMessengerLine } from "react-icons/ri";
 import Confetti from "react-confetti";
 // --- ⚙️ ตั้งรหัสผ่าน Admin ---
 
@@ -500,20 +498,50 @@ ${form.phone}`;
     setTimeout(() => setToastMessage(""), 3000);
   };
 
+  const getResumePublicUrl = () =>
+    new URL(RESUME_PATH, window.location.origin).toString();
+
   // ✅ แชร์ผ่าน Line โดยตรง
-  const handleShareToLine = () => {
-    const resumeUrl = `${window.location.origin}${RESUME_PATH}`;
-    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(`Resume - ${form.firstName} ${form.lastName}\n${resumeUrl}`)}`;
-    window.open(lineUrl, '_blank');
-    showToast("✅ เปิด Line แล้ว!");
+  const handleShareToLine = async () => {
+    try {
+      const resumeUrl = getResumePublicUrl();
+      const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(resumeUrl)}`;
+      const popup = window.open(lineShareUrl, "_blank", "noopener,noreferrer");
+
+      if (!popup) {
+        // Fallback กรณีโดนบล็อก popup
+        await navigator.clipboard.writeText(resumeUrl);
+        showToast("📋 คัดลอกลิงก์แล้ว (เปิด LINE แล้ววางลิงก์ได้เลย)");
+        return;
+      }
+
+      showToast("✅ เปิดโหมดแชร์ LINE แล้ว");
+    } catch (err) {
+      showToast("❌ เปิด LINE ไม่สำเร็จ");
+    }
   };
 
-  // ✅ แชร์ผ่าน Facebook Messenger โดยตรง
-  const handleShareToMessenger = () => {
-    const resumeUrl = `${window.location.origin}${RESUME_PATH}`;
-    const messengerUrl = `fb-messenger://share?link=${encodeURIComponent(resumeUrl)}`;
-    window.open(messengerUrl, '_blank');
-    showToast("✅ เปิด Messenger แล้ว!");
+  // ✅ แชร์ผ่าน Facebook โดยตรง
+  const handleShareToMessenger = async () => {
+    try {
+      const resumeUrl = getResumePublicUrl();
+      const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resumeUrl)}`;
+      const popup = window.open(
+        facebookShareUrl,
+        "_blank",
+        "noopener,noreferrer",
+      );
+
+      if (!popup) {
+        await navigator.clipboard.writeText(resumeUrl);
+        showToast("📋 คัดลอกลิงก์แล้ว (เปิด Facebook แล้ววางลิงก์ได้เลย)");
+        return;
+      }
+
+      showToast("✅ เปิดโหมดแชร์ Facebook แล้ว");
+    } catch (err) {
+      showToast("❌ เปิด Facebook ไม่สำเร็จ");
+    }
   };
 
   // แชร์ผ่าน Web Share API (สำหรับแอปอื่นๆ)
@@ -604,8 +632,17 @@ ${form.phone}`;
             </motion.button>
           </div>
 
-          {/* แถวกลาง: Share to Line, Messenger, Others */}
+          {/* แถวกลาง: แชร์ปกติ, Line, Facebook */}
           <div className="flex justify-center gap-3 flex-wrap">
+            <motion.button
+              onClick={handleShareFile}
+              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#7edad2] to-[#5fb3a9] text-white rounded-full shadow-md hover:opacity-90 transition-all"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <FaShare /> แชร์ปกติ
+            </motion.button>
+
             <motion.button
               onClick={handleShareToLine}
               className="flex items-center gap-2 px-5 py-3 bg-[#63c982] text-white rounded-full shadow-md hover:bg-[#55b874] transition-all"
@@ -621,16 +658,7 @@ ${form.phone}`;
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
-              <RiMessengerLine className="text-lg" /> แชร์ผ่าน Messenger
-            </motion.button>
-
-            <motion.button
-              onClick={handleShareFile}
-              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#7edad2] to-[#5fb3a9] text-white rounded-full shadow-md hover:opacity-90 transition-all"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaShare /> แชร์แบบอื่น
+              <FaFacebookMessenger className="text-lg" /> แชร์ผ่าน Facebook
             </motion.button>
           </div>
 
