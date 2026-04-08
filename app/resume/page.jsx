@@ -538,6 +538,8 @@ ${form.phone}`;
   const isMobilePlatform = () =>
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
+  const shareMessage = "";
+
   // แชร์ผ่าน Web Share API (สำหรับแอปอื่นๆ)
   const handleShareFile = async (fileName = getResumeExportFileName()) => {
     try {
@@ -553,7 +555,8 @@ ${form.phone}`;
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         // ✅ Mobile — แชร์ไฟล์ PDF ได้เลย
         await navigator.share({
-          // title: `Resume - ${form.firstName} ${form.lastName}`,
+          title: shareMessage,
+          text: shareMessage,
           files: [file],
         });
         return;
@@ -562,7 +565,8 @@ ${form.phone}`;
       if (navigator.share) {
         // ⚠️ fallback ทุกแพลตฟอร์ม — แชร์แค่ Link
         await navigator.share({
-          // title: `Resume - ${form.firstName} ${form.lastName}`,
+          title: shareMessage,
+          text: shareMessage,
           url: getResumePublicUrl(),
         });
         showToast("🔗 แชร์ Link แทน (อุปกรณ์ไม่รองรับแชร์ไฟล์)");
