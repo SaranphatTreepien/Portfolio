@@ -21,9 +21,13 @@ import {
   FaTrash,
   FaFileUpload,
   FaPencilAlt,
-  FaShare, // ✅ เพิ่มตรงนี้
+  FaShare,
+  FaLine,
+  FaFacebookMessenger,
 } from "react-icons/fa";
 import { MdEmail, MdDateRange } from "react-icons/md";
+import { FaLine as SiLine } from "react-icons/fa6";
+import { RiMessengerLine } from "react-icons/ri";
 import Confetti from "react-confetti";
 // --- ⚙️ ตั้งรหัสผ่าน Admin ---
 
@@ -495,6 +499,24 @@ ${form.phone}`;
     setToastMessage(message);
     setTimeout(() => setToastMessage(""), 3000);
   };
+
+  // ✅ แชร์ผ่าน Line โดยตรง
+  const handleShareToLine = () => {
+    const resumeUrl = `${window.location.origin}${RESUME_PATH}`;
+    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(`Resume - ${form.firstName} ${form.lastName}\n${resumeUrl}`)}`;
+    window.open(lineUrl, '_blank');
+    showToast("✅ เปิด Line แล้ว!");
+  };
+
+  // ✅ แชร์ผ่าน Facebook Messenger โดยตรง
+  const handleShareToMessenger = () => {
+    const resumeUrl = `${window.location.origin}${RESUME_PATH}`;
+    const messengerUrl = `fb-messenger://share?link=${encodeURIComponent(resumeUrl)}`;
+    window.open(messengerUrl, '_blank');
+    showToast("✅ เปิด Messenger แล้ว!");
+  };
+
+  // แชร์ผ่าน Web Share API (สำหรับแอปอื่นๆ)
   const handleShareFile = async () => {
     try {
       showToast("⏳ กำลังเตรียมไฟล์...");
@@ -571,7 +593,7 @@ ${form.phone}`;
 
         {/* Action Buttons */}
         <div className="flex flex-col items-center gap-3 mb-12">
-          {/* แถวบน: Download + Share */}
+          {/* แถวบน: Download */}
           <div className="flex justify-center gap-3">
             <motion.button
               onClick={() => setShowDownloadAlert(true)}
@@ -580,6 +602,27 @@ ${form.phone}`;
             >
               <FaDownload /> RESUME PDF
             </motion.button>
+          </div>
+
+          {/* แถวกลาง: Share to Line, Messenger, Others */}
+          <div className="flex justify-center gap-3 flex-wrap">
+            <motion.button
+              onClick={handleShareToLine}
+              className="flex items-center gap-2 px-5 py-3 bg-[#63c982] text-white rounded-full shadow-md hover:bg-[#55b874] transition-all"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <SiLine className="text-lg" /> แชร์ผ่าน Line
+            </motion.button>
+
+            <motion.button
+              onClick={handleShareToMessenger}
+              className="flex items-center gap-2 px-5 py-3 bg-[#6aaee8] text-white rounded-full shadow-md hover:bg-[#5a9fdc] transition-all"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <RiMessengerLine className="text-lg" /> แชร์ผ่าน Messenger
+            </motion.button>
 
             <motion.button
               onClick={handleShareFile}
@@ -587,7 +630,7 @@ ${form.phone}`;
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
-              <FaShare /> แชร์ PDF
+              <FaShare /> แชร์แบบอื่น
             </motion.button>
           </div>
 
