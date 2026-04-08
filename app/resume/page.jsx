@@ -507,9 +507,8 @@ ${form.phone}`;
       );
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        // ✅ Mobile — แชร์ไฟล์ PDF ได้เลย
+        // ✅ Mobile — แชร์ไฟล์ PDF ได้เลย (ไม่ใส่ title เพื่อป้องกัน Line แสดงข้อความ)
         await navigator.share({
-          title: `Resume - ${form.firstName} ${form.lastName}`,
           files: [file],
         });
       } else if (navigator.share) {
