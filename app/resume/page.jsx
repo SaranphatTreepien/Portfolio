@@ -501,11 +501,22 @@ ${form.phone}`;
   const getResumePublicUrl = () =>
     new URL(RESUME_PATH, window.location.origin).toString();
 
+  const isMobilePlatform = () =>
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+
   // ✅ แชร์ผ่าน Line โดยตรง
   const handleShareToLine = async () => {
     try {
       const resumeUrl = getResumePublicUrl();
+      // LINE mode: ส่งเฉพาะ URL (ไม่แนบข้อความ title)
       const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(resumeUrl)}`;
+
+      if (isMobilePlatform()) {
+        window.location.href = lineShareUrl;
+        showToast("✅ เปิดโหมดแชร์ LINE แล้ว");
+        return;
+      }
+
       const popup = window.open(lineShareUrl, "_blank", "noopener,noreferrer");
 
       if (!popup) {
@@ -525,7 +536,9 @@ ${form.phone}`;
   const handleShareToMessenger = async () => {
     try {
       const resumeUrl = getResumePublicUrl();
-      const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resumeUrl)}`;
+      const facebookShareUrl = isMobilePlatform()
+        ? `https://m.facebook.com/sharer.php?u=${encodeURIComponent(resumeUrl)}`
+        : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resumeUrl)}`;
       const popup = window.open(
         facebookShareUrl,
         "_blank",
