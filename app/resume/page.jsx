@@ -557,20 +557,21 @@ ${form.phone}`;
       );
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        // ✅ Mobile — แชร์ไฟล์ PDF ได้เลย (ไม่ใส่ title เพื่อป้องกัน Line แสดงข้อความ)
+        // ✅ Mobile — แชร์ไฟล์ PDF ได้เลย
         await navigator.share({
+          title: `Resume - ${form.firstName} ${form.lastName}`,
           files: [file],
         });
       } else if (navigator.share) {
         // ⚠️ Desktop — แชร์แค่ Link
         await navigator.share({
           title: `Resume - ${form.firstName} ${form.lastName}`,
-          url: window.location.href,
+          url: getResumePublicUrl(),
         });
         showToast("🔗 แชร์ Link แทน (Desktop ไม่รองรับไฟล์)");
       } else {
         // Fallback — Copy Link
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(getResumePublicUrl());
         showToast("📋 คัดลอกลิงก์แล้ว!");
       }
     } catch (err) {
