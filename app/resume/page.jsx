@@ -22,10 +22,8 @@ import {
   FaFileUpload,
   FaPencilAlt,
   FaShare,
-  FaFacebookMessenger,
 } from "react-icons/fa";
 import { MdEmail, MdDateRange } from "react-icons/md";
-import { FaLine as SiLine } from "react-icons/fa6";
 import Confetti from "react-confetti";
 // --- ⚙️ ตั้งรหัสผ่าน Admin ---
 
@@ -76,9 +74,10 @@ export default function ResumePage() {
   const [toastMessage, setToastMessage] = useState("");
 
   // State Modal
-  const [showDownloadAlert, setShowDownloadAlert] = useState(false);
   const [showSendAlert, setShowSendAlert] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showExportNameModal, setShowExportNameModal] = useState(false);
+  const [pendingExportAction, setPendingExportAction] = useState(null);
 
   // State Admin
   const [isAdmin, setIsAdmin] = useState(false);
@@ -87,6 +86,7 @@ export default function ResumePage() {
   const [language, setLanguage] = useState("TH");
   const [docType, setDocType] = useState("RESUME");
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [exportPosition, setExportPosition] = useState("");
 
   // 📝 Form State
   const [form, setForm] = useState({
@@ -458,7 +458,43 @@ ${form.phone}`;
     setLoading(false);
   };
 
-  const handleDownload = async () => {
+  const sanitizeFilePart = (value, fallback = "") => {
+    const cleaned = (value || "")
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[\\/:*?"<>|]/g, "");
+    return cleaned || fallback;
+  };
+
+  const getResumeExportFileName = (positionValue = exportPosition) => {
+    const fName = sanitizeFilePart(form.firstName, "Name");
+    const lName = sanitizeFilePart(form.lastName, "Surname");
+    const position = sanitizeFilePart(positionValue, "");
+
+    return position
+      ? `${fName}_${lName}_${position}_Resume.pdf`
+      : `${fName}_${lName}_Resume.pdf`;
+  };
+
+  const openExportNameModal = (action) => {
+    setPendingExportAction(action);
+    setShowExportNameModal(true);
+  };
+
+  const runPendingExportAction = async (positionValue = exportPosition) => {
+    const fileName = getResumeExportFileName(positionValue);
+
+    if (pendingExportAction === "download") {
+      await handleDownload(fileName);
+      return;
+    }
+
+    if (pendingExportAction === "share") {
+      await handleShareFile(fileName);
+    }
+  };
+
+  const handleDownload = async (fileName = getResumeExportFileName()) => {
     try {
       showToast("⏳ กำลังเตรียมไฟล์...");
 
@@ -470,9 +506,7 @@ ${form.phone}`;
       const url = window.URL.createObjectURL(blob);
 
       // 3. สร้างชื่อไฟล์ใหม่ที่ต้องการ
-      const fName = form.firstName.trim() || "Name";
-      const lName = form.lastName.trim() || "Surname";
-      const cleanFileName = `Resume_${fName}_${lName}.pdf`;
+      const cleanFileName = fileName;
 
       // 4. สร้างลิงก์หลอกๆ เพื่อกดดาวน์โหลด
       const link = document.createElement("a");
@@ -504,92 +538,15 @@ ${form.phone}`;
   const isMobilePlatform = () =>
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
-  const isIOSPlatform = () =>
-    /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
-
-  // ✅ แชร์ผ่าน Line โดยตรง
-  const handleShareToLine = async () => {
-    try {
-      const resumeUrl = getResumePublicUrl();
-      const response = await fetch(RESUME_PATH);
-      const blob = await response.blob();
-      const file = new File(
-        [blob],
-        `Resume_${form.firstName}_${form.lastName}.pdf`,
-        { type: "application/pdf" },
-      );
-
-      // พยายามแชร์เป็นไฟล์ก่อน (รวม iOS)
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
-      }
-
-      // ถ้าแชร์ไฟล์ไม่ได้ ค่อย fallback เป็นลิงก์
-      if (isIOSPlatform()) {
-        const lineDeepLink = `line://msg/text/${encodeURIComponent(resumeUrl)}`;
-        window.location.href = lineDeepLink;
-
-        // fallback ถ้าเครื่องไม่มีแอป LINE หรือ deep link เปิดไม่สำเร็จ
-        setTimeout(() => {
-          const lineWebShare = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(resumeUrl)}`;
-          window.location.href = lineWebShare;
-        }, 800);
-        return;
-      }
-
-      // Fallback: แชร์ลิงก์เฉพาะกรณีที่แชร์ไฟล์ native ไม่ได้
-      const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(resumeUrl)}`;
-
-      const popup = window.open(lineShareUrl, "_blank", "noopener,noreferrer");
-
-      if (!popup) {
-        // Fallback กรณีโดนบล็อก popup
-        await navigator.clipboard.writeText(resumeUrl);
-        showToast("📋 คัดลอกลิงก์แล้ว (เปิด LINE แล้ววางลิงก์ได้เลย)");
-        return;
-      }
-
-      showToast("✅ เปิดโหมดแชร์ LINE แล้ว");
-    } catch (err) {
-      showToast("❌ เปิด LINE ไม่สำเร็จ");
-    }
-  };
-
-  // ✅ แชร์ผ่าน Facebook โดยตรง
-  const handleShareToMessenger = async () => {
-    try {
-      const resumeUrl = getResumePublicUrl();
-      const facebookShareUrl = isMobilePlatform()
-        ? `https://m.facebook.com/sharer.php?u=${encodeURIComponent(resumeUrl)}`
-        : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resumeUrl)}`;
-      const popup = window.open(
-        facebookShareUrl,
-        "_blank",
-        "noopener,noreferrer",
-      );
-
-      if (!popup) {
-        await navigator.clipboard.writeText(resumeUrl);
-        showToast("📋 คัดลอกลิงก์แล้ว (เปิด Facebook แล้ววางลิงก์ได้เลย)");
-        return;
-      }
-
-      showToast("✅ เปิดโหมดแชร์ Facebook แล้ว");
-    } catch (err) {
-      showToast("❌ เปิด Facebook ไม่สำเร็จ");
-    }
-  };
-
   // แชร์ผ่าน Web Share API (สำหรับแอปอื่นๆ)
-  const handleShareFile = async () => {
+  const handleShareFile = async (fileName = getResumeExportFileName()) => {
     try {
       showToast("⏳ กำลังเตรียมไฟล์...");
       const response = await fetch(RESUME_PATH);
       const blob = await response.blob();
       const file = new File(
         [blob],
-        `Resume_${form.firstName}_${form.lastName}.pdf`,
+        fileName,
         { type: "application/pdf" },
       );
 
@@ -603,7 +560,7 @@ ${form.phone}`;
 
       // บนมือถือ: ถ้าแชร์ไฟล์ไม่ได้ ไม่ fallback เป็นลิงก์
       if (isMobilePlatform()) {
-        showToast("⚠️ มือถือเครื่องนี้ไม่รองรับแชร์ไฟล์โดยตรง ลองปุ่ม LINE/Facebook");
+        showToast("⚠️ มือถือเครื่องนี้ไม่รองรับแชร์ไฟล์โดยตรง ให้กด RESUME PDF ก่อน");
         return;
       } else if (navigator.share) {
         // ⚠️ Desktop — แชร์แค่ Link
@@ -665,45 +622,26 @@ ${form.phone}`;
 
         {/* Action Buttons */}
         <div className="flex flex-col items-center gap-3 mb-12">
-          {/* แถวบน: Download */}
-          <div className="flex justify-center gap-3">
-            <motion.button
-              onClick={() => setShowDownloadAlert(true)}
-              className="flex items-center gap-2 px-5 py-3 bg-[#f8fafc] text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-white transition-all"
-              whileHover={{ scale: 1.05, y: -2 }}
-            >
-              <FaDownload /> RESUME PDF
-            </motion.button>
-          </div>
+          {/* แถวเดียว: Download + Share */}
+          <div className="w-full overflow-x-auto">
+            <div className="flex justify-center gap-3 whitespace-nowrap px-2">
+              <motion.button
+                onClick={() => openExportNameModal("download")}
+                className="flex items-center gap-2 px-5 py-3 bg-[#f8fafc] text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-white transition-all"
+                whileHover={{ scale: 1.05, y: -2 }}
+              >
+                <FaDownload /> RESUME PDF
+              </motion.button>
 
-          {/* แถวกลาง: แชร์ปกติ, Line, Facebook */}
-          <div className="flex justify-center gap-3 flex-wrap">
-            <motion.button
-              onClick={handleShareFile}
-              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#7edad2] to-[#5fb3a9] text-white rounded-full shadow-md hover:opacity-90 transition-all"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaShare /> แชร์ปกติ
-            </motion.button>
-
-            <motion.button
-              onClick={handleShareToLine}
-              className="flex items-center gap-2 px-5 py-3 bg-[#63c982] text-white rounded-full shadow-md hover:bg-[#55b874] transition-all"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <SiLine className="text-lg" /> แชร์ผ่าน Line
-            </motion.button>
-
-            <motion.button
-              onClick={handleShareToMessenger}
-              className="flex items-center gap-2 px-5 py-3 bg-[#6aaee8] text-white rounded-full shadow-md hover:bg-[#5a9fdc] transition-all"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaFacebookMessenger className="text-lg" /> แชร์ผ่าน Facebook
-            </motion.button>
+              <motion.button
+                onClick={() => openExportNameModal("share")}
+                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#7edad2] to-[#5fb3a9] text-white rounded-full shadow-md hover:opacity-90 transition-all"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaShare /> แชร์ปกติ
+              </motion.button>
+            </div>
           </div>
 
           {/* แถวล่าง: Admin */}
@@ -1406,20 +1344,72 @@ ${form.phone}`;
           )}
         </AnimatePresence>
         <AnimatePresence>
-          {(showDownloadAlert || showSendAlert) && (
+          {showExportNameModal && (
+            <div className="fixed inset-0 bg-black/50 z-[90] flex items-center justify-center p-4">
+              <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full text-center">
+                <h3 className="text-xl font-bold mb-2">ตั้งชื่อไฟล์</h3>
+                <p className="text-gray-600 mb-4 text-sm">
+                  กรอกตำแหน่ง (ไม่บังคับ) ก่อน{pendingExportAction === "download" ? "โหลด" : "แชร์"}
+                </p>
+
+                <input
+                  type="text"
+                  value={exportPosition}
+                  onChange={(e) => setExportPosition(e.target.value)}
+                  placeholder="เช่น DevSecOps"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7edad2] focus:border-transparent outline-none text-sm text-gray-700"
+                />
+
+                <p className="text-xs text-gray-500 mt-2 mb-6 break-all">
+                  ชื่อไฟล์: {getResumeExportFileName()}
+                </p>
+
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button
+                    onClick={async () => {
+                      setShowExportNameModal(false);
+                      await runPendingExportAction(exportPosition);
+                      setPendingExportAction(null);
+                    }}
+                    className="px-4 py-2 bg-[#7edad2] text-white font-bold rounded"
+                  >
+                    ตกลง
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setShowExportNameModal(false);
+                      await runPendingExportAction("");
+                      setPendingExportAction(null);
+                    }}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded border border-gray-300"
+                  >
+                    ไม่กรอก
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowExportNameModal(false);
+                      setPendingExportAction(null);
+                    }}
+                    className="px-4 py-2 bg-gray-200 rounded"
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {showSendAlert && (
             <div className="fixed inset-0 bg-black/50 z-[90] flex items-center justify-center p-4">
               <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full text-center">
                 <h3 className="text-xl font-bold mb-2">ยืนยัน?</h3>
                 <p className="text-gray-600 mb-6">
-                  {/* ✨ แก้ตรงนี้: ให้แสดงชื่อไฟล์แบบใหม่ (Resume_ชื่อ_นามสกุล) */}
-                  {showDownloadAlert
-                    ? `โหลดไฟล์ Resume_${form.firstName}_${form.lastName}.pdf?`
-                    : `ส่งอีเมลหา ${form.receiverEmail}?`}
+                  {`ส่งอีเมลหา ${form.receiverEmail}?`}
                 </p>
                 <div className="flex gap-4 justify-center">
                   <button
                     onClick={() => {
-                      setShowDownloadAlert(false);
                       setShowSendAlert(false);
                     }}
                     className="px-4 py-2 bg-gray-200 rounded"
@@ -1428,9 +1418,7 @@ ${form.phone}`;
                   </button>
                   <button
                     onClick={() => {
-                      if (showDownloadAlert) handleDownload();
-                      if (showSendAlert) sendEmail();
-                      setShowDownloadAlert(false);
+                      sendEmail();
                       setShowSendAlert(false);
                     }}
                     className="px-4 py-2 bg-[#7edad2] text-white font-bold rounded"
