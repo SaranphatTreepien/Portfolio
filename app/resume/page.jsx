@@ -553,22 +553,19 @@ ${form.phone}`;
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         // ✅ Mobile — แชร์ไฟล์ PDF ได้เลย
         await navigator.share({
+          title: `Resume - ${form.firstName} ${form.lastName}`,
           files: [file],
         });
         return;
       }
 
-      // บนมือถือ: ถ้าแชร์ไฟล์ไม่ได้ ไม่ fallback เป็นลิงก์
-      if (isMobilePlatform()) {
-        showToast("⚠️ มือถือเครื่องนี้ไม่รองรับแชร์ไฟล์โดยตรง ให้กด RESUME PDF ก่อน");
-        return;
-      } else if (navigator.share) {
-        // ⚠️ Desktop — แชร์แค่ Link
+      if (navigator.share) {
+        // ⚠️ fallback ทุกแพลตฟอร์ม — แชร์แค่ Link
         await navigator.share({
           title: `Resume - ${form.firstName} ${form.lastName}`,
           url: getResumePublicUrl(),
         });
-        showToast("🔗 แชร์ Link แทน (Desktop ไม่รองรับไฟล์)");
+        showToast("🔗 แชร์ Link แทน (อุปกรณ์ไม่รองรับแชร์ไฟล์)");
       } else {
         // Fallback — Copy Link
         await navigator.clipboard.writeText(getResumePublicUrl());
