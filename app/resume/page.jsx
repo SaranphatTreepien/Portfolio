@@ -504,10 +504,27 @@ ${form.phone}`;
   const isMobilePlatform = () =>
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
+  const isIOSPlatform = () =>
+    /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+
   // ✅ แชร์ผ่าน Line โดยตรง
   const handleShareToLine = async () => {
     try {
       const resumeUrl = getResumePublicUrl();
+
+      // iOS: LINE มักไม่แสดงใน share sheet ตอนแชร์ไฟล์ จึงเปิด LINE app ตรง
+      if (isIOSPlatform()) {
+        const lineDeepLink = `line://msg/text/${encodeURIComponent(resumeUrl)}`;
+        window.location.href = lineDeepLink;
+
+        // fallback ถ้าเครื่องไม่มีแอป LINE หรือ deep link เปิดไม่สำเร็จ
+        setTimeout(() => {
+          const lineWebShare = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(resumeUrl)}`;
+          window.location.href = lineWebShare;
+        }, 800);
+        return;
+      }
+
       const response = await fetch(RESUME_PATH);
       const blob = await response.blob();
       const file = new File(
