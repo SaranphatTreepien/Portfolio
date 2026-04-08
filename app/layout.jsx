@@ -15,9 +15,37 @@ const bebasNeue = Bebas_Neue({
   variable: '--font-bebas',
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://saranphattree-me.vercel.app'
+
 export const metadata = {
   title: 'Saranphat',
   description: 'This is my personal portfolio website showcasing projects and skills.',
+  metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Saranphat',
+    description: 'This is my personal portfolio website showcasing projects and skills.',
+    url: siteUrl,
+    siteName: 'Saranphat',
+    type: 'website',
+    locale: 'en_US',
+    images: [
+      {
+        url: '/assets/hero/dev4.png',
+        width: 1200,
+        height: 630,
+        alt: 'Saranphat Portfolio',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Saranphat',
+    description: 'This is my personal portfolio website showcasing projects and skills.',
+    images: ['/assets/hero/dev4.png'],
+  },
 }
 
 export default function RootLayout({ children }) {
