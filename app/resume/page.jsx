@@ -511,8 +511,21 @@ ${form.phone}`;
   const handleShareToLine = async () => {
     try {
       const resumeUrl = getResumePublicUrl();
+      const response = await fetch(RESUME_PATH);
+      const blob = await response.blob();
+      const file = new File(
+        [blob],
+        `Resume_${form.firstName}_${form.lastName}.pdf`,
+        { type: "application/pdf" },
+      );
 
-      // iOS: LINE มักไม่แสดงใน share sheet ตอนแชร์ไฟล์ จึงเปิด LINE app ตรง
+      // พยายามแชร์เป็นไฟล์ก่อน (รวม iOS)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+
+      // ถ้าแชร์ไฟล์ไม่ได้ ค่อย fallback เป็นลิงก์
       if (isIOSPlatform()) {
         const lineDeepLink = `line://msg/text/${encodeURIComponent(resumeUrl)}`;
         window.location.href = lineDeepLink;
@@ -522,24 +535,6 @@ ${form.phone}`;
           const lineWebShare = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(resumeUrl)}`;
           window.location.href = lineWebShare;
         }, 800);
-        return;
-      }
-
-      const response = await fetch(RESUME_PATH);
-      const blob = await response.blob();
-      const file = new File(
-        [blob],
-        `Resume_${form.firstName}_${form.lastName}.pdf`,
-        { type: "application/pdf" },
-      );
-
-      // มือถือ: แชร์ไฟล์แบบ native เพื่อให้เลือก LINE โดยไม่มีข้อความแนบ
-      if (
-        isMobilePlatform() &&
-        navigator.canShare &&
-        navigator.canShare({ files: [file] })
-      ) {
-        await navigator.share({ files: [file] });
         return;
       }
 
