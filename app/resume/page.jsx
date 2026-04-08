@@ -538,7 +538,8 @@ ${form.phone}`;
   const isMobilePlatform = () =>
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
-  const shareMessage = "";
+  const shareMessage =
+    "สวัสดีครับ ผมศรัณย์ภัทร ขออนุญาตส่ง Resume เพื่อพิจารณาครับ 🙇‍♂️📄"
 
   // แชร์ผ่าน Web Share API (สำหรับแอปอื่นๆ)
   const handleShareFile = async (fileName = getResumeExportFileName()) => {
@@ -546,11 +547,7 @@ ${form.phone}`;
       showToast("⏳ กำลังเตรียมไฟล์...");
       const response = await fetch(RESUME_PATH);
       const blob = await response.blob();
-      const file = new File(
-        [blob],
-        fileName,
-        { type: "application/pdf" },
-      );
+      const file = new File([blob], fileName, { type: "application/pdf" });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         // ✅ Mobile — แชร์ไฟล์ PDF ได้เลย
@@ -1350,7 +1347,8 @@ ${form.phone}`;
               <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full text-center">
                 <h3 className="text-xl font-bold mb-2">ตั้งชื่อไฟล์</h3>
                 <p className="text-gray-600 mb-4 text-sm">
-                  กรอกตำแหน่ง (ไม่บังคับ) ก่อน{pendingExportAction === "download" ? "โหลด" : "แชร์"}
+                  กรอกตำแหน่ง (ไม่บังคับ) ก่อน
+                  {pendingExportAction === "download" ? "โหลด" : "แชร์"}
                 </p>
 
                 <input
