@@ -508,14 +508,26 @@ ${form.phone}`;
   const handleShareToLine = async () => {
     try {
       const resumeUrl = getResumePublicUrl();
-      // LINE mode: ส่งเฉพาะ URL (ไม่แนบข้อความ title)
-      const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(resumeUrl)}`;
+      const response = await fetch(RESUME_PATH);
+      const blob = await response.blob();
+      const file = new File(
+        [blob],
+        `Resume_${form.firstName}_${form.lastName}.pdf`,
+        { type: "application/pdf" },
+      );
 
-      if (isMobilePlatform()) {
-        window.location.href = lineShareUrl;
-        showToast("✅ เปิดโหมดแชร์ LINE แล้ว");
+      // มือถือ: แชร์ไฟล์แบบ native เพื่อให้เลือก LINE โดยไม่มีข้อความแนบ
+      if (
+        isMobilePlatform() &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({ files: [file] });
         return;
       }
+
+      // Fallback: แชร์ลิงก์เฉพาะกรณีที่แชร์ไฟล์ native ไม่ได้
+      const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(resumeUrl)}`;
 
       const popup = window.open(lineShareUrl, "_blank", "noopener,noreferrer");
 
