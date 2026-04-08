@@ -539,8 +539,7 @@ ${form.phone}`;
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
   const shareMessage =
-    "สวัสดีครับ ผมศรัณย์ภัทร ขออนุญาตส่ง Resume เพื่อพิจารณาครับ 🙇‍♂️📄"
-
+  "สวัสดีครับ ผมศรัณย์ภัทร\nขออนุญาตส่ง Resume เพื่อพิจารณาครับ 🙇‍♂️📄";
   // แชร์ผ่าน Web Share API (สำหรับแอปอื่นๆ)
   const handleShareFile = async (fileName = getResumeExportFileName()) => {
     try {
