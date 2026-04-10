@@ -48,6 +48,8 @@ export default function ExperienceEditor({ slug }) {
     const [isDescExpanded, setIsDescExpanded] = useState(false);
     // --- ✅ [ใหม่ 1] เพิ่ม State สำหรับเช็คสถานะการลาก ---
     const [isDragging, setIsDragging] = useState(false);
+    const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+    const [dropHint, setDropHint] = useState({ index: null, position: null });
 
     useEffect(() => {
         setIsDescExpanded(false);
@@ -178,6 +180,80 @@ export default function ExperienceEditor({ slug }) {
         setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
     };
 
+    const saveToDatabaseStrict = async (payload) => {
+        const res = await fetch('/api/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || `Save failed (${res.status})`);
+        }
+    };
+
+    const clearItemDragState = () => {
+        setDraggedItemIndex(null);
+        setDropHint({ index: null, position: null });
+    };
+
+    const reorderItems = async (fromIndex, targetIndex, position = "before") => {
+        if (fromIndex === null || targetIndex === null) return;
+        if (fromIndex === targetIndex) return;
+
+        const nextItems = [...items];
+        const [movedItem] = nextItems.splice(fromIndex, 1);
+
+        let insertIndex = targetIndex;
+        if (fromIndex < targetIndex) insertIndex -= 1;
+        if (position === "after") insertIndex += 1;
+
+        insertIndex = Math.max(0, Math.min(nextItems.length, insertIndex));
+        nextItems.splice(insertIndex, 0, movedItem);
+
+        setItems(nextItems);
+
+        try {
+            await saveToDatabaseStrict({ slug, items: nextItems, originalSlug: slug });
+            showToast("บันทึกลำดับการ์ดเรียบร้อย", "success");
+        } catch (error) {
+            console.error("Reorder Error:", error);
+            showToast("บันทึกลำดับไม่สำเร็จ", "error");
+            await fetchProjectData();
+        }
+    };
+
+    const handleItemDragStart = (e, index) => {
+        if (!isAdmin) return;
+        setDraggedItemIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", String(index));
+    };
+
+    const handleItemDragOver = (e, index) => {
+        if (!isAdmin || draggedItemIndex === null || draggedItemIndex === index) return;
+        e.preventDefault();
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const position = e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+        setDropHint({ index, position });
+        e.dataTransfer.dropEffect = "move";
+    };
+
+    const handleItemDrop = async (e, index) => {
+        e.preventDefault();
+        if (draggedItemIndex === null) return;
+
+        const position = dropHint.index === index ? dropHint.position || "before" : "before";
+        await reorderItems(draggedItemIndex, index, position);
+        clearItemDragState();
+    };
+
+    const handleItemDragEnd = () => {
+        clearItemDragState();
+    };
+
     // --- Actions ---
     // [ใหม่] ฟังก์ชันสำหรับลบ Project ทั้งอัน
     const handleDeleteProject = async () => {
@@ -281,6 +357,11 @@ export default function ExperienceEditor({ slug }) {
                 newItems = [newItemData, ...items];
             }
 
+            newItems = newItems.map((item, index) => ({
+                ...item,
+                order: index + 1,
+            }));
+
             // --- ส่วนที่ 3: บันทึกลง Database ---
 
             await saveToDatabase(
@@ -308,9 +389,13 @@ export default function ExperienceEditor({ slug }) {
         if (!confirm("คุณแน่ใจหรือไม่ว่าจะลบรายการนี้?")) return;
         setIsSaving(true);
         const newItems = items.filter((_, i) => i !== index);
+        const reorderedItems = newItems.map((item, itemIndex) => ({
+            ...item,
+            order: itemIndex + 1,
+        }));
         // 👇 เพิ่ม originalSlug: slug ตรงนี้
-        await saveToDatabase({ slug, items: newItems, originalSlug: slug }, "ลบรายการเรียบร้อย");
-        setItems(newItems);
+        await saveToDatabase({ slug, items: reorderedItems, originalSlug: slug }, "ลบรายการเรียบร้อย");
+        setItems(reorderedItems);
         setIsSaving(false);
     };
     const saveToDatabase = async (payload, successMsg) => {
@@ -487,12 +572,31 @@ export default function ExperienceEditor({ slug }) {
                         {items.map((item, index) => {
                             const imgArray = Array.isArray(item.img) ? item.img : (item.img ? [item.img] : []);
                             const hasImages = imgArray.length > 0;
+                            const isDragged = draggedItemIndex === index;
+                            const isDropBefore = dropHint.index === index && dropHint.position === "before";
+                            const isDropAfter = dropHint.index === index && dropHint.position === "after";
                             return (
                             <div
                                 key={index}
                                 onClick={() => setViewingItem(item)}
-                                className="bg-white rounded-3xl p-5 shadow-md group relative hover:shadow-2xl hover:shadow-[#7edad2]/10 transition-all duration-300 border border-gray-100 cursor-pointer transform hover:-translate-y-2"
+                                draggable={isAdmin}
+                                onDragStart={(e) => handleItemDragStart(e, index)}
+                                onDragOver={(e) => handleItemDragOver(e, index)}
+                                onDrop={(e) => handleItemDrop(e, index)}
+                                onDragEnd={handleItemDragEnd}
+                                className={`bg-white rounded-3xl p-5 shadow-md group relative hover:shadow-2xl hover:shadow-[#7edad2]/10 transition-all duration-300 border border-gray-100 cursor-pointer transform hover:-translate-y-2 ${isAdmin ? "cursor-grab active:cursor-grabbing" : ""} ${isDragged ? "opacity-60 scale-[0.98]" : ""}`}
                             >
+                                {isAdmin && (
+                                    <>
+                                        <div className={`absolute left-4 right-4 top-2 z-20 h-1 rounded-full transition-opacity ${isDropBefore ? "bg-[#7edad2] opacity-100" : "opacity-0"}`} />
+                                        <div className={`absolute left-4 right-4 bottom-2 z-20 h-1 rounded-full transition-opacity ${isDropAfter ? "bg-[#7edad2] opacity-100" : "opacity-0"}`} />
+                                        <div className="absolute top-4 left-4 z-10 pointer-events-none">
+                                            <span className="text-[10px] tracking-[0.25em] font-mono text-gray-600 bg-white/90 px-2 py-1 rounded-full border border-gray-200 shadow-sm">
+                                                DRAG
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                                 {isAdmin && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 translate-y-2 group-hover:translate-y-0">
                                         <button onClick={(e) => { e.stopPropagation(); openEditItem(item, index); }} className="p-2.5 bg-white text-blue-500 rounded-full shadow-md hover:bg-blue-50 border border-gray-100"><EditIcon /></button>

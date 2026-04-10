@@ -69,6 +69,9 @@ export default function Work() {
   const [formData, setFormData] = useState(defaultFormData);
   const [isTopicDropdownOpen, setIsTopicDropdownOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+  const [draggedSlug, setDraggedSlug] = useState(null);
+  const [dropHint, setDropHint] = useState({ slug: null, position: null });
+  const [isReordering, setIsReordering] = useState(false);
 
   // --- File handlers ---
   const handleProcessFile = (file) => {
@@ -106,6 +109,123 @@ export default function Work() {
     setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000);
   };
 
+  const sortProjectsForDisplay = (list) => {
+    return [...list].sort((a, b) => {
+      const aOrder = Number(a.order);
+      const bOrder = Number(b.order);
+      const aHasOrder = Number.isFinite(aOrder);
+      const bHasOrder = Number.isFinite(bOrder);
+
+      if (aHasOrder && bHasOrder && aOrder !== bOrder) return aOrder - bOrder;
+      if (aHasOrder !== bHasOrder) return aHasOrder ? -1 : 1;
+      if (a.isBest === true && b.isBest !== true) return -1;
+      if (a.isBest !== true && b.isBest === true) return 1;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+  };
+
+  const normalizeProjects = (list) => {
+    return sortProjectsForDisplay(list).map((item, index) => ({
+      ...item,
+      order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
+    }));
+  };
+
+  const clearDragState = () => {
+    setDraggedSlug(null);
+    setDropHint({ slug: null, position: null });
+  };
+
+  const persistProjectOrder = async (orderedProjects) => {
+    const updates = orderedProjects.map((item, index) => {
+      const nextOrder = index + 1;
+      if (Number(item.order) === nextOrder) return null;
+
+      return fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: item.slug,
+          originalSlug: item.slug,
+          order: nextOrder,
+        }),
+      });
+    }).filter(Boolean);
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+    }
+  };
+
+  const handleDragStart = (e, slug) => {
+    if (!isAdmin) return;
+    setDraggedSlug(slug);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', slug);
+  };
+
+  const handleDragOverCard = (e, slug) => {
+    if (!isAdmin || !draggedSlug || draggedSlug === slug) return;
+    e.preventDefault();
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+    setDropHint({ slug, position });
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const moveProject = async (dragSlug, targetSlug, position = 'before') => {
+    if (!dragSlug || !targetSlug || dragSlug === targetSlug) return;
+
+    const currentProjects = [...projects];
+    const fromIndex = currentProjects.findIndex((item) => item.slug === dragSlug);
+    const targetIndex = currentProjects.findIndex((item) => item.slug === targetSlug);
+
+    if (fromIndex === -1 || targetIndex === -1) return;
+
+    const nextProjects = [...currentProjects];
+    const [movedItem] = nextProjects.splice(fromIndex, 1);
+
+    let insertIndex = targetIndex;
+    if (fromIndex < targetIndex) insertIndex -= 1;
+    if (position === 'after') insertIndex += 1;
+
+    insertIndex = Math.max(0, Math.min(nextProjects.length, insertIndex));
+    nextProjects.splice(insertIndex, 0, movedItem);
+
+    const orderedProjects = nextProjects.map((item, index) => ({
+      ...item,
+      order: index + 1,
+    }));
+
+    setProjects(orderedProjects);
+    setIsReordering(true);
+
+    try {
+      await persistProjectOrder(orderedProjects);
+      showToast('จัดลำดับการ์ดเรียบร้อยแล้ว', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('บันทึกลำดับไม่สำเร็จ', 'error');
+      await fetchProjects();
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
+  const handleDropCard = async (e, slug) => {
+    e.preventDefault();
+    if (!draggedSlug) return;
+
+    const position = dropHint.slug === slug ? dropHint.position || 'before' : 'before';
+    await moveProject(draggedSlug, slug, position);
+    clearDragState();
+  };
+
+  const handleDragEnd = () => {
+    clearDragState();
+  };
+
   const handleRestore = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -130,7 +250,7 @@ export default function Work() {
       const res = await fetch('/api/projects');
       if (!res.ok) throw new Error(`API Error: ${res.status}`);
       const data = await res.json();
-      setProjects(Array.isArray(data) ? data : []);
+      setProjects(normalizeProjects(Array.isArray(data) ? data : []));
     } catch { setProjects([]); }
     finally { setLoading(false); }
   };
@@ -203,6 +323,13 @@ export default function Work() {
       return item.category === tabValue;
     })
     .sort((a, b) => {
+      const aOrder = Number(a.order);
+      const bOrder = Number(b.order);
+      const aHasOrder = Number.isFinite(aOrder);
+      const bHasOrder = Number.isFinite(bOrder);
+
+      if (aHasOrder && bHasOrder && aOrder !== bOrder) return aOrder - bOrder;
+      if (aHasOrder !== bHasOrder) return aHasOrder ? -1 : 1;
       if (a.isBest === true && b.isBest !== true) return -1;
       if (a.isBest !== true && b.isBest === true) return 1;
       return new Date(b.createdAt) - new Date(a.createdAt);
@@ -409,6 +536,9 @@ export default function Work() {
               <motion.span initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-xs text-[#00ff99] bg-[#00ff99]/10 px-2 py-1 rounded border border-[#00ff99]/20">
                 Admin Mode
               </motion.span>
+              <span className="text-xs text-gray-400 self-center">
+                {isReordering ? 'กำลังบันทึกลำดับ...' : 'ลากการ์ดเพื่อจัดลำดับได้'}
+              </span>
               <motion.button
                 initial={{ opacity: 0 }} animate={{ opacity: 0.1 }}
                 onClick={() => { setDeleteConfirmationText(""); setIsDeleteAllModalOpen(true); }}
@@ -480,6 +610,9 @@ export default function Work() {
                 <AnimatePresence mode="popLayout">
                   {filterWork.slice(0, visibleItems).map((item, index) => {
                     const isDeleting = deletingId === item.slug;
+                    const isDraggingCard = draggedSlug === item.slug;
+                    const isDropBefore = dropHint.slug === item.slug && dropHint.position === 'before';
+                    const isDropAfter = dropHint.slug === item.slug && dropHint.position === 'after';
                     return (
                       <motion.div
                         layout key={item._id || item.slug || index}
@@ -487,8 +620,24 @@ export default function Work() {
                         initial="hidden"
                         animate={isDeleting ? { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } } : "visible"}
                         exit="exit" whileHover="hover"
-                        className={`relative group rounded-3xl overflow-hidden ${isDeleting ? "ring-4 ring-red-500 shadow-2xl shadow-red-500/50" : ""}`}
+                        draggable={isAdmin}
+                        onDragStart={(e) => handleDragStart(e, item.slug)}
+                        onDragOver={(e) => handleDragOverCard(e, item.slug)}
+                        onDrop={(e) => handleDropCard(e, item.slug)}
+                        onDragEnd={handleDragEnd}
+                        className={`relative group rounded-3xl overflow-hidden ${isAdmin ? "cursor-grab active:cursor-grabbing" : ""} ${isDraggingCard ? "opacity-60 scale-[0.98]" : ""} ${isDeleting ? "ring-4 ring-red-500 shadow-2xl shadow-red-500/50" : ""}`}
                       >
+                        {isAdmin && (
+                          <>
+                            <div className={`absolute left-4 right-4 top-2 z-20 h-1 rounded-full transition-opacity ${isDropBefore ? 'bg-[#00ff99] opacity-100' : 'opacity-0'}`} />
+                            <div className={`absolute left-4 right-4 bottom-2 z-20 h-1 rounded-full transition-opacity ${isDropAfter ? 'bg-[#00ff99] opacity-100' : 'opacity-0'}`} />
+                            <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                              <span className="text-[10px] tracking-[0.25em] font-mono text-white/90 bg-black/60 px-2 py-1 rounded-full border border-white/10">
+                                DRAG
+                              </span>
+                            </div>
+                          </>
+                        )}
                         <div className="absolute top-14 left-4 z-20 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300">
                           <span className="text-[10px] tracking-wider font-mono text-white/90 bg-black/70 px-2 py-1 rounded border border-white/10 shadow-sm">
                             /{item.slug}

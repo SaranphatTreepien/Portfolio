@@ -19,8 +19,8 @@ export async function GET(request) {
     } else {
       const projects = await db.collection(COLLECTION_NAME)
         .find({})
-        // 🔥 แก้ตรงนี้: ให้ความสำคัญกับ isBest (-1 คือมากไปน้อย/True มาก่อน) แล้วค่อยดูวันที่
-        .sort({ isBest: -1, createdAt: -1 })
+        // เรียงตาม order ก่อน แล้วค่อย fallback ไปที่ Best/createdAt สำหรับข้อมูลเก่า
+        .sort({ order: 1, isBest: -1, createdAt: -1 })
         .toArray();
       return NextResponse.json(projects);
     }
@@ -70,6 +70,22 @@ export async function POST(request) {
 
     if (Object.prototype.hasOwnProperty.call(body, 'isBest')) {
       updateData.isBest = Boolean(body.isBest);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, 'order')) {
+      const orderValue = Number(body.order);
+      if (!Number.isNaN(orderValue)) {
+        updateData.order = orderValue;
+      }
+    } else if (!originalSlug) {
+      const maxOrderDoc = await db.collection(COLLECTION_NAME)
+        .find({ order: { $type: 'number' } })
+        .sort({ order: -1 })
+        .limit(1)
+        .toArray();
+
+      const currentMaxOrder = maxOrderDoc[0]?.order || 0;
+      updateData.order = currentMaxOrder + 1;
     }
 
     // 🔥 4. บันทึกลง Database
