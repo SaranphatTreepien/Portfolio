@@ -31,8 +31,17 @@ const modalVariants = {
 
 const defaultFormData = {
   title: "", category: "2569", slug: "", img: "", createdAt: "", link: "",
+  specialTopics: [],
   isCertificate: false, isBest: false, isCloud: false, isNetwork: false, isCommunity: false,
 };
+
+const specialTopicOptions = [
+  { value: "Cloud", label: "☁️ Cloud" },
+  { value: "Network", label: "🌐 Network" },
+  { value: "DevSecOps", label: "🛡️ DevSecOps" },
+  { value: "Certificate", label: "📜 Certificate" },
+  { value: "Community", label: "🤝 Community" },
+];
 
 export default function Work() {
   const [projects, setProjects] = useState([]);
@@ -58,6 +67,7 @@ export default function Work() {
   const [editingProject, setEditingProject] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
+  const [isTopicDropdownOpen, setIsTopicDropdownOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   // --- File handlers ---
@@ -141,6 +151,7 @@ export default function Work() {
     { category: "Best", label: "⭐ Best" },
     { category: "Cloud", label: "☁️ Cloud" },
     { category: "Network", label: "🌐 Network" },
+    { category: "DevSecOps", label: "🛡️ DevSecOps" },
     { category: "Certificate", label: "📜 Certificate" },
     { category: "Community", label: "🤝 Community" },
   ];
@@ -169,14 +180,26 @@ export default function Work() {
   
   const tabData = [...specialCategories, ...displayedYears];
 
+  const hasSpecialTopic = (item, topic) => {
+    if (Array.isArray(item.specialTopics) && item.specialTopics.includes(topic)) return true;
+    if (item.specialTopic === topic) return true;
+    if (topic === "Cloud") return item.isCloud === true;
+    if (topic === "Network") return item.isNetwork === true;
+    if (topic === "DevSecOps") return item.isDevSecOps === true;
+    if (topic === "Certificate") return item.isCertificate === true;
+    if (topic === "Community") return item.isCommunity === true;
+    return false;
+  };
+
   const filterWork = projects
     .filter((item) => {
       if (tabValue === "all") return true;
       if (tabValue === "Best") return item.isBest === true;
-      if (tabValue === "Cloud") return item.isCloud === true;
-      if (tabValue === "Network") return item.isNetwork === true;
-      if (tabValue === "Certificate") return item.isCertificate === true;
-      if (tabValue === "Community") return item.isCommunity === true;
+      if (tabValue === "Cloud") return hasSpecialTopic(item, "Cloud");
+      if (tabValue === "Network") return hasSpecialTopic(item, "Network");
+      if (tabValue === "DevSecOps") return hasSpecialTopic(item, "DevSecOps");
+      if (tabValue === "Certificate") return hasSpecialTopic(item, "Certificate");
+      if (tabValue === "Community") return hasSpecialTopic(item, "Community");
       return item.category === tabValue;
     })
     .sort((a, b) => {
@@ -236,23 +259,40 @@ export default function Work() {
     const dateString = today.toISOString().split('T')[0];
     const currentThaiYear = (today.getFullYear() + 543).toString();
     setFormData({ ...defaultFormData, category: currentThaiYear, createdAt: dateString });
+    setIsTopicDropdownOpen(false);
     setSelectedFile(null);
     setImagePreview("");
     setIsFormModalOpen(true);
   };
 
   const openEditModal = (project) => {
+    const legacyTopics = [
+      project.isCloud ? "Cloud" : null,
+      project.isNetwork ? "Network" : null,
+      project.isDevSecOps ? "DevSecOps" : null,
+      project.isCertificate ? "Certificate" : null,
+      project.isCommunity ? "Community" : null,
+    ].filter(Boolean);
+
+    const mergedTopics = Array.from(new Set([
+      ...(Array.isArray(project.specialTopics) ? project.specialTopics : []),
+      ...(project.specialTopic ? [project.specialTopic] : []),
+      ...legacyTopics,
+    ]));
+
     setEditingProject(project);
     setFormData({
       title: project.title, category: project.category, slug: project.slug, img: project.img,
       createdAt: project.createdAt ? new Date(project.createdAt).toISOString().split('T')[0] : "",
       link: project.link || "",
+      specialTopics: mergedTopics,
       isCertificate: project.isCertificate || false,
       isBest: project.isBest || false,
       isCloud: project.isCloud || false,
       isNetwork: project.isNetwork || false,
       isCommunity: project.isCommunity || false,
     });
+    setIsTopicDropdownOpen(false);
     setImagePreview(project.img);
     setSelectedFile(null);
     setIsFormModalOpen(true);
@@ -265,7 +305,18 @@ export default function Work() {
     try {
       let finalImageUrl = formData.img;
       if (selectedFile) finalImageUrl = await uploadToCloudinary(selectedFile);
-      const payload = { ...formData, img: finalImageUrl };
+      const normalizedTopics = Array.from(new Set(formData.specialTopics || []));
+      const payload = {
+        ...formData,
+        img: finalImageUrl,
+        specialTopics: normalizedTopics,
+        specialTopic: normalizedTopics[0] || "",
+        isCloud: normalizedTopics.includes("Cloud"),
+        isNetwork: normalizedTopics.includes("Network"),
+        isDevSecOps: normalizedTopics.includes("DevSecOps"),
+        isCertificate: normalizedTopics.includes("Certificate"),
+        isCommunity: normalizedTopics.includes("Community"),
+      };
       if (editingProject) payload.originalSlug = editingProject.slug;
       const res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
@@ -273,6 +324,7 @@ export default function Work() {
         await fetchProjects();
         setTimeout(() => {
           setIsFormModalOpen(false); setIsSaving(false); setEditingProject(null);
+          setIsTopicDropdownOpen(false);
           setFormData(defaultFormData); setSelectedFile(null); setImagePreview("");
           showToast(editingProject ? "แก้ไขงานสำเร็จ!" : "เพิ่มงานใหม่สำเร็จ!", "success");
         }, 800);
@@ -324,22 +376,15 @@ export default function Work() {
     finally { setIsBackingUp(false); }
   };
 
-  // --- Reusable checkbox toggle row ---
-  const CheckboxRow = ({ field, label }) => (
-    <div
-      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all select-none ${formData[field] ? "bg-[#7edad2]/10 border-[#7edad2]" : "bg-gray-50 border-gray-200 hover:bg-gray-100"}`}
-      onClick={() => setFormData((prev) => ({ ...prev, [field]: !prev[field] }))}
-    >
-      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0 ${formData[field] ? "bg-[#7edad2] border-[#7edad2]" : "border-gray-300 bg-white"}`}>
-        {formData[field] && (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-        )}
-      </div>
-      <span className="text-gray-700 text-sm font-medium">{label}</span>
-    </div>
-  );
+  const toggleSpecialTopic = (topic) => {
+    setFormData((prev) => {
+      const exists = prev.specialTopics.includes(topic);
+      const nextTopics = exists
+        ? prev.specialTopics.filter((t) => t !== topic)
+        : [...prev.specialTopics, topic];
+      return { ...prev, specialTopics: nextTopics };
+    });
+  };
 
   if (loading) return (
     <div className="pt-24 flex flex-col items-center justify-center gap-3">
@@ -625,12 +670,74 @@ export default function Work() {
                       </div>
                     </div>
 
-                    {/* Tags */}
+                    {/* Special Topics */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {/* Best — custom style with star animation */}
-                        <div
+                      <label className="block text-sm font-medium text-gray-700 mb-1">หัวข้อพิเศษ (เลือกได้หลายอย่าง)</label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setIsTopicDropdownOpen((prev) => !prev)}
+                          className="w-full border p-3 rounded-xl bg-gray-50 outline-none border-gray-200 text-black transition-all text-left flex items-center justify-between"
+                        >
+                          <span className="text-sm text-gray-700 truncate pr-3">
+                            {formData.specialTopics.length > 0
+                              ? `${formData.specialTopics.length} แท็กที่เลือก`
+                              : "ไม่มี"}
+                          </span>
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-500 transition-transform ${isTopicDropdownOpen ? "rotate-180" : ""}`}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        </button>
+
+                        {isTopicDropdownOpen && (
+                          <div className="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                            {specialTopicOptions.map((option) => {
+                              const selected = formData.specialTopics.includes(option.value);
+                              return (
+                                <button
+                                  key={option.value}
+                                  type="button"
+                                  onClick={() => toggleSpecialTopic(option.value)}
+                                  className={`w-full px-3 py-2.5 text-left text-sm flex items-center justify-between transition-colors ${selected ? "bg-[#7edad2]/15 text-gray-900" : "text-gray-600 hover:bg-gray-50"}`}
+                                >
+                                  <span>{option.label}</span>
+                                  {selected && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-[#00a777]">
+                                      <path fillRule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.01 7a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.42l2.293 2.29 6.303-6.29a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {formData.specialTopics.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {formData.specialTopics.map((topic) => {
+                            const topicLabel = specialTopicOptions.find((opt) => opt.value === topic)?.label || topic;
+                            return (
+                              <button
+                                key={topic}
+                                type="button"
+                                onClick={() => toggleSpecialTopic(topic)}
+                                className="text-xs px-2.5 py-1 rounded-full bg-[#7edad2]/20 text-[#005b44] border border-[#7edad2]/40 hover:bg-[#7edad2]/30 transition-colors"
+                              >
+                                {topicLabel} ×
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Best Tag */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Highlight</label>
+                      <div className="grid grid-cols-1 gap-2">
+                        <button
+                          type="button"
                           className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all select-none ${formData.isBest ? "bg-yellow-50 border-yellow-400 text-yellow-600 shadow-sm" : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"}`}
                           onClick={() => setFormData({ ...formData, isBest: !formData.isBest })}
                         >
@@ -644,11 +751,7 @@ export default function Work() {
                             </svg>
                           )}
                           <span className="font-medium text-sm">⭐ Best Project</span>
-                        </div>
-                        <CheckboxRow field="isCloud" label="☁️ Cloud" />
-                        <CheckboxRow field="isNetwork" label="🌐 Network" />
-                        <CheckboxRow field="isCertificate" label="📜 Certificate / Award" />
-                        <CheckboxRow field="isCommunity" label="🤝 Community" />
+                        </button>
                       </div>
                     </div>
 

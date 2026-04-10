@@ -3,7 +3,25 @@ import Link from "next/link";
 import { FiArrowUpRight, FiLink, FiCalendar, FiStar } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
 
-const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate, isBest }) => {
+const WorkItem = ({ slug, category, specialTopic, specialTopics, img, title, createdAt, link, isCertificate, isBest, isCloud, isNetwork, isCommunity, isDevSecOps }) => {
+  const displayCategory = category || (Array.isArray(specialTopics) && specialTopics[0]) || specialTopic;
+  const tagLabelMap = {
+    Cloud: "☁️ Cloud",
+    Network: "🌐 Network",
+    DevSecOps: "🛡️ DevSecOps",
+    Certificate: "📜 Certificate",
+    Community: "🤝 Community",
+  };
+
+  const topicValues = new Set(Array.isArray(specialTopics) ? specialTopics : []);
+  if (specialTopic) topicValues.add(specialTopic);
+  if (isCloud) topicValues.add("Cloud");
+  if (isNetwork) topicValues.add("Network");
+  if (isDevSecOps) topicValues.add("DevSecOps");
+  if (isCertificate) topicValues.add("Certificate");
+  if (isCommunity) topicValues.add("Community");
+
+  const topicChips = [...topicValues].map((value) => tagLabelMap[value] || value);
 
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleString("en-US", {
@@ -22,8 +40,18 @@ const WorkItem = ({ slug, category, img, title, createdAt, link, isCertificate, 
 
           {/* Badge Top Left (Category - ของเดิม) */}
           <Badge className="absolute top-5 left-5 z-20 bg-white/90 backdrop-blur-md text-gray-900 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-sm border border-white/50 hover:bg-white">
-            {category}
+            {displayCategory}
           </Badge>
+
+          {topicChips.length > 0 && (
+            <div className="absolute bottom-5 right-5 z-20 flex flex-wrap justify-end gap-1.5 max-w-[72%]">
+              {topicChips.map((tag) => (
+                <span key={tag} className="text-[10px] leading-none px-2 py-1 rounded-md bg-black/45 text-white border border-white/20 backdrop-blur-sm">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* ✅ Badge Theme: Rose Pink (แดงชมพู) */}
           {/* ✅ Badge Theme: Rose Pink + Active Hover Effects */}
