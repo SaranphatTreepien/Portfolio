@@ -42,27 +42,30 @@ const stats = [
 ];
 
 const Hero = () => {
-
   return (
-    <section className="relative w-full min-h-screen overflow-hidden flex flex-col font-sans" id="Home">
-
+    <section
+      className="relative w-full min-h-screen overflow-hidden flex flex-col font-sans"
+      id="Home"
+    >
       {/* --- Background Layers --- */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent to-[#005f5f] lg:from-white lg:to-gray-50 -z-20">
         {/* Static gradient orbs */}
-        <div 
+        <div
           className="absolute w-[600px] h-[600px] rounded-full opacity-30 blur-3xl"
           style={{
-            background: 'radial-gradient(circle, rgba(126,218,210,0.4) 0%, transparent 70%)',
-            top: '20%',
-            right: '10%',
+            background:
+              "radial-gradient(circle, rgba(126,218,210,0.4) 0%, transparent 70%)",
+            top: "20%",
+            right: "10%",
           }}
         ></div>
-        <div 
+        <div
           className="absolute w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
           style={{
-            background: 'radial-gradient(circle, rgba(0,168,168,0.3) 0%, transparent 70%)',
-            bottom: '10%',
-            left: '5%',
+            background:
+              "radial-gradient(circle, rgba(0,168,168,0.3) 0%, transparent 70%)",
+            bottom: "10%",
+            left: "5%",
           }}
         ></div>
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1.5px,transparent_1.5px)] lg:bg-[radial-gradient(#cbd5e1_1.5px,transparent_1.5px)] [background-size:32px_32px] opacity-15 lg:opacity-40"></div>
@@ -84,13 +87,10 @@ const Hero = () => {
       </div>
 
       <div className="container mx-auto h-full px-6 sm:px-8 flex-grow flex flex-col pt-28 lg:pt-32 relative">
-
         {/* --- Main Content Row --- */}
         <div className="flex flex-col lg:flex-row items-center lg:items-end justify-between w-full flex-grow pb-12 lg:pb-0 gap-10 lg:gap-0 z-10">
-
           {/* --- Text Content (Left Side) --- */}
           <div className="w-full lg:w-[50%] text-center lg:text-left z-20 order-2 lg:order-1 flex flex-col items-center lg:items-start space-y-6 mb-10 lg:mb-32">
-
             {/* Badge */}
             <div>
               <span className="inline-flex items-center gap-2 py-2 px-5 rounded-full bg-white/10 border border-white/20 lg:bg-accent/5 lg:border-accent/10 backdrop-blur-sm shadow-sm">
@@ -121,10 +121,14 @@ const Hero = () => {
               <span className="mr-3 font-medium">Currently </span>
               <TypeAnimation
                 sequence={[
-                  "Not perfect yet", 1500,
-                  "But learning every day", 1500,
-                  "Small progress", 1500,
-                  "Is still progress 🤍", 2000
+                  "Not perfect yet",
+                  1500,
+                  "But learning every day",
+                  1500,
+                  "Small progress",
+                  1500,
+                  "Is still progress 🤍",
+                  2000,
                 ]}
                 speed={50}
                 repeat={Infinity}
@@ -136,16 +140,25 @@ const Hero = () => {
 
             {/* Description */}
             <p className="text-white/80 lg:text-gray-500 max-w-[90%] sm:max-w-[550px] text-sm sm:text-lg leading-relaxed font-normal">
-              Passionate about exploring <strong className="text-white lg:text-accent font-bold">Data, Networks, AI</strong>, and <strong className="text-white lg:text-accent font-bold">AIoT</strong>. Turning complex problems into elegant, intelligent solutions.
+              Passionate about building{" "}
+              <strong className="text-white lg:text-accent font-bold">
+                real products
+              </strong>{" "}
+              with modern web and{" "}
+              <strong className="text-white lg:text-accent font-bold">
+                cloud technologies
+              </strong>
+              . From idea to deployment — always learning, always shipping.
             </p>
 
             {/* Buttons Area */}
             <div className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-4 w-full pt-4">
-
               {/* 1. Contact Button */}
               <ScrollLink to="Contact" smooth duration={500} offset={-50}>
                 <button className="h-[50px] sm:h-[56px] px-6 sm:px-8 rounded-full bg-white text-accent lg:bg-accent lg:text-white font-bold shadow-lg">
-                  <span className="flex items-center gap-2">Contact Me <span className="text-lg">➔</span></span>
+                  <span className="flex items-center gap-2">
+                    Contact Me <span className="text-lg">➔</span>
+                  </span>
                 </button>
               </ScrollLink>
 
@@ -166,20 +179,26 @@ const Hero = () => {
                   <FiArrowRight className="text-lg" />
                 </button>
               </Link>
-
             </div>
 
             {/* Socials */}
             <div className="flex items-center gap-6 pt-4">
-              <SocialLink href="https://github.com/SaranphatTreepien" icon={<FaGithub />} label="GitHub" />
-              <SocialLink href="https://www.linkedin.com/in/saranphat-treepien-4284402b2" icon={<FaLinkedin />} label="LinkedIn" />
+              <SocialLink
+                href="https://github.com/SaranphatTreepien"
+                icon={<FaGithub />}
+                label="GitHub"
+              />
+              <SocialLink
+                href="https://www.linkedin.com/in/saranphat-treepien-4284402b2"
+                icon={<FaLinkedin />}
+                label="LinkedIn"
+              />
             </div>
           </div>
 
           {/* --- Image Area (Right Side) --- */}
           <div className="w-full lg:w-[45%] z-10 relative h-[400px] sm:h-[500px] lg:h-[750px] flex justify-center lg:justify-end items-center lg:items-end order-1 lg:order-2 mb-8 lg:mb-0">
             <div className="relative w-[300px] h-[340px] sm:w-[400px] sm:h-[460px] lg:w-[550px] lg:h-[650px]">
-
               {/* Glow effect */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/15 blur-[40px] rounded-full -z-10"></div>
 
@@ -187,8 +206,20 @@ const Hero = () => {
               <div className="absolute inset-0 z-0 pointer-events-none">
                 {/* Curved line shape */}
                 <div className="absolute top-[-15%] -left-[10%] opacity-80">
-                  <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 80 C 10 80, 20 20, 50 20 C 80 20, 80 50, 50 50 C 20 50, 20 80, 90 90" stroke="white" strokeWidth="3" strokeLinecap="round" strokeDasharray="6 6" />
+                  <svg
+                    width="80"
+                    height="80"
+                    viewBox="0 0 100 100"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M10 80 C 10 80, 20 20, 50 20 C 80 20, 80 50, 50 50 C 20 50, 20 80, 90 90"
+                      stroke="white"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray="6 6"
+                    />
                   </svg>
                 </div>
 
@@ -211,7 +242,6 @@ const Hero = () => {
                   placeholder="empty"
                 />
               </div>
-
             </div>
           </div>
         </div>
@@ -226,9 +256,7 @@ const Hero = () => {
               >
                 {/* Icon Wrapper */}
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/80 to-white/40 shadow-sm border border-white/50 flex items-center justify-center mb-6">
-                  <div className="text-accent text-2xl">
-                    {item.icon}
-                  </div>
+                  <div className="text-accent text-2xl">{item.icon}</div>
                 </div>
 
                 {/* Content */}
@@ -242,7 +270,6 @@ const Hero = () => {
             ))}
           </div>
         </div>
-
       </div>
     </section>
   );

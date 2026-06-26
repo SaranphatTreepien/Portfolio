@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { memo } from "react";
 import { FiArrowUpRight, FiLink, FiCalendar, FiStar } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
 
@@ -91,6 +92,8 @@ const WorkItem = ({ slug, category, specialTopic, specialTopics, img, title, cre
             src={img}
             alt={title}
             fill
+            sizes="(max-width: 1024px) 100vw, 33vw"
+            loading="lazy"
             className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-110"
           />
 
@@ -170,4 +173,4 @@ const WorkItem = ({ slug, category, specialTopic, specialTopics, img, title, cre
   );
 };
 
-export default WorkItem;
+export default memo(WorkItem);

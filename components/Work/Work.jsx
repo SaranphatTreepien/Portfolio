@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createPortal } from "react-dom";
@@ -15,18 +15,41 @@ const CheckCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="
 const XCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-red-500"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" /></svg>);
 const SkullIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-red-600"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>);
 
-// --- Animation Variants - ลด animation เพื่อประหยัด GPU ---
-const cardVariants = {
-  hidden: { opacity: 0, scale: 0.98, y: 10 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2 } },
-  exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.15 } },
-  hover: { y: -4, transition: { duration: 0.2 } }
+const COUNTED_TOPICS = ["Cloud", "Network", "DevSecOps", "Certificate", "Community"];
+
+const isYearCategory = (value) => /^\d{4}$/.test(String(value || "").trim());
+
+const hasSpecialTopic = (item, topic) => {
+  if (Array.isArray(item.specialTopics) && item.specialTopics.includes(topic)) return true;
+  if (item.specialTopic === topic) return true;
+  if (topic === "Cloud") return item.isCloud === true;
+  if (topic === "Network") return item.isNetwork === true;
+  if (topic === "DevSecOps") return item.isDevSecOps === true;
+  if (topic === "Certificate") return item.isCertificate === true;
+  if (topic === "Community") return item.isCommunity === true;
+  return false;
 };
 
-const modalVariants = {
-  hidden: { opacity: 0, scale: 0.98, y: 20 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2 } },
-  exit: { opacity: 0, scale: 0.98, y: 20, transition: { duration: 0.15 } }
+const matchesTab = (item, tabValue) => {
+  if (tabValue === "all") return true;
+  if (tabValue === "Best") return item.isBest === true;
+  if (tabValue === "Cloud") return hasSpecialTopic(item, "Cloud");
+  if (tabValue === "Network") return hasSpecialTopic(item, "Network");
+  if (tabValue === "DevSecOps") return hasSpecialTopic(item, "DevSecOps");
+  if (tabValue === "Certificate") return hasSpecialTopic(item, "Certificate");
+  if (tabValue === "Community") return hasSpecialTopic(item, "Community");
+  return item.category === tabValue;
+};
+
+const buildTopicCounts = (projects) => {
+  const counts = { Best: 0, Cloud: 0, Network: 0, DevSecOps: 0, Certificate: 0, Community: 0 };
+  for (const item of projects) {
+    if (item.isBest === true) counts.Best++;
+    for (const topic of COUNTED_TOPICS) {
+      if (hasSpecialTopic(item, topic)) counts[topic]++;
+    }
+  }
+  return counts;
 };
 
 const defaultFormData = {
@@ -42,6 +65,82 @@ const specialTopicOptions = [
   { value: "Certificate", label: "📜 Certificate" },
   { value: "Community", label: "🤝 Community" },
 ];
+
+const WorkCard = memo(function WorkCard({
+  item,
+  isAdmin,
+  isDeleting,
+  isDraggingCard,
+  isDropBefore,
+  isDropAfter,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  onEdit,
+  onDelete,
+}) {
+  return (
+    <div
+      draggable={isAdmin}
+      onDragStart={(e) => onDragStart(e, item.slug)}
+      onDragOver={(e) => onDragOver(e, item.slug)}
+      onDrop={(e) => onDrop(e, item.slug)}
+      onDragEnd={onDragEnd}
+      className={`relative group rounded-3xl overflow-hidden ${isAdmin ? "cursor-grab active:cursor-grabbing" : ""} ${isDraggingCard ? "opacity-60 scale-[0.98]" : ""} ${isDeleting ? "ring-4 ring-red-500 shadow-2xl shadow-red-500/50" : ""}`}
+    >
+      {isAdmin && (
+        <>
+          <div className={`absolute left-4 right-4 top-2 z-20 h-1 rounded-full transition-opacity ${isDropBefore ? "bg-[#00ff99] opacity-100" : "opacity-0"}`} />
+          <div className={`absolute left-4 right-4 bottom-2 z-20 h-1 rounded-full transition-opacity ${isDropAfter ? "bg-[#00ff99] opacity-100" : "opacity-0"}`} />
+          <div className="absolute top-4 left-4 z-20 pointer-events-none">
+            <span className="text-[10px] tracking-[0.25em] font-mono text-white/90 bg-black/60 px-2 py-1 rounded-full border border-white/10">
+              DRAG
+            </span>
+          </div>
+        </>
+      )}
+      <div className="absolute top-14 left-4 z-20 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300">
+        <span className="text-[10px] tracking-wider font-mono text-white/90 bg-black/70 px-2 py-1 rounded border border-white/10 shadow-sm">
+          /{item.slug}
+        </span>
+      </div>
+      {isDeleting && (
+        <div className="absolute inset-0 z-50 bg-red-500/30 flex items-center justify-center">
+          <div className="bg-white/90 p-3 rounded-full shadow-lg"><TrashIcon className="w-8 h-8 text-red-600 animate-bounce" /></div>
+        </div>
+      )}
+      <WorkItem
+        slug={item.slug}
+        category={item.category}
+        specialTopic={item.specialTopic}
+        specialTopics={item.specialTopics}
+        img={item.img}
+        title={item.title}
+        createdAt={item.createdAt}
+        link={item.link}
+        isCertificate={item.isCertificate}
+        isBest={item.isBest}
+        isCloud={item.isCloud}
+        isNetwork={item.isNetwork}
+        isCommunity={item.isCommunity}
+        isDevSecOps={item.isDevSecOps}
+      />
+      {isAdmin && !isDeleting && (
+        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10 translate-y-2 group-hover:translate-y-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+            className="p-2.5 bg-white text-blue-500 rounded-full shadow-lg hover:bg-blue-500 hover:text-white border border-blue-100 hover:scale-110 active:scale-90 transition-transform"
+          ><PencilIcon /></button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(item.slug); }}
+            className="p-2.5 bg-white text-red-500 rounded-full shadow-lg hover:bg-red-500 hover:text-white border border-red-100 hover:scale-110 active:scale-90 transition-transform"
+          ><TrashIcon /></button>
+        </div>
+      )}
+    </div>
+  );
+});
 
 export default function Work() {
   const [projects, setProjects] = useState([]);
@@ -131,10 +230,17 @@ export default function Work() {
     }));
   };
 
-  const clearDragState = () => {
+  const clearDragState = useCallback(() => {
     setDraggedSlug(null);
     setDropHint({ slug: null, position: null });
-  };
+  }, []);
+
+  const handleDragStart = useCallback((e, slug) => {
+    if (!isAdmin) return;
+    setDraggedSlug(slug);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", slug);
+  }, [isAdmin]);
 
   const persistProjectOrder = async (orderedProjects) => {
     const updates = orderedProjects.map((item, index) => {
@@ -157,22 +263,18 @@ export default function Work() {
     }
   };
 
-  const handleDragStart = (e, slug) => {
-    if (!isAdmin) return;
-    setDraggedSlug(slug);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', slug);
-  };
-
-  const handleDragOverCard = (e, slug) => {
+  const handleDragOverCard = useCallback((e, slug) => {
     if (!isAdmin || !draggedSlug || draggedSlug === slug) return;
     e.preventDefault();
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const position = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
-    setDropHint({ slug, position });
-    e.dataTransfer.dropEffect = 'move';
-  };
+    const position = e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+    setDropHint((prev) => {
+      if (prev.slug === slug && prev.position === position) return prev;
+      return { slug, position };
+    });
+    e.dataTransfer.dropEffect = "move";
+  }, [isAdmin, draggedSlug]);
 
   const moveProject = async (dragSlug, targetSlug, position = 'before') => {
     if (!dragSlug || !targetSlug || dragSlug === targetSlug) return;
@@ -222,9 +324,9 @@ export default function Work() {
     clearDragState();
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     clearDragState();
-  };
+  }, [clearDragState]);
 
   const handleRestore = (e) => {
     const file = e.target.files[0];
@@ -255,29 +357,47 @@ export default function Work() {
     finally { setLoading(false); }
   };
 
-  // --- Tabs data ---
-  const isYearCategory = (value) => /^\d{4}$/.test(String(value || "").trim());
-  const uniqueYearCategories = Array.from(
-    new Set(
-      projects
-        .map((item) => String(item.category || "").trim())
-        .filter(isYearCategory)
-    )
-  ).sort((a, b) => Number(b) - Number(a));
-  
-  // แยกหมวดหมู่พิเศษกับปี
-  const specialCategories = [
-    { category: "all", label: "All" },
-    { category: "Best", label: "⭐ Best" },
-    { category: "Cloud", label: "☁️ Cloud" },
-    { category: "Network", label: "🌐 Network" },
-    { category: "DevSecOps", label: "🛡️ DevSecOps" },
-    { category: "Certificate", label: "📜 Certificate" },
-    { category: "Community", label: "🤝 Community" },
-  ];
-  
-  const yearCategories = uniqueYearCategories.map((c) => ({ category: c, label: c }));
+  // --- Tabs data (memoized — คำนวณใหม่เมื่อ projects หรือสถานะปีเปลี่ยน) ---
+  const topicCounts = useMemo(() => buildTopicCounts(projects), [projects]);
+
+  const yearCategories = useMemo(() => {
+    const uniqueYearCategories = Array.from(
+      new Set(
+        projects
+          .map((item) => String(item.category || "").trim())
+          .filter(isYearCategory)
+      )
+    ).sort((a, b) => Number(b) - Number(a));
+
+    return uniqueYearCategories.map((c) => ({ category: c, label: c }));
+  }, [projects]);
+
   const canCollapseYears = yearCategories.length > 0;
+
+  const tabData = useMemo(() => {
+    const specialCategories = [
+      { category: "all", label: `All (${projects.length})` },
+      { category: "Best", label: `⭐ Best (${topicCounts.Best})` },
+      { category: "Cloud", label: `☁️ Cloud (${topicCounts.Cloud})` },
+      { category: "Network", label: `🌐 Network (${topicCounts.Network})` },
+      { category: "DevSecOps", label: `🛡️ DevSecOps (${topicCounts.DevSecOps})` },
+      { category: "Certificate", label: `📜 Certificate (${topicCounts.Certificate})` },
+      { category: "Community", label: `🤝 Community (${topicCounts.Community})` },
+    ];
+
+    const displayedYears = !canCollapseYears || !isYearsCollapsed ? yearCategories : [];
+    return [...specialCategories, ...displayedYears];
+  }, [topicCounts, yearCategories, canCollapseYears, isYearsCollapsed]);
+
+  const filterWork = useMemo(
+    () => projects.filter((item) => matchesTab(item, tabValue)),
+    [projects, tabValue]
+  );
+
+  const visibleWork = useMemo(
+    () => filterWork.slice(0, visibleItems),
+    [filterWork, visibleItems]
+  );
 
   const handleToggleYears = () => {
     setIsYearsCollapsed((prev) => {
@@ -291,49 +411,6 @@ export default function Work() {
       return next;
     });
   };
-  
-  // แสดงปีตามสถานะการหุบ/ขยาย
-  const displayedYears = (() => {
-    if (!canCollapseYears || !isYearsCollapsed) return yearCategories;
-    return [];
-  })();
-  
-  const tabData = [...specialCategories, ...displayedYears];
-
-  const hasSpecialTopic = (item, topic) => {
-    if (Array.isArray(item.specialTopics) && item.specialTopics.includes(topic)) return true;
-    if (item.specialTopic === topic) return true;
-    if (topic === "Cloud") return item.isCloud === true;
-    if (topic === "Network") return item.isNetwork === true;
-    if (topic === "DevSecOps") return item.isDevSecOps === true;
-    if (topic === "Certificate") return item.isCertificate === true;
-    if (topic === "Community") return item.isCommunity === true;
-    return false;
-  };
-
-  const filterWork = projects
-    .filter((item) => {
-      if (tabValue === "all") return true;
-      if (tabValue === "Best") return item.isBest === true;
-      if (tabValue === "Cloud") return hasSpecialTopic(item, "Cloud");
-      if (tabValue === "Network") return hasSpecialTopic(item, "Network");
-      if (tabValue === "DevSecOps") return hasSpecialTopic(item, "DevSecOps");
-      if (tabValue === "Certificate") return hasSpecialTopic(item, "Certificate");
-      if (tabValue === "Community") return hasSpecialTopic(item, "Community");
-      return item.category === tabValue;
-    })
-    .sort((a, b) => {
-      const aOrder = Number(a.order);
-      const bOrder = Number(b.order);
-      const aHasOrder = Number.isFinite(aOrder);
-      const bHasOrder = Number.isFinite(bOrder);
-
-      if (aHasOrder && bHasOrder && aOrder !== bOrder) return aOrder - bOrder;
-      if (aHasOrder !== bHasOrder) return aHasOrder ? -1 : 1;
-      if (a.isBest === true && b.isBest !== true) return -1;
-      if (a.isBest !== true && b.isBest === true) return 1;
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
 
   // --- Auth & CRUD handlers ---
   const handleLogin = (e) => {
@@ -606,66 +683,25 @@ export default function Work() {
             {filterWork.length === 0 ? (
               <div className="text-center text-gray-500 py-10">ยังไม่มีข้อมูลในหมวดนี้</div>
             ) : (
-              <motion.div layout className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
-                <AnimatePresence mode="popLayout">
-                  {filterWork.slice(0, visibleItems).map((item, index) => {
-                    const isDeleting = deletingId === item.slug;
-                    const isDraggingCard = draggedSlug === item.slug;
-                    const isDropBefore = dropHint.slug === item.slug && dropHint.position === 'before';
-                    const isDropAfter = dropHint.slug === item.slug && dropHint.position === 'after';
-                    return (
-                      <motion.div
-                        layout key={item._id || item.slug || index}
-                        variants={cardVariants}
-                        initial="hidden"
-                        animate={isDeleting ? { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } } : "visible"}
-                        exit="exit" whileHover="hover"
-                        draggable={isAdmin}
-                        onDragStart={(e) => handleDragStart(e, item.slug)}
-                        onDragOver={(e) => handleDragOverCard(e, item.slug)}
-                        onDrop={(e) => handleDropCard(e, item.slug)}
-                        onDragEnd={handleDragEnd}
-                        className={`relative group rounded-3xl overflow-hidden ${isAdmin ? "cursor-grab active:cursor-grabbing" : ""} ${isDraggingCard ? "opacity-60 scale-[0.98]" : ""} ${isDeleting ? "ring-4 ring-red-500 shadow-2xl shadow-red-500/50" : ""}`}
-                      >
-                        {isAdmin && (
-                          <>
-                            <div className={`absolute left-4 right-4 top-2 z-20 h-1 rounded-full transition-opacity ${isDropBefore ? 'bg-[#00ff99] opacity-100' : 'opacity-0'}`} />
-                            <div className={`absolute left-4 right-4 bottom-2 z-20 h-1 rounded-full transition-opacity ${isDropAfter ? 'bg-[#00ff99] opacity-100' : 'opacity-0'}`} />
-                            <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                              <span className="text-[10px] tracking-[0.25em] font-mono text-white/90 bg-black/60 px-2 py-1 rounded-full border border-white/10">
-                                DRAG
-                              </span>
-                            </div>
-                          </>
-                        )}
-                        <div className="absolute top-14 left-4 z-20 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300">
-                          <span className="text-[10px] tracking-wider font-mono text-white/90 bg-black/70 px-2 py-1 rounded border border-white/10 shadow-sm">
-                            /{item.slug}
-                          </span>
-                        </div>
-                        {isDeleting && (
-                          <div className="absolute inset-0 z-50 bg-red-500/30 flex items-center justify-center">
-                            <div className="bg-white/90 p-3 rounded-full shadow-lg"><TrashIcon className="w-8 h-8 text-red-600 animate-bounce" /></div>
-                          </div>
-                        )}
-                        <WorkItem {...item} />
-                        {isAdmin && !isDeleting && (
-                          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10 translate-y-2 group-hover:translate-y-0">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
-                              className="p-2.5 bg-white text-blue-500 rounded-full shadow-lg hover:bg-blue-500 hover:text-white border border-blue-100 hover:scale-110 active:scale-90 transition-transform"
-                            ><PencilIcon /></button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDeleteProject(item.slug); }}
-                              className="p-2.5 bg-white text-red-500 rounded-full shadow-lg hover:bg-red-500 hover:text-white border border-red-100 hover:scale-110 active:scale-90 transition-transform"
-                            ><TrashIcon /></button>
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
+                {visibleWork.map((item) => (
+                  <WorkCard
+                    key={item._id || item.slug}
+                    item={item}
+                    isAdmin={isAdmin}
+                    isDeleting={deletingId === item.slug}
+                    isDraggingCard={draggedSlug === item.slug}
+                    isDropBefore={dropHint.slug === item.slug && dropHint.position === "before"}
+                    isDropAfter={dropHint.slug === item.slug && dropHint.position === "after"}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOverCard}
+                    onDrop={handleDropCard}
+                    onDragEnd={handleDragEnd}
+                    onEdit={openEditModal}
+                    onDelete={handleDeleteProject}
+                  />
+                ))}
+              </div>
             )}
             {visibleItems < filterWork.length && (
               <div className="flex justify-center mt-12">
@@ -681,8 +717,8 @@ export default function Work() {
         </Tabs>
       </div>
 
-      {/* --- Portals (Toast + Modals) --- */}
-      {typeof document !== 'undefined' && createPortal(
+      {/* --- Portals (Toast + Modals) — render เฉพาะเมื่อมี overlay เปิดอยู่ --- */}
+      {typeof document !== "undefined" && (toast.show || isAuthModalOpen || isDeleteAllModalOpen || isFormModalOpen) && createPortal(
         <>
           {/* Toast - ลด animation เพื่อประหยัด GPU */}
           <AnimatePresence>

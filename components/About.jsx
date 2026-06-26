@@ -9,20 +9,33 @@ const About = () => {
     { icon: <FaUser />, field: "Name", value: "Saranphat (Max)" },
     { icon: <FaMapMarkerAlt />, field: "Location", value: "Bangkok" },
     { icon: <FaPhoneAlt />, field: "Phone", value: "+66 61 446 1930" },
-    { icon: <FaEnvelope />, field: "Email", value: "saranphat.tre289@gmail.com" },
+    {
+      icon: <FaEnvelope />,
+      field: "Email",
+      value: "saranphat.tre289@gmail.com",
+    },
   ];
 
   // ดึง Skills เด่นๆ ออกมาจาก Text ของคุณเพื่อทำเป็น Tags
   const skills = [
-    "Network Engineering", "AI & Computer Vision", "IoT (MQTT/HTTP)",
-    "Hardware/Circuits", "Data Analysis", "Risk Assessment"
+    "Network Engineering",
+    "AI & Computer Vision",
+    "IoT (MQTT/HTTP)",
+    "Hardware/Circuits",
+    "Data Analysis",
+    "Risk Assessment",
+    "Next.js",
+    "PostgreSQL",
+    "Docker",
+    "Kubernetes",
+    "AWS",
+    "CI/CD",
   ];
 
   return (
     <section className="relative pt-16 pb-32 overflow-hidden" id="About">
       <div className="container mx-auto h-full">
         <div className="flex flex-col xl:flex-row items-center justify-between gap-12 xl:gap-20">
-
           {/* --- Image Section --- */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -62,22 +75,43 @@ const About = () => {
           >
             {/* Header */}
             <div className="mb-6">
-              <span className="text-accent font-semibold tracking-wider uppercase text-sm">About Me</span>
-              <AnimatedText text="My Name is Max" textStyles="h2 text-4xl font-bold mt-2 mb-2" />
-              <p className="text-xl text-primary font-medium">B.Eng., Computer Engineering</p>
+              <span className="text-accent font-semibold tracking-wider uppercase text-sm">
+                About Me
+              </span>
+              <AnimatedText
+                text="My Name is Max"
+                textStyles="h2 text-4xl font-bold mt-2 mb-2"
+              />
+              <p className="text-xl text-primary font-medium">
+                B.Eng., Computer Engineering
+              </p>
             </div>
 
             {/* Main Description */}
             <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 max-w-[700px]">
-              I am passionate about <span className="text-accent font-semibold">Network Infrastructure</span>, enjoying the challenge of managing servers, switches, and routers.
-              My expertise extends to <span className="text-accent font-semibold">AI & Computer Vision</span> for safety solutions and <span className="text-accent font-semibold">IoT protocols</span> (MQTT, HTTP, I2C).
-              I love combining hardware knowledge with data analysis to build practical, intelligent systems that solve real-world problems.
+              I am passionate about{" "}
+              <span className="text-accent font-semibold">
+                Network Infrastructure
+              </span>
+              , enjoying the challenge of managing servers, switches, and
+              routers. My expertise extends to{" "}
+              <span className="text-accent font-semibold">
+                AI & Computer Vision
+              </span>{" "}
+              for safety solutions and{" "}
+              <span className="text-accent font-semibold">IoT protocols</span>{" "}
+              (MQTT, HTTP, I2C). I love combining hardware knowledge with data
+              analysis to build practical, intelligent systems that solve
+              real-world problems.
             </p>
 
             {/* Skills Tags (Optional: ดีไซน์แบบป้ายกำกับ) */}
             <div className="flex flex-wrap justify-center xl:justify-start gap-3 mb-10">
               {skills.map((skill, index) => (
-                <span key={index} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-full font-medium border border-gray-200 dark:border-gray-700">
+                <span
+                  key={index}
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-full font-medium border border-gray-200 dark:border-gray-700"
+                >
                   {skill}
                 </span>
               ))}
@@ -86,18 +120,24 @@ const About = () => {
             {/* Contact Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
               {info.map((item, index) => (
-                <div key={index} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                <div
+                  key={index}
+                  className="flex items-center gap-4 bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
+                >
                   <div className="w-10 h-10 bg-accent/10 text-accent rounded-lg flex items-center justify-center text-lg">
                     {item.icon}
                   </div>
                   <div className="text-left">
-                    <div className="text-xs uppercase font-bold text-gray-400 tracking-wide">{item.field}</div>
-                    <div className="text-sm font-semibold text-gray-800 dark:text-white break-all">{item.value}</div>
+                    <div className="text-xs uppercase font-bold text-gray-400 tracking-wide">
+                      {item.field}
+                    </div>
+                    <div className="text-sm font-semibold text-gray-800 dark:text-white break-all">
+                      {item.value}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-
           </motion.div>
         </div>
       </div>
