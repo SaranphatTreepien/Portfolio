@@ -1,36 +1,28 @@
 import Link from "next/link";
-import {
-  FaFacebookF,
-  FaGithub,
-  FaLinkedinIn,
-  FaFilePdf, // ไอคอนสำหรับ PDF
-  FaUserTie, // ไอคอนสำหรับ Resume (มาดนักธุรกิจ/โปรไฟล์)
-} from "react-icons/fa";
+import { FaFacebookF } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import { RiInstagramFill } from "react-icons/ri";
-import { BsFileEarmarkPersonFill } from "react-icons/bs"; // อีกตัวเลือกที่สวยสำหรับ Resume
+import { BsFileEarmarkPersonFill } from "react-icons/bs";
 
 const socials = [
-  { icon: <RiInstagramFill />, path: "https://www.instagram.com/maxtree289_/#" },
-  { icon: <FaFacebookF />, path: "https://web.facebook.com/Saranphat7S/" },
-  { icon: <FaGithub />, path: "https://github.com/SaranphatTreepien" },
-  { icon: <FaLinkedinIn />, path: "https://www.linkedin.com/in/saranphat-treepien-4284402b2" },
-  // เปลี่ยนตรงนี้
-  { icon: <BsFileEarmarkPersonFill />, path: "/resume", title: "Resume" }, // ไอคอนรูปเอกสารมีตัวคน
-  // { icon: <FaFilePdf />, path: "/cv", title: "CV" },                 // ไอคอน PDF ชัดเจน
+  { icon: <RiInstagramFill />, path: "https://www.instagram.com/maxtree289_/#", external: true },
+  { icon: <FaFacebookF />, path: "https://web.facebook.com/Saranphat7S/", external: true },
+  { icon: <FaXTwitter />, path: "https://x.com/maxtree289_", external: true, title: "X" },
+  { icon: <BsFileEarmarkPersonFill />, path: "/resume", title: "Resume" },
 ];
 
 const Socials = ({ containerStyles, iconStyles }) => {
   return (
     <div className={containerStyles}>
       {socials.map((item, index) => {
-        const isPdf = item.path.endsWith(".pdf");
+        const isExternal = item.external || item.path.endsWith(".pdf");
 
         return (
           <Link
             href={item.path}
             key={index}
-            target={isPdf ? "_blank" : undefined}
-            rel={isPdf ? "noopener noreferrer" : undefined}
+            target={isExternal ? "_blank" : undefined}
+            rel={isExternal ? "noopener noreferrer" : undefined}
           >
             <span className={iconStyles} title={item.title}>
               {item.icon}

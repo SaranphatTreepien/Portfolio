@@ -13,7 +13,7 @@ import Footer from "@/components/Footer";
 
 const Home = () => {
   //implement locomotive scroll
- 
+
   return (
     <>
       <Hero />
