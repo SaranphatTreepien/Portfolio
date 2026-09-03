@@ -53,9 +53,6 @@ const Contact = () => {
 
   return (
     <section className="relative pt-12 pb-32 overflow-hidden" id="Contact">
-      {/* Dot Pattern Background */}
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(#e5e7eb_1.5px,transparent_1.5px)] [background-size:20px_20px] opacity-40" />
-      
       <div className="container mx-auto px-4">
         <div className="flex flex-col xl:flex-row gap-12 items-center justify-center">
           

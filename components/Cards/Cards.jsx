@@ -38,6 +38,19 @@ const Year = ({ children }) => (
 const journeyData = {
   freelance: [
     {
+      company: "AAppoint — AI Agent / Backend Engineer (Freelance)",
+      icon: <FaRobot />,
+      duration: <Year>May 2026 - Present</Year>,
+      description: "Developed dual-facing AI agents for restaurant booking and shop management using LangChain and Gemini.",
+      details: [
+        "B2C Agent: Customer-facing agent for restaurant booking, built with LangChain and Gemini.",
+        "B2B Agent: Assists shop managers with booking summaries, cancellations, and shop information.",
+        "Memory: Redis for short-term memory and PostgreSQL for long-term memory across both agents.",
+        "Expanded agent capability from text-only responses to full booking-to-payment workflows, integrating with LINE OA via custom, token-authenticated API endpoints."
+      ],
+      type: "default"
+    },
+    {
       company: "Water Vending Machine System (IoT Commercial Project)",
       icon: <FaBriefcase />,
       duration: <Year>2567-2568</Year>,
@@ -52,6 +65,13 @@ const journeyData = {
     },
   ],
   experience: [
+    {
+      company: "AI Agent & LLM Self-Study",
+      icon: <FaRobot />,
+      duration: <Year>2569</Year>,
+      description: "Self-studied AI Agent architecture and LLM application development — prompt engineering, LangChain agent design, and memory systems (Redis, PostgreSQL) — as groundwork before building the AAppoint AI agent project.",
+      type: "default"
+    },
     {
       company: "Smart Plug IoT Project",
       icon: <FaPlug />,
@@ -115,6 +135,12 @@ const journeyData = {
     }
   ],
   skill: [
+    {
+      company: "AI Agent Development",
+      icon: <FaRobot />,
+      description: "LangChain, Google Gemini, agent memory design (Redis short-term, PostgreSQL long-term), LINE OA API integration.",
+      type: "skill"
+    },
     {
       company: "Networking Fundamentals",
       icon: <FaNetworkWired />,

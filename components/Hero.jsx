@@ -81,8 +81,18 @@ const Hero = () => {
             left: "5%",
           }}
         ></div>
-        <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1.5px,transparent_1.5px)] lg:bg-[radial-gradient(#cbd5e1_1.5px,transparent_1.5px)] [background-size:32px_32px] opacity-15 lg:opacity-40"></div>
+        <div
+          className="absolute inset-0 bg-[radial-gradient(rgba(148,163,184,0.5)_1.5px,transparent_1.5px)] [background-size:24px_24px]"
+          style={{
+            maskImage:
+              "radial-gradient(ellipse 90% 80% at 50% 30%, black 40%, transparent 90%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 90% 80% at 50% 30%, black 40%, transparent 90%)",
+          }}
+        ></div>
       </div>
+
+      <div className="hidden lg:block absolute top-0 right-0 w-[50%] h-full bg-gradient-to-bl from-accent to-[#00a8a8] -z-10 rounded-bl-[250px] shadow-[-20px_0_100px_rgba(0,0,0,0.08)]"></div>
 
       {/* --- Tech Elements (Binary / Code Symbols) --- */}
       <div className="hidden lg:block absolute top-20 left-10 font-mono text-accent/5 text-8xl font-bold select-none z-0 rotate-12 pointer-events-none">
@@ -91,8 +101,6 @@ const Hero = () => {
       <div className="hidden lg:block absolute bottom-1/3 right-10 font-mono text-accent/5 text-6xl font-bold select-none z-0 -rotate-12 pointer-events-none">
         010011
       </div>
-
-      <div className="hidden lg:block absolute top-0 right-0 w-[50%] h-full bg-gradient-to-bl from-accent to-[#00a8a8] -z-10 rounded-bl-[250px] shadow-[-20px_0_100px_rgba(0,0,0,0.08)]"></div>
 
       {/* Header */}
       <div className="absolute top-0 left-0 w-full z-50">
