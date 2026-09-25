@@ -7,6 +7,7 @@ export async function POST(request) {
     try {
         const body = await request.json();
         const {
+            type,
             fullName,
             position,
             company,
@@ -16,8 +17,17 @@ export async function POST(request) {
             bodyText,      
             attachments    
         } = body;
+        const isContactMessage = type === "contact";
+        const recipient = receiverEmail || process.env.CONTACT_RECEIVER_EMAIL || process.env.SMTP_USER;
 
-        console.log(`📩 Preparing email to: ${receiverEmail}`);
+        if (!recipient || !emailSender || !bodyText) {
+            return NextResponse.json(
+                { success: false, error: "Missing email recipient, sender, or message" },
+                { status: 400 }
+            );
+        }
+
+        console.log(`📩 Preparing email to: ${recipient}`);
 
         const mailAttachments = [];
 
@@ -62,12 +72,39 @@ export async function POST(request) {
             },
         });
 
+        const receivedAt = new Intl.DateTimeFormat("th-TH", {
+            dateStyle: "long",
+            timeStyle: "short",
+            timeZone: "Asia/Bangkok",
+        }).format(new Date());
+        const contactText = [
+            "📩 แจ้งเตือนจาก Portfolio",
+            "มีผู้ติดต่อส่งข้อความเข้ามาผ่านหน้า Contact",
+            "",
+            "👤 ข้อมูลผู้ติดต่อ",
+            "--------------------",
+            `🧑 ชื่อ-นามสกุล: ${fullName}`,
+            `📧 อีเมล: ${emailSender}`,
+            `📞 เบอร์โทร: ${phone || "ไม่ได้ระบุ"}`,
+            `🕒 วันที่ส่ง: ${receivedAt}`,
+            "",
+            "💬 ข้อความจากผู้ติดต่อ",
+            "--------------------",
+            bodyText,
+            "",
+            "↩️ กด Reply เพื่อส่งอีเมลตอบกลับไปยังผู้ติดต่อได้ทันที",
+        ].join("\n");
+
         const info = await transporter.sendMail({
-            from: `"${fullName} - Portfolio" <${process.env.SMTP_USER}>`, 
-            to: receiverEmail,                                            
+            from: `"${fullName} via Portfolio" <${process.env.SMTP_USER}>`, 
+            to: recipient,                                            
             replyTo: emailSender,                                         
-            subject: `สมัครงานตำแหน่ง ${position} – ${fullName}`,         
-            text: bodyText,                                              
+            subject: isContactMessage
+                ? `📩 [Portfolio Contact] ${fullName} - ${emailSender}`
+                : `สมัครงานตำแหน่ง ${position} – ${fullName}`,         
+            text: isContactMessage
+                ? contactText
+                : bodyText,                                              
             attachments: mailAttachments                                  
         });
 

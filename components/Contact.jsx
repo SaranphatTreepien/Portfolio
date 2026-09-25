@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import emailjs from "emailjs-com";
 import AnimatedText from "./AnimatedText";
 import Image from "next/image";
 import { FaCheckCircle, FaPaperPlane, FaGlobeAsia } from "react-icons/fa";
@@ -15,6 +14,7 @@ const Contact = () => {
     message: "",
   });
   const [showNotification, setShowNotification] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [showIcon, setShowIcon] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
@@ -23,32 +23,43 @@ const Contact = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setIsSending(true);
+    setErrorMessage("");
 
     // รวมเบอร์โทรกับรหัสประเทศก่อนส่ง
     const fullPhone = `${formData.countryCode} ${formData.phone}`;
 
-    emailjs
-      .send(
-        "service_dgj4ayv",
-        "template_ili86ci",
-        {
-          ...formData,
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "contact",
+          fullName: `${formData.firstname} ${formData.lastname}`,
+          emailSender: formData.email,
           phone: fullPhone,
-          time: new Date().toLocaleString("en-US"),
-        },
-        "jUeofg9Z-GDt6SElF"
-      )
-      .then(() => {
+          bodyText: formData.message,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Unable to send message");
+      }
+
         setShowNotification(true);
         setTimeout(() => setShowNotification(false), 4000);
         setShowIcon(true);
         setFormData({ firstname: "", lastname: "", email: "", countryCode: "+66", phone: "", message: "" });
         setTimeout(() => setShowIcon(false), 3000);
-      })
-      .finally(() => setIsSending(false));
+    } catch (error) {
+      console.error("Contact form error:", error);
+      setErrorMessage(error.message || "Unable to send message");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -203,6 +214,12 @@ const Contact = () => {
           </div>
         </div>
       </div>
+      {errorMessage && (
+        <div className="fixed bottom-10 right-10 z-[100] max-w-sm rounded-2xl bg-red-600 px-6 py-4 text-white shadow-xl">
+          <p className="font-bold">ส่งข้อความไม่สำเร็จ</p>
+          <p className="text-sm">{errorMessage}</p>
+        </div>
+      )}
     </section>
   );
 };
