@@ -15,18 +15,21 @@ const CheckCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="
 const XCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-red-500"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" /></svg>);
 const SkullIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-red-600"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>);
 
-const COUNTED_TOPICS = ["Cloud", "Network", "DevSecOps", "Certificate", "Community"];
+const COUNTED_TOPICS = ["Cloud", "Network", "DevSecOps", "Certificate", "Event"];
 
 const isYearCategory = (value) => /^\d{4}$/.test(String(value || "").trim());
 
 const hasSpecialTopic = (item, topic) => {
-  if (Array.isArray(item.specialTopics) && item.specialTopics.includes(topic)) return true;
+  const topics = Array.isArray(item.specialTopics)
+    ? item.specialTopics.map((value) => value === "Community" ? "Event" : value)
+    : [];
+  if (topics.includes(topic)) return true;
   if (item.specialTopic === topic) return true;
   if (topic === "Cloud") return item.isCloud === true;
   if (topic === "Network") return item.isNetwork === true;
   if (topic === "DevSecOps") return item.isDevSecOps === true;
   if (topic === "Certificate") return item.isCertificate === true;
-  if (topic === "Community") return item.isCommunity === true;
+  if (topic === "Event") return item.isEvent === true || item.isCommunity === true;
   return false;
 };
 
@@ -37,12 +40,12 @@ const matchesTab = (item, tabValue) => {
   if (tabValue === "Network") return hasSpecialTopic(item, "Network");
   if (tabValue === "DevSecOps") return hasSpecialTopic(item, "DevSecOps");
   if (tabValue === "Certificate") return hasSpecialTopic(item, "Certificate");
-  if (tabValue === "Community") return hasSpecialTopic(item, "Community");
+  if (tabValue === "Event") return hasSpecialTopic(item, "Event");
   return item.category === tabValue;
 };
 
 const buildTopicCounts = (projects) => {
-  const counts = { Best: 0, Cloud: 0, Network: 0, DevSecOps: 0, Certificate: 0, Community: 0 };
+  const counts = { Best: 0, Cloud: 0, Network: 0, DevSecOps: 0, Certificate: 0, Event: 0 };
   for (const item of projects) {
     if (item.isBest === true) counts.Best++;
     for (const topic of COUNTED_TOPICS) {
@@ -55,7 +58,7 @@ const buildTopicCounts = (projects) => {
 const defaultFormData = {
   title: "", category: "2569", slug: "", img: "", createdAt: "", link: "",
   specialTopics: [],
-  isCertificate: false, isBest: false, isCloud: false, isNetwork: false, isCommunity: false,
+  isCertificate: false, isBest: false, isCloud: false, isNetwork: false, isEvent: false,
 };
 
 const specialTopicOptions = [
@@ -63,7 +66,7 @@ const specialTopicOptions = [
   { value: "Network", label: "🌐 Network" },
   { value: "DevSecOps", label: "🛡️ DevSecOps" },
   { value: "Certificate", label: "📜 Certificate" },
-  { value: "Community", label: "🤝 Community" },
+  { value: "Event", label: "🎪 Event" },
 ];
 
 const WorkCard = memo(function WorkCard({
@@ -123,7 +126,7 @@ const WorkCard = memo(function WorkCard({
         isBest={item.isBest}
         isCloud={item.isCloud}
         isNetwork={item.isNetwork}
-        isCommunity={item.isCommunity}
+        isEvent={item.isEvent || item.isCommunity}
         isDevSecOps={item.isDevSecOps}
       />
       {isAdmin && !isDeleting && (
@@ -210,6 +213,14 @@ export default function Work() {
 
   const sortProjectsForDisplay = (list) => {
     return [...list].sort((a, b) => {
+      const aDate = new Date(a.createdAt).getTime();
+      const bDate = new Date(b.createdAt).getTime();
+      const aHasDate = Number.isFinite(aDate);
+      const bHasDate = Number.isFinite(bDate);
+
+      if (aHasDate && bHasDate && aDate !== bDate) return bDate - aDate;
+      if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+
       const aOrder = Number(a.order);
       const bOrder = Number(b.order);
       const aHasOrder = Number.isFinite(aOrder);
@@ -219,7 +230,7 @@ export default function Work() {
       if (aHasOrder !== bHasOrder) return aHasOrder ? -1 : 1;
       if (a.isBest === true && b.isBest !== true) return -1;
       if (a.isBest !== true && b.isBest === true) return 1;
-      return new Date(b.createdAt) - new Date(a.createdAt);
+      return 0;
     });
   };
 
@@ -382,7 +393,7 @@ export default function Work() {
       { category: "Network", label: `🌐 Network (${topicCounts.Network})` },
       { category: "DevSecOps", label: `🛡️ DevSecOps (${topicCounts.DevSecOps})` },
       { category: "Certificate", label: `📜 Certificate (${topicCounts.Certificate})` },
-      { category: "Community", label: `🤝 Community (${topicCounts.Community})` },
+      { category: "Event", label: `🎪 Event (${topicCounts.Event})` },
     ];
 
     const displayedYears = !canCollapseYears || !isYearsCollapsed ? yearCategories : [];
@@ -475,12 +486,12 @@ export default function Work() {
       project.isNetwork ? "Network" : null,
       project.isDevSecOps ? "DevSecOps" : null,
       project.isCertificate ? "Certificate" : null,
-      project.isCommunity ? "Community" : null,
+      (project.isEvent || project.isCommunity) ? "Event" : null,
     ].filter(Boolean);
 
     const mergedTopics = Array.from(new Set([
-      ...(Array.isArray(project.specialTopics) ? project.specialTopics : []),
-      ...(project.specialTopic ? [project.specialTopic] : []),
+      ...(Array.isArray(project.specialTopics) ? project.specialTopics.map((topic) => topic === "Community" ? "Event" : topic) : []),
+      ...(project.specialTopic ? [project.specialTopic === "Community" ? "Event" : project.specialTopic] : []),
       ...legacyTopics,
     ]));
 
@@ -494,7 +505,7 @@ export default function Work() {
       isBest: project.isBest || false,
       isCloud: project.isCloud || false,
       isNetwork: project.isNetwork || false,
-      isCommunity: project.isCommunity || false,
+      isEvent: project.isEvent || project.isCommunity || false,
     });
     setIsTopicDropdownOpen(false);
     setImagePreview(project.img);
@@ -509,7 +520,7 @@ export default function Work() {
     try {
       let finalImageUrl = formData.img;
       if (selectedFile) finalImageUrl = await uploadToCloudinary(selectedFile);
-      const normalizedTopics = Array.from(new Set(formData.specialTopics || []));
+      const normalizedTopics = Array.from(new Set((formData.specialTopics || []).map((topic) => topic === "Community" ? "Event" : topic)));
       const payload = {
         ...formData,
         img: finalImageUrl,
@@ -519,7 +530,8 @@ export default function Work() {
         isNetwork: normalizedTopics.includes("Network"),
         isDevSecOps: normalizedTopics.includes("DevSecOps"),
         isCertificate: normalizedTopics.includes("Certificate"),
-        isCommunity: normalizedTopics.includes("Community"),
+        isEvent: normalizedTopics.includes("Event"),
+        isCommunity: false,
       };
       if (editingProject) payload.originalSlug = editingProject.slug;
       const res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });

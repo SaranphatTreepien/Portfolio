@@ -20,6 +20,18 @@ const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" view
 const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-[#7edad2]"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>;
 const Spinner = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
 
+const splitItemsByImage = (sourceItems = []) =>
+    sourceItems.flatMap(item => {
+        const imageUrls = Array.isArray(item.img)
+            ? item.img.filter(Boolean)
+            : (item.img ? [item.img] : []);
+
+        if (imageUrls.length === 0) return [{ ...item, img: "" }];
+        return imageUrls.map(img => ({ ...item, img }));
+    });
+
+const ITEMS_PER_PAGE = 10;
+
 export default function ExperienceEditor({ slug }) {
     const router = useRouter();
     // ✅ 1. เพิ่ม State สำหรับเก็บไฟล์ที่เลือกรออัปโหลด
@@ -50,10 +62,16 @@ export default function ExperienceEditor({ slug }) {
     const [isDragging, setIsDragging] = useState(false);
     const [draggedItemIndex, setDraggedItemIndex] = useState(null);
     const [dropHint, setDropHint] = useState({ index: null, position: null });
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         setIsDescExpanded(false);
     }, [viewingItem]);
+
+    useEffect(() => {
+        const pageCount = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+        setCurrentPage(page => Math.min(page, pageCount));
+    }, [items.length]);
 
     const processFiles = (files) => {
         if (!files || files.length === 0) return;
@@ -164,7 +182,7 @@ export default function ExperienceEditor({ slug }) {
             if (data && data.slug) {
                 setProject(data);
                 if (data.items && Array.isArray(data.items)) {
-                    setItems(data.items);
+                    setItems(splitItemsByImage(data.items));
                 } else {
                     setItems([]);
                 }
@@ -327,10 +345,9 @@ export default function ExperienceEditor({ slug }) {
         try {
             // --- ส่วนที่ 1: จัดการเรื่องรูปภาพ ---
 
-            // ดึงรูปเดิมที่มีอยู่แล้วใน DB มาตั้งต้น (ป้องกันรูปเก่าหาย)
-            // ถ้าเป็น Array อยู่แล้วก็ใช้เลย ถ้าเป็น string ก็จับใส่ [] ถ้าไม่มีก็เป็น []
+            // รูปแต่ละใบจะกลายเป็นรายการแยกกัน แต่ใช้ข้อมูลเนื้อหาจากฟอร์มชุดเดียวกัน
             let finalImageUrls = Array.isArray(formData.img)
-                ? [...formData.img]
+                ? formData.img.filter(Boolean)
                 : (formData.img ? [formData.img] : []);
 
             // ถ้ามีการเลือกรูปใหม่ (รออัปโหลด)
@@ -343,35 +360,50 @@ export default function ExperienceEditor({ slug }) {
                 finalImageUrls = [...finalImageUrls, ...newUploadedUrls];
             }
 
-            // --- ส่วนที่ 2: เตรียมข้อมูล Item ---
+            const imageItems = (finalImageUrls.length > 0 ? finalImageUrls : [""]).map(img => ({
+                img,
+                title: "",
+                description: "",
+                link: "",
+            }));
 
-            // สร้าง Object ข้อมูลใหม่ โดยเปลี่ยนช่อง img ให้เป็น Array (finalImageUrls)
-            const newItemData = { ...formData, img: finalImageUrls };
+            const galleryData = {
+                galleryTitle: formData.title.trim(),
+                galleryDescription: formData.description.trim(),
+                galleryLink: formData.link?.trim() || "",
+            };
 
             let newItems = [...items];
             if (editingItemIndex !== null) {
-                // กรณี "แก้ไข": แทนที่ตำแหน่งเดิม
-                newItems[editingItemIndex] = newItemData;
+                // แก้ไขรูปโดยไม่ทำให้คำอธิบาย Gallery ถูกทำซ้ำในทุกการ์ด
+                newItems.splice(editingItemIndex, 1, ...imageItems);
             } else {
-                // กรณี "เพิ่มใหม่": เอาไว้บนสุด
-                newItems = [newItemData, ...items];
+                // เพิ่มรูปใหม่หลายใบเป็นการ์ดแยกกัน
+                newItems = [...imageItems, ...items];
             }
 
             newItems = newItems.map((item, index) => ({
                 ...item,
+                title: "",
+                description: "",
+                link: "",
                 order: index + 1,
             }));
 
             // --- ส่วนที่ 3: บันทึกลง Database ---
 
             await saveToDatabase(
-                { slug, items: newItems, originalSlug: slug },
+                { ...galleryData, slug, items: newItems, originalSlug: slug },
                 "บันทึกเนื้อหาเรียบร้อย"
             );
 
             // --- ส่วนที่ 4: อัปเดต UI และล้างค่า ---
 
             setItems(newItems);
+            setProject(prev => ({ ...prev, ...galleryData }));
+            if (editingItemIndex === null) {
+                setCurrentPage(1);
+            }
             setIsModalOpen(false);
 
             // ⚠️ สำคัญ: อย่าลืมล้างค่าไฟล์ที่เลือกไว้ด้วย เพื่อไม่ให้ติดไปตอนเพิ่ม Item ถัดไป
@@ -439,16 +471,62 @@ export default function ExperienceEditor({ slug }) {
     const openAddItem = () => {
         setEditMode('ITEM');
         setEditingItemIndex(null);
-        setFormData({ title: "", description: "", img: "", link: "" });
+        setFormData({
+            title: project.galleryTitle || "",
+            description: project.galleryDescription || "",
+            img: "",
+            link: project.galleryLink || "",
+        });
         setImagePreview(null);
         setSelectedFile(null); // ✅ Reset ไฟล์
+        setSelectedFiles([]);
+        setImagePreviews([]);
         setIsModalOpen(true);
+    };
+
+    const openEditGalleryContent = () => {
+        setEditMode('CONTENT');
+        setEditingItemIndex(null);
+        setFormData({
+            title: project.galleryTitle || "เกี่ยวกับเนื้อหา",
+            description: project.galleryDescription || "",
+            img: "",
+            link: "",
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleSaveGalleryContent = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
+        try {
+            const payload = {
+                ...project,
+                galleryTitle: formData.title.trim() || "เกี่ยวกับเนื้อหา",
+                galleryDescription: formData.description.trim(),
+                slug,
+                originalSlug: slug,
+            };
+            await saveToDatabase(payload, "บันทึกคำอธิบาย Gallery เรียบร้อย");
+            setProject(payload);
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Gallery Content Error:", error);
+            showToast("บันทึกคำอธิบายไม่สำเร็จ", "error");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const openEditItem = (item, index) => {
         setEditMode('ITEM');
         setEditingItemIndex(index);
-        setFormData({ ...item });
+        setFormData({
+            title: project.galleryTitle || "",
+            description: project.galleryDescription || "",
+            link: project.galleryLink || "",
+            img: Array.isArray(item.img) ? item.img[0] || "" : item.img || "",
+        });
         setImagePreview(item.img || null);
         setSelectedFile(null);       // ✅ Reset ไฟล์
         setSelectedFiles([]);        // ✅ Reset ไฟล์หลายรูป
@@ -479,6 +557,10 @@ export default function ExperienceEditor({ slug }) {
 
     if (isLoading) return <div className="text-center py-20 text-[#7edad2] animate-pulse font-bold tracking-widest">LOADING...</div>;
     if (!project) return <div className="text-center py-20 text-red-500">Project not found</div>;
+
+    const pageCount = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+    const pageStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const visibleItems = items.slice(pageStartIndex, pageStartIndex + ITEMS_PER_PAGE);
 
     return (
         <div className="container mx-auto py-12 px-4 pb-40 text-gray-800">
@@ -557,9 +639,35 @@ export default function ExperienceEditor({ slug }) {
                     </div>
                     {isAdmin && (
                         <button onClick={openAddItem} className="bg-[#7edad2] hover:bg-[#6bcbc0] text-white px-4 py-2 md:px-6 md:py-3 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-[#7edad2]/40 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 active:scale-95 text-sm md:text-base">
-                            <PlusIcon /> <span className="hidden md:inline">เพิ่มเนื้อหาใหม่</span><span className="md:hidden">เพิ่ม</span>
+                            <PlusIcon /> <span>เพิ่มเนื้อหาใหม่</span>
                         </button>
                     )}
+                </div>
+
+                <div className="relative overflow-hidden mb-10 rounded-[2rem] border border-[#7edad2]/30 bg-gradient-to-br from-[#effcfb] via-white to-[#f7fffe] p-6 md:p-9 shadow-[0_12px_35px_rgba(74,169,162,0.12)]">
+                    <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[#7edad2]/20 blur-2xl" />
+                    <div className="relative flex items-start gap-4">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7edad2] text-white shadow-lg shadow-[#7edad2]/30">
+                            <span className="text-xl">✦</span>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-[#4aa9a2]">Content Overview</p>
+                            <h3 className="mb-3 text-xl font-bold text-gray-800 md:text-2xl">{project.galleryTitle || "เกี่ยวกับเนื้อหา"}</h3>
+                            <p className="whitespace-pre-wrap text-sm leading-7 text-gray-600 md:text-base">
+                                {project.galleryDescription || "เพิ่มคำอธิบายเพื่อเล่าให้ผู้ชมเข้าใจว่า Gallery นี้เกี่ยวกับอะไร และคุณทำอะไรไว้บ้าง"}
+                            </p>
+                            {project.galleryLink && (
+                                <a
+                                    href={project.galleryLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#4aa9a2] hover:text-[#287f79]"
+                                >
+                                    <LinkIcon /> เปิดลิงก์ที่เกี่ยวข้อง
+                                </a>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {items.length === 0 ? (
@@ -569,7 +677,8 @@ export default function ExperienceEditor({ slug }) {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {items.map((item, index) => {
+                        {visibleItems.map((item, visibleIndex) => {
+                            const index = pageStartIndex + visibleIndex;
                             const imgArray = Array.isArray(item.img) ? item.img : (item.img ? [item.img] : []);
                             const hasImages = imgArray.length > 0;
                             const isDragged = draggedItemIndex === index;
@@ -612,15 +721,6 @@ export default function ExperienceEditor({ slug }) {
                                                 fill
                                                 className="object-cover group-hover:scale-110 transition-transform duration-500"
                                             />
-                                            {/* Badge จำนวนรูป */}
-                                            {imgArray.length > 1 && (
-                                                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-full border border-white/20 flex items-center gap-1">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                                                    </svg>
-                                                    {imgArray.length}
-                                                </div>
-                                            )}
                                         </>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-2">
@@ -629,8 +729,6 @@ export default function ExperienceEditor({ slug }) {
                                         </div>
                                     )}
                                 </div>
-                                <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-1 group-hover:text-[#7edad2] transition-colors">{item.title}</h3>
-                                <p className="text-gray-500 text-xs md:text-sm line-clamp-3">{item.description || <span className="italic text-gray-300">ไม่มีรายละเอียด</span>}</p>
                                 {item.link && (
                                     <div className="mt-4 pt-3 border-t border-gray-100 flex justify-start">
                                         <a
@@ -650,6 +748,44 @@ export default function ExperienceEditor({ slug }) {
                             </div>
                             );
                         })}
+                    </div>
+                )}
+
+                {pageCount > 1 && (
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-10">
+                        <button
+                            type="button"
+                            onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 rounded-full border border-gray-200 text-sm font-semibold text-gray-600 transition-colors hover:border-[#7edad2] hover:text-[#5bbeb5] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            ก่อนหน้า
+                        </button>
+                        {Array.from({ length: pageCount }, (_, index) => index + 1).map(page => (
+                            <button
+                                type="button"
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`w-10 h-10 rounded-full text-sm font-bold transition-colors ${
+                                    currentPage === page
+                                        ? "bg-[#7edad2] text-white shadow-md"
+                                        : "border border-gray-200 text-gray-600 hover:border-[#7edad2] hover:text-[#5bbeb5]"
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => setCurrentPage(page => Math.min(pageCount, page + 1))}
+                            disabled={currentPage === pageCount}
+                            className="px-4 py-2 rounded-full border border-gray-200 text-sm font-semibold text-gray-600 transition-colors hover:border-[#7edad2] hover:text-[#5bbeb5] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            ถัดไป
+                        </button>
+                        <span className="w-full text-center text-xs text-gray-400">
+                            หน้า {currentPage} จาก {pageCount} ({items.length} รูป)
+                        </span>
                     </div>
                 )}
             </div>
@@ -702,11 +838,37 @@ export default function ExperienceEditor({ slug }) {
                                 <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
                                     <h3 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-3">
                                         <span className="w-2 h-8 bg-[#7edad2] rounded-full"></span>
-                                        {editMode === 'PROJECT' ? "แก้ไขหน้าปก" : (editingItemIndex !== null ? "แก้ไขเนื้อหา" : "เพิ่มเนื้อหาใหม่")}
+                                        {editMode === 'PROJECT' ? "แก้ไขหน้าปก" : (editingItemIndex !== null ? "แก้ไขรูปภาพและคำอธิบาย" : "เพิ่มรูปภาพและคำอธิบาย")}
                                     </h3>
                                     <button onClick={() => setIsModalOpen(false)} className="text-gray-300 hover:text-red-500 text-3xl transition-colors">&times;</button>
                                 </div>
-                                <form onSubmit={editMode === 'PROJECT' ? handleSaveProjectInfo : handleSaveItem} className="space-y-6">
+                                <form onSubmit={editMode === 'PROJECT' ? handleSaveProjectInfo : editMode === 'CONTENT' ? handleSaveGalleryContent : handleSaveItem} className="space-y-6">
+                                    {editMode === 'CONTENT' && (
+                                        <>
+                                            <div>
+                                                <label className="block text-sm font-bold mb-2 text-gray-700">หัวข้อคำอธิบาย</label>
+                                                <input
+                                                    className="border border-gray-200 p-4 rounded-xl w-full bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#7edad2] focus:bg-white transition-all shadow-sm"
+                                                    value={formData.title}
+                                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                                    placeholder="เช่น สิ่งที่ทำในงานนี้"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold mb-2 text-gray-700">คำอธิบายทั้งหมด</label>
+                                                <textarea
+                                                    required
+                                                    rows={10}
+                                                    className="border border-gray-200 p-4 rounded-xl w-full bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#7edad2] focus:bg-white transition-all shadow-sm resize-y"
+                                                    value={formData.description}
+                                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                                    placeholder="อธิบายภาพรวมของ Gallery นี้ว่าทำอะไรไปบ้าง..."
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                    {editMode !== 'CONTENT' && (
+                                    <>
                                     <div>
                                         <label className="block text-sm font-bold mb-2 text-gray-700">หัวข้อ (Title)</label>
                                         <input required className="border border-gray-200 p-4 rounded-xl w-full bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#7edad2] focus:bg-white transition-all shadow-sm" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="ใส่หัวข้อที่นี่..." />
@@ -763,17 +925,22 @@ export default function ExperienceEditor({ slug }) {
                                         </label>
 
                                         {/* ✅ Preview Multi-Images: แสดงทั้งรูปเก่าใน DB และรูปใหม่ที่กำลังจะเพิ่ม */}
-                                        {(imagePreviews.length > 0 || (Array.isArray(formData.img) && formData.img.length > 0)) && (
+                                        {(imagePreviews.length > 0 || (Array.isArray(formData.img) ? formData.img.length > 0 : Boolean(formData.img))) && (
                                             <div className="mt-4 grid grid-cols-3 gap-3">
 
                                                 {/* 1. แสดงรูปเก่าที่มีอยู่ใน Database */}
-                                                {Array.isArray(formData.img) && formData.img.map((url, idx) => (
+                                                {(Array.isArray(formData.img) ? formData.img : (formData.img ? [formData.img] : [])).map((url, idx) => (
                                                     <div key={`old-${idx}`} className="relative h-24 rounded-lg overflow-hidden border group/item">
                                                         <Image src={url} alt="old-preview" fill className="object-cover" />
                                                         {/* ปุ่มลบรูปเก่า */}
                                                         <button
                                                             type="button"
-                                                            onClick={() => setFormData({ ...formData, img: formData.img.filter((_, i) => i !== idx) })}
+                                                            onClick={() => {
+                                                                const currentImages = Array.isArray(formData.img)
+                                                                    ? formData.img
+                                                                    : (formData.img ? [formData.img] : []);
+                                                                setFormData({ ...formData, img: currentImages.filter((_, i) => i !== idx) });
+                                                            }}
                                                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:scale-110 transition-transform opacity-0 group-hover/item:opacity-100"
                                                         >
                                                             &times;
@@ -803,6 +970,8 @@ export default function ExperienceEditor({ slug }) {
                                             </div>
                                         )}
                                     </div>
+                                    </>
+                                    )}
                                     <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
                                         <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-gray-500 hover:bg-gray-100 rounded-xl transition font-medium">ยกเลิก</button>
                                         <button
@@ -828,7 +997,7 @@ export default function ExperienceEditor({ slug }) {
                             }}
                         >
                             <div
-                                className="bg-[#0a0a0a] md:rounded-[2.5rem] overflow-hidden w-full max-w-[100vw] md:max-w-[90vw] h-full md:h-[92vh] flex flex-col md:flex-row relative shadow-2xl"
+                                className="bg-[#0a0a0a] md:rounded-[2.5rem] overflow-hidden w-full max-w-[100vw] md:max-w-[90vw] h-full md:h-[92vh] flex flex-col relative shadow-2xl"
                                 onClick={e => e.stopPropagation()}
                             >
                                 {/* ปุ่มปิด Modal หลัก */}
@@ -841,7 +1010,7 @@ export default function ExperienceEditor({ slug }) {
 
                                 {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
                                 {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
-                                <div className="relative w-full md:w-[70%] h-[64vh] md:h-full bg-[#050505] flex-shrink-0 overflow-hidden group">
+                                <div className="relative w-full h-full bg-[#050505] flex-1 overflow-hidden group">
 
                                     {/* ปุ่ม Zoom controls (ถ้ามี) วางตรงนี้ */}
 
@@ -891,51 +1060,6 @@ export default function ExperienceEditor({ slug }) {
                                     </div>
                                 </div>
 
-                                {/* --- ส่วนที่ 2: เนื้อหา --- */}
-                                <div className="w-full md:w-[30%] bg-[#111] px-4 py-4 md:p-10 overflow-y-auto border-t md:border-t-0 md:border-l border-white/10 z-20 flex flex-col">
-                                    <div className="flex-1 text-left">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[#7edad2] animate-pulse"></span>
-                                            <span className="text-[#7edad2] text-[10px] font-bold tracking-[0.2em] uppercase">Content</span>
-                                        </div>
-
-                                        <h2 className="text-[10px] md:text-2xl font-extrabold text-white mb-2 leading-tight tracking-tight">
-                                            {viewingItem.title}
-                                        </h2>
-
-                                        <div className="relative">
-                                            {viewingItem.description ? (
-                                                <p className={`text-gray-400 text-xs md:text-base leading-snug whitespace-pre-wrap transition-all duration-500 ${isDescExpanded ? 'line-clamp-none' : 'line-clamp-1 md:line-clamp-none'}`}>
-                                                    {viewingItem.description}
-                                                </p>
-                                            ) : (
-                                                <p className="text-gray-600 text-xs italic">ไม่มีรายละเอียด</p>
-                                            )}
-
-                                            {viewingItem.description && (
-                                                <button
-                                                    onClick={() => setIsDescExpanded(!isDescExpanded)}
-                                                    className="md:hidden text-[#7edad2] text-[10px] font-black mt-3 flex items-center gap-2 py-1.5 px-3 bg-white/5 rounded-lg border border-white/10 uppercase tracking-widest"
-                                                >
-                                                    {isDescExpanded ? 'ย่อ ▲' : 'อ่านเพิ่ม ▼'}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {viewingItem.link && (
-                                        <div className="mt-4 pt-4 border-t border-white/5">
-                                            <a
-                                                href={viewingItem.link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center justify-center gap-2 w-full bg-[#7edad2] text-[#0a0a0a] py-3 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-transform active:scale-95 shadow-lg shadow-[#7edad2]/10"
-                                            >
-                                                เปิดลิงก์
-                                            </a>
-                                        </div>
-                                    )}
-                                </div>
                             </div>
                         </div>
                     )}

@@ -25,6 +25,8 @@ import {
 } from "react-icons/fa";
 import { MdEmail, MdDateRange } from "react-icons/md";
 import Confetti from "react-confetti";
+import Zoom from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 // --- ⚙️ ตั้งรหัสผ่าน Admin ---
 
 // --- 📂 ตั้งค่า Path ไฟล์ PDF ---
@@ -578,17 +580,19 @@ ${form.phone}`;
     }
   };
   return (
-    <div className="relative min-h-screen py-10 px-4 md:py-20 bg-[#eaeff2] overflow-hidden font-sans text-gray-800">
-      {/* Background Decor */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#7edad2]/15 rounded-full blur-[80px] -z-10 mix-blend-multiply animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-[#a0e4de]/15 rounded-full blur-[60px] -z-10 mix-blend-multiply" />
+    <div className="relative min-h-screen overflow-hidden bg-[#f3fbfa] font-sans text-slate-800">
+      {/* Soft mint background */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(126,218,210,0.3),transparent_34%),radial-gradient(circle_at_100%_22%,rgba(174,235,226,0.32),transparent_36%),linear-gradient(145deg,#f8fdfc_0%,#e8f7f4_52%,#f4fbfa_100%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(71,163,153,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(71,163,153,0.07)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:linear-gradient(to_bottom,black,transparent_78%)]" />
+      <div className="pointer-events-none absolute -left-32 top-48 h-80 w-80 rounded-full bg-[#7edad2]/20 blur-[100px]" />
+      <div className="pointer-events-none absolute -right-32 bottom-24 h-96 w-96 rounded-full bg-cyan-500/10 blur-[110px]" />
 
       {/* Navigation */}
-      <nav className="max-w-5xl mx-auto flex justify-between items-center mb-10">
+      <nav className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-4 py-5 md:px-8">
         <Link href="/">
           <motion.button
             whileHover={{ x: -5 }}
-            className="flex items-center gap-2 text-gray-600 hover:text-[#7edad2] font-medium transition-colors bg-white/60 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-white/50"
+            className="flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm backdrop-blur-md transition-colors hover:bg-white hover:text-[#4fa99f]"
           >
             <span>←</span> กลับหน้าหลัก
           </motion.button>
@@ -606,71 +610,39 @@ ${form.phone}`;
         </Link> */}
       </nav>
 
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-10">
-          <motion.h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 tracking-tight mb-2">
-            My{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7edad2] to-[#5fb3a9]">
-              Resume
-            </span>
-          </motion.h1>
-          <p className="text-gray-500">พร้อมสำหรับโอกาสใหม่ๆ เสมอ</p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col items-center gap-3 mb-12">
-          {/* แถวเดียว: Download + Share */}
-          <div className="w-full overflow-x-auto">
-            <div className="flex justify-center gap-3 whitespace-nowrap px-2">
-              <motion.button
-                onClick={() => openExportNameModal("download")}
-                className="flex items-center gap-2 px-5 py-3 bg-[#f8fafc] text-gray-700 rounded-full shadow-md border border-gray-200 hover:bg-white transition-all"
-                whileHover={{ scale: 1.05, y: -2 }}
-              >
-                <FaDownload /> RESUME PDF
-              </motion.button>
-
-              <motion.button
-                onClick={() => openExportNameModal("share")}
-                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#7edad2] to-[#5fb3a9] text-white rounded-full shadow-md hover:opacity-90 transition-all"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FaShare /> SHARE PDF
-              </motion.button>
+      <div className="relative z-10 mx-auto max-w-6xl px-4 pb-32 md:px-8">
+        <motion.section
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 flex flex-col items-center text-center"
+        >
+          <div className="flex flex-col items-center">
+            <div className="mb-3 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#4fa99f]">
+              <span className="h-px w-10 bg-[#7edad2]" />
+              Personal profile
             </div>
+            <motion.h1 className="max-w-3xl text-4xl font-black tracking-tight text-slate-800 sm:text-5xl md:text-6xl">
+              My{" "}
+              <span className="bg-gradient-to-r from-[#4fa99f] via-[#7edad2] to-[#8acfc7] bg-clip-text text-transparent">
+                Resume
+              </span>
+            </motion.h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500 md:text-base">
+              ทำความรู้จักประสบการณ์ ทักษะ และเส้นทางการทำงานของ Saranphat
+              พร้อมดาวน์โหลดเอกสารสำหรับโอกาสใหม่ๆ
+            </p>
           </div>
-
-          {/* แถวล่าง: Admin */}
-          <motion.button
-            onClick={handleAdminClick}
-            className={`flex items-center gap-3 px-6 py-2.5 rounded-full shadow-sm transition-all border text-sm ${
-              isAdmin
-                ? showForm
-                  ? "bg-[#f8fafc] text-[#7edad2] border-[#7edad2]"
-                  : "bg-gradient-to-r from-[#7edad2] to-[#6ccbc2] text-white border-transparent"
-                : "bg-gray-100 text-gray-400 border-transparent hover:bg-gray-200"
-            }`}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isAdmin ? (
-              showForm ? (
-                <>
-                  <FaTimes /> ปิดฟอร์ม
-                </>
-              ) : (
-                <>
-                  <SiGmail className="text-lg" /> สร้างอีเมลสมัครงาน
-                </>
-              )
-            ) : (
-              <>
-                <FaLock className="text-xs" /> Admin Only
-              </>
-            )}
-          </motion.button>
-        </div>
+          <div className="mt-4 flex items-center gap-2 rounded-full border border-[#bce9e3] bg-white/70 px-4 py-2 text-xs text-[#4fa99f] shadow-sm backdrop-blur-md">
+            <span className="h-2 w-2 rounded-full bg-[#7edad2] shadow-[0_0_10px_#7edad2]" />
+            <span className="font-semibold uppercase tracking-wider">
+              Available for opportunities
+            </span>
+            <span className="hidden text-slate-400 sm:inline">·</span>
+            <span className="hidden text-slate-500 sm:inline">
+              Open to meaningful work
+            </span>
+          </div>
+        </motion.section>
 
         {/* 📧 Email Form */}
         <AnimatePresence>
@@ -1198,10 +1170,13 @@ ${form.phone}`;
                           className="inline-block border border-blue-200 rounded-md overflow-hidden bg-white shadow-sm w-32 relative group"
                         >
                           <div className="h-16 bg-blue-50 flex items-center justify-center text-blue-400 overflow-hidden">
-                            <img
-                              src={img.preview}
-                              className="w-full h-full object-cover"
-                            />
+                            <Zoom>
+                              <img
+                                src={img.preview}
+                                className="w-full h-full object-cover cursor-zoom-in"
+                                alt={img.file.name}
+                              />
+                            </Zoom>
                           </div>
                           <div className="p-2 border-t border-blue-200">
                             <div className="text-[9px] font-bold text-blue-600">
@@ -1295,7 +1270,6 @@ ${form.phone}`;
           )}
         </AnimatePresence>
 
-        {/* ... Modals (Auth, Lightbox, Alerts) คงเดิม ... */}
         <AnimatePresence>
           {showAuthModal && (
             <motion.div
@@ -1452,31 +1426,84 @@ ${form.phone}`;
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center mt-10"
+          className="mt-10 flex justify-center"
         >
-          <div
-            className="relative group cursor-pointer w-full max-w-2xl bg-[#f8fafc] p-2 rounded-2xl shadow-xl overflow-hidden border border-white/50"
-            onClick={() => setLightbox(true)}
-          >
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-10 flex items-center justify-center">
-              <span className="opacity-0 group-hover:opacity-100 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-sm text-sm font-medium transition-all">
-                🔍 คลิกเพื่อขยาย
-              </span>
-            </div>
-
-            {/* ✅ Canvas แทนรูป — render จาก PDF อัตโนมัติ */}
-            <canvas
-              ref={canvasRef}
-              className="w-full h-auto rounded-lg"
-              style={{ display: pdfThumbReady ? "block" : "none" }}
-            />
-
-            {/* Loading placeholder */}
-            {!pdfThumbReady && (
-              <div className="w-full h-64 flex items-center justify-center text-gray-400 animate-pulse">
-                ⏳ กำลังโหลด Resume...
+          <div className="w-full max-w-6xl">
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-white/80 bg-white/45 px-4 py-3 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-center sm:text-left">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#4fa99f]">
+                  Document preview
+                </p>
+                <h2 className="mt-0.5 text-lg font-bold text-slate-800 md:text-xl">
+                  Resume / Saranphat Treepian
+                </h2>
               </div>
-            )}
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
+                <div className="flex items-center gap-2 rounded-2xl border border-white/90 bg-white/75 p-1.5 shadow-lg shadow-[#398f87]/15 backdrop-blur-xl">
+                  <motion.button
+                    onClick={() => openExportNameModal("download")}
+                    aria-label="Download Resume PDF"
+                    title="Download Resume PDF"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:-translate-y-1 hover:border-[#7edad2] hover:text-[#4fa99f]"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                  >
+                    <FaDownload />
+                  </motion.button>
+                  <motion.button
+                    onClick={() => openExportNameModal("share")}
+                    aria-label="Share Resume PDF"
+                    title="Share Resume PDF"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#7edad2] to-[#4fa99f] text-white shadow-md shadow-[#7edad2]/30 transition-all hover:-translate-y-1 hover:brightness-105"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FaShare />
+                  </motion.button>
+                  <motion.button
+                    onClick={handleAdminClick}
+                    aria-label={isAdmin ? (showForm ? "Close email form" : "Create application email") : "Admin only"}
+                    title={isAdmin ? (showForm ? "ปิดฟอร์ม" : "สร้างอีเมลสมัครงาน") : "Admin Only"}
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm shadow-sm transition-all hover:-translate-y-1 ${
+                      isAdmin
+                        ? showForm
+                          ? "border-[#7edad2] bg-white text-[#4fa99f]"
+                          : "border-transparent bg-[#183d4b] text-white"
+                        : "border-slate-200 bg-white text-slate-400 hover:text-slate-600"
+                    }`}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isAdmin ? (showForm ? <FaTimes /> : <SiGmail className="text-lg" />) : <FaLock className="text-xs" />}
+                  </motion.button>
+                </div>
+                <span className="text-xs text-slate-500">
+                  PDF · Click to expand
+                </span>
+              </div>
+            </div>
+            <div
+              className="group relative cursor-pointer overflow-hidden rounded-[1.5rem] border border-white/20 bg-white/90 p-2 shadow-2xl shadow-black/30 sm:p-3"
+              onClick={() => setLightbox(true)}
+            >
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/5">
+                <span className="rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 opacity-0 shadow-sm backdrop-blur transition-all group-hover:opacity-100">
+                  🔍 คลิกเพื่อขยาย
+                </span>
+              </div>
+
+              {/* Canvas แทนรูป — render จาก PDF อัตโนมัติ */}
+              <canvas
+                ref={canvasRef}
+                className="h-auto w-full rounded-xl"
+                style={{ display: pdfThumbReady ? "block" : "none" }}
+              />
+
+              {!pdfThumbReady && (
+                <div className="flex h-64 w-full items-center justify-center text-gray-400 animate-pulse">
+                  ⏳ กำลังโหลด Resume...
+                </div>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>

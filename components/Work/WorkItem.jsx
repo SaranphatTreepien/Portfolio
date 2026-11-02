@@ -4,23 +4,27 @@ import { memo } from "react";
 import { FiArrowUpRight, FiLink, FiCalendar, FiStar } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
 
-const WorkItem = ({ slug, category, specialTopic, specialTopics, img, title, createdAt, link, isCertificate, isBest, isCloud, isNetwork, isCommunity, isDevSecOps }) => {
-  const displayCategory = category || (Array.isArray(specialTopics) && specialTopics[0]) || specialTopic;
+const WorkItem = ({ slug, category, specialTopic, specialTopics, img, title, createdAt, link, isCertificate, isBest, isCloud, isNetwork, isEvent, isCommunity, isDevSecOps }) => {
+  const displayCategory = category || (Array.isArray(specialTopics) && (specialTopics[0] === "Community" ? "Event" : specialTopics[0])) || (specialTopic === "Community" ? "Event" : specialTopic);
   const tagLabelMap = {
     Cloud: "☁️ Cloud",
     Network: "🌐 Network",
     DevSecOps: "🛡️ DevSecOps",
     Certificate: "📜 Certificate",
-    Community: "🤝 Community",
+    Event: "🎪 Event",
   };
 
-  const topicValues = new Set(Array.isArray(specialTopics) ? specialTopics : []);
-  if (specialTopic) topicValues.add(specialTopic);
+  const topicValues = new Set(
+    Array.isArray(specialTopics)
+      ? specialTopics.map((value) => value === "Community" ? "Event" : value)
+      : []
+  );
+  if (specialTopic) topicValues.add(specialTopic === "Community" ? "Event" : specialTopic);
   if (isCloud) topicValues.add("Cloud");
   if (isNetwork) topicValues.add("Network");
   if (isDevSecOps) topicValues.add("DevSecOps");
   if (isCertificate) topicValues.add("Certificate");
-  if (isCommunity) topicValues.add("Community");
+  if (isEvent || isCommunity) topicValues.add("Event");
 
   const topicChips = [...topicValues].map((value) => tagLabelMap[value] || value);
 
