@@ -15,7 +15,7 @@ const Header = () => {
              lg:justify-between"
         >
           {/* logo */}
-          <Logo />
+          <Logo subtitle="Computer Engineer · Cloud & Network" />
           <div className="flex items-center gap-12"></div>
           {/* nav & socials */}
           <Nav

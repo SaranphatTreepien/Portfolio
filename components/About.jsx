@@ -44,7 +44,7 @@ const About = () => {
             className="flex-1 flex justify-center xl:justify-start relative"
           >
             {/* Background Decorative Shape */}
-            <div className="absolute w-[300px] h-[300px] xl:w-[450px] xl:h-[450px] bg-accent/20 rounded-full blur-3xl -z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute w-[300px] h-[300px] xl:w-[450px] xl:h-[450px] bg-[radial-gradient(circle,rgba(126,218,210,0.35)_0%,transparent_70%)] rounded-full -z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
 
             <div className="relative w-full max-w-[420px]">
               {/* Solid Shape Behind */}

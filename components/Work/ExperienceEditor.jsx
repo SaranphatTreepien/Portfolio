@@ -5,7 +5,27 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { PhotoIcon } from "@heroicons/react/24/outline";
+import Markdown from "./Markdown";
 
+const OVERVIEW_COLLAPSE_CHARS = 900;
+
+// Serve Cloudinary originals resized + auto format instead of the full-size upload.
+const optimizeCloudinary = (url, width) =>
+    typeof url === "string" && url.includes("res.cloudinary.com") && url.includes("/upload/") && !url.includes("/upload/f_auto")
+        ? url.replace("/upload/", `/upload/f_auto,q_auto,c_limit,w_${width}/`)
+        : url;
+
+const toPlainText = (text = "") =>
+    text
+        .replace(/^#{1,6}\s+/gm, "")
+        .replace(/^\s*[-*+]\s+/gm, "")
+        .replace(/[*_`>]/g, "")
+        .trim();
+
+const isEmptyItem = (item) => {
+    const hasImage = Array.isArray(item.img) ? item.img.some(Boolean) : Boolean(item.img);
+    return !hasImage && !item.title && !item.description && !item.link;
+};
 
 // รหัสผ่านอยู่ใน .env.local (ADMIN_PASSWORD) — เช็คที่ server เท่านั้น
 
@@ -19,16 +39,6 @@ const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" view
 const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>;
 const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-[#7edad2]"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>;
 const Spinner = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
-
-const splitItemsByImage = (sourceItems = []) =>
-    sourceItems.flatMap(item => {
-        const imageUrls = Array.isArray(item.img)
-            ? item.img.filter(Boolean)
-            : (item.img ? [item.img] : []);
-
-        if (imageUrls.length === 0) return [{ ...item, img: "" }];
-        return imageUrls.map(img => ({ ...item, img }));
-    });
 
 const ITEMS_PER_PAGE = 10;
 
@@ -48,30 +58,27 @@ export default function ExperienceEditor({ slug }) {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [passwordInput, setPasswordInput] = useState("");
-    const [showZoomBar, setShowZoomBar] = useState(false);
-    const [zoomLevel, setZoomLevel] = useState(100);
     const [editMode, setEditMode] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItemIndex, setEditingItemIndex] = useState(null);
     const [viewingItem, setViewingItem] = useState(null);
-    const [isZoomed, setIsZoomed] = useState(false);
     const [formData, setFormData] = useState({ title: "", description: "", img: "", category: "" });
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
-    const [isDescExpanded, setIsDescExpanded] = useState(false);
+    const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
     // --- ✅ [ใหม่ 1] เพิ่ม State สำหรับเช็คสถานะการลาก ---
     const [isDragging, setIsDragging] = useState(false);
     const [draggedItemIndex, setDraggedItemIndex] = useState(null);
     const [dropHint, setDropHint] = useState({ index: null, position: null });
     const [currentPage, setCurrentPage] = useState(1);
 
-    useEffect(() => {
-        setIsDescExpanded(false);
-    }, [viewingItem]);
+    const listedItems = items
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => isAdmin || !isEmptyItem(item));
 
     useEffect(() => {
-        const pageCount = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+        const pageCount = Math.max(1, Math.ceil(listedItems.length / ITEMS_PER_PAGE));
         setCurrentPage(page => Math.min(page, pageCount));
-    }, [items.length]);
+    }, [listedItems.length]);
 
     const processFiles = (files) => {
         if (!files || files.length === 0) return;
@@ -181,11 +188,7 @@ export default function ExperienceEditor({ slug }) {
 
             if (data && data.slug) {
                 setProject(data);
-                if (data.items && Array.isArray(data.items)) {
-                    setItems(splitItemsByImage(data.items));
-                } else {
-                    setItems([]);
-                }
+                setItems(Array.isArray(data.items) ? data.items : []);
             }
         } catch (error) {
             console.error("Error fetching project:", error);
@@ -319,6 +322,8 @@ export default function ExperienceEditor({ slug }) {
                 // ✅ เอาค่าที่ได้จากฟอร์ม (Title, Description) มาทับค่าเดิม
                 ...formData,
 
+                // project.items อาจค้างค่าเก่า ใช้ items ปัจจุบันแทน กันการ์ดที่เพิ่ม/ลบไปแล้วถูกเขียนทับ
+                items,
                 img: imageUrl,
                 slug: slug,
                 originalSlug: slug
@@ -343,9 +348,8 @@ export default function ExperienceEditor({ slug }) {
         setIsSaving(true);
 
         try {
-            // --- ส่วนที่ 1: จัดการเรื่องรูปภาพ ---
+            // --- ส่วนที่ 1: จัดการเรื่องรูปภาพ (รูปทั้งหมดอยู่การ์ดเดียวกัน ใช้ title/description/link เดียวกัน) ---
 
-            // รูปแต่ละใบจะกลายเป็นรายการแยกกัน แต่ใช้ข้อมูลเนื้อหาจากฟอร์มชุดเดียวกัน
             let finalImageUrls = Array.isArray(formData.img)
                 ? formData.img.filter(Boolean)
                 : (formData.img ? [formData.img] : []);
@@ -360,47 +364,35 @@ export default function ExperienceEditor({ slug }) {
                 finalImageUrls = [...finalImageUrls, ...newUploadedUrls];
             }
 
-            const imageItems = (finalImageUrls.length > 0 ? finalImageUrls : [""]).map(img => ({
-                img,
-                title: "",
-                description: "",
-                link: "",
-            }));
-
-            const galleryData = {
-                galleryTitle: formData.title.trim(),
-                galleryDescription: formData.description.trim(),
-                galleryLink: formData.link?.trim() || "",
+            const newItem = {
+                img: finalImageUrls,
+                title: formData.title.trim(),
+                description: formData.description.trim(),
+                link: formData.link?.trim() || "",
             };
 
             let newItems = [...items];
             if (editingItemIndex !== null) {
-                // แก้ไขรูปโดยไม่ทำให้คำอธิบาย Gallery ถูกทำซ้ำในทุกการ์ด
-                newItems.splice(editingItemIndex, 1, ...imageItems);
+                newItems.splice(editingItemIndex, 1, newItem);
             } else {
-                // เพิ่มรูปใหม่หลายใบเป็นการ์ดแยกกัน
-                newItems = [...imageItems, ...items];
+                newItems = [newItem, ...items];
             }
 
             newItems = newItems.map((item, index) => ({
                 ...item,
-                title: "",
-                description: "",
-                link: "",
                 order: index + 1,
             }));
 
             // --- ส่วนที่ 3: บันทึกลง Database ---
 
             await saveToDatabase(
-                { ...galleryData, slug, items: newItems, originalSlug: slug },
+                { slug, items: newItems, originalSlug: slug },
                 "บันทึกเนื้อหาเรียบร้อย"
             );
 
             // --- ส่วนที่ 4: อัปเดต UI และล้างค่า ---
 
             setItems(newItems);
-            setProject(prev => ({ ...prev, ...galleryData }));
             if (editingItemIndex === null) {
                 setCurrentPage(1);
             }
@@ -472,10 +464,10 @@ export default function ExperienceEditor({ slug }) {
         setEditMode('ITEM');
         setEditingItemIndex(null);
         setFormData({
-            title: project.galleryTitle || "",
-            description: project.galleryDescription || "",
+            title: "",
+            description: "",
             img: "",
-            link: project.galleryLink || "",
+            link: "",
         });
         setImagePreview(null);
         setSelectedFile(null); // ✅ Reset ไฟล์
@@ -491,7 +483,7 @@ export default function ExperienceEditor({ slug }) {
             title: project.galleryTitle || "เกี่ยวกับเนื้อหา",
             description: project.galleryDescription || "",
             img: "",
-            link: "",
+            link: project.galleryLink || "",
         });
         setIsModalOpen(true);
     };
@@ -500,15 +492,13 @@ export default function ExperienceEditor({ slug }) {
         e.preventDefault();
         setIsSaving(true);
         try {
-            const payload = {
-                ...project,
+            const contentFields = {
                 galleryTitle: formData.title.trim() || "เกี่ยวกับเนื้อหา",
                 galleryDescription: formData.description.trim(),
-                slug,
-                originalSlug: slug,
+                galleryLink: formData.link?.trim() || "",
             };
-            await saveToDatabase(payload, "บันทึกคำอธิบาย Gallery เรียบร้อย");
-            setProject(payload);
+            await saveToDatabase({ ...contentFields, slug, originalSlug: slug }, "บันทึกคำอธิบาย Gallery เรียบร้อย");
+            setProject(prev => ({ ...prev, ...contentFields }));
             setIsModalOpen(false);
         } catch (error) {
             console.error("Gallery Content Error:", error);
@@ -522,10 +512,10 @@ export default function ExperienceEditor({ slug }) {
         setEditMode('ITEM');
         setEditingItemIndex(index);
         setFormData({
-            title: project.galleryTitle || "",
-            description: project.galleryDescription || "",
-            link: project.galleryLink || "",
-            img: Array.isArray(item.img) ? item.img[0] || "" : item.img || "",
+            title: item.title || "",
+            description: item.description || "",
+            link: item.link || "",
+            img: Array.isArray(item.img) ? item.img : (item.img ? [item.img] : []),
         });
         setImagePreview(item.img || null);
         setSelectedFile(null);       // ✅ Reset ไฟล์
@@ -558,9 +548,12 @@ export default function ExperienceEditor({ slug }) {
     if (isLoading) return <div className="text-center py-20 text-[#7edad2] animate-pulse font-bold tracking-widest">LOADING...</div>;
     if (!project) return <div className="text-center py-20 text-red-500">Project not found</div>;
 
-    const pageCount = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+    const pageCount = Math.max(1, Math.ceil(listedItems.length / ITEMS_PER_PAGE));
     const pageStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const visibleItems = items.slice(pageStartIndex, pageStartIndex + ITEMS_PER_PAGE);
+    const visibleItems = listedItems.slice(pageStartIndex, pageStartIndex + ITEMS_PER_PAGE);
+    const isOverviewLong = (project.galleryDescription || "").length > OVERVIEW_COLLAPSE_CHARS;
+    const isOverviewCollapsed = isOverviewLong && !isOverviewExpanded;
+    const viewingImages = !viewingItem ? [] : Array.isArray(viewingItem.img) ? viewingItem.img.filter(Boolean) : (viewingItem.img ? [viewingItem.img] : []);
 
     return (
         <div className="container mx-auto py-12 px-4 pb-40 text-gray-800">
@@ -580,172 +573,199 @@ export default function ExperienceEditor({ slug }) {
             </div>
 
             {/* ส่วนที่ 1: หน้าปก */}
-            <div className="relative group mb-16">
+            <section className="relative mb-14 md:mb-20">
                 {isAdmin && (
-                    /* [แก้ไข] เปลี่ยนจากปุ่มเดียว เป็น div เพื่อใส่ 2 ปุ่ม (แก้ไข + ลบ) */
-                    <div className="absolute top-6 right-6 z-10 flex gap-2">
-                        <button onClick={openEditProject} className="bg-white/90 backdrop-blur-md text-gray-700 px-5 py-2.5 rounded-full shadow-lg font-bold flex items-center gap-2 hover:bg-[#7edad2] hover:text-white transition-all duration-300 transform hover:-translate-y-1">
+                    <div className="absolute top-4 right-4 md:top-6 md:right-6 z-10 flex gap-2">
+                        <button onClick={openEditProject} className="bg-white text-gray-700 px-4 py-2 rounded-full shadow-md font-bold flex items-center gap-2 hover:bg-[#7edad2] hover:text-white transition-colors">
                             <EditIcon /> <span className="hidden sm:inline">แก้ไขหน้าปก</span>
                         </button>
-                        <button onClick={handleDeleteProject} className="bg-red-500/90 backdrop-blur-md text-white px-5 py-2.5 rounded-full shadow-lg font-bold flex items-center gap-2 hover:bg-red-600 transition-all duration-300 transform hover:-translate-y-1">
+                        <button onClick={handleDeleteProject} className="bg-red-500 text-white px-4 py-2 rounded-full shadow-md font-bold flex items-center gap-2 hover:bg-red-600 transition-colors">
                             <TrashIcon /> <span className="hidden sm:inline">ลบหน้านี้</span>
                         </button>
                     </div>
                 )}
-                <div className="max-w-5xl mx-auto bg-gradient-to-b from-gray-900 to-gray-800 p-4 md:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden text-white border border-gray-700">
-
-                    {/* Background Glow */}
-                    <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#7edad2]/20 rounded-full blur-[100px] pointer-events-none"></div>
-
-                    <div className="w-full mb-6 rounded-[20px] overflow-hidden shadow-inner bg-black/40 border border-white/5">
-                        {project.img ? (
+                <div className="max-w-5xl mx-auto overflow-hidden rounded-[2rem] md:rounded-[2.5rem] border border-gray-800 bg-gray-900 bg-[radial-gradient(circle_at_100%_0%,rgba(126,218,210,0.16),transparent_45%)] text-white shadow-xl">
+                    {project.img && (
+                        <div className="bg-black/40 border-b border-white/5">
                             <img
-                                src={project.img}
+                                src={optimizeCloudinary(project.img, 1600)}
                                 alt={project.title}
-                                className="block w-full h-auto object-contain"
+                                decoding="async"
+                                className="block w-full h-auto max-h-[70vh] object-contain mx-auto"
                             />
-                        ) : (
-                            <div className="flex items-center justify-center h-[280px] text-gray-500">ไม่มีรูปภาพ</div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-3 mb-4">
-                        <span className="bg-[#7edad2]/20 text-[#7edad2] px-4 py-1.5 rounded-full text-[10px] md:text-sm font-bold tracking-wide border border-[#7edad2]/30 shadow-[0_0_15px_rgba(126,218,210,0.2)]">
+                        </div>
+                    )}
+                    <div className="p-6 md:p-12">
+                        <span className="inline-flex bg-[#7edad2]/15 text-[#7edad2] px-3 py-1 rounded-full text-xs md:text-sm font-bold tracking-wide border border-[#7edad2]/30">
                             {project.category || "General"}
                         </span>
-                    </div>
-
-                    <h1 className="text-[14px] md:text-4xl font-bold text-white mb-4 leading-tight tracking-tight drop-shadow-sm break-words">
-                        {project.title}
-                    </h1>
-
-                    <div className="text-gray-200 whitespace-pre-wrap break-words leading-relaxed text-[14px] md:text-lg font-light border-l-4 border-[#7edad2] pl-4 md:pl-6">
-                        {project.description || "ยังไม่มีรายละเอียด..."}
+                        <h1 className="mt-4 text-2xl md:text-4xl font-bold leading-tight tracking-tight break-words">
+                            {project.title}
+                        </h1>
+                        {project.description ? (
+                            <div className="mt-5 border-l-4 border-[#7edad2] pl-4 md:pl-6">
+                                <Markdown tone="dark">{project.description}</Markdown>
+                            </div>
+                        ) : (
+                            <p className="mt-5 text-gray-400">ยังไม่มีรายละเอียด...</p>
+                        )}
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div className="border-t border-gray-200/60 my-16 max-w-6xl mx-auto"></div>
-
-            {/* ส่วนที่ 2: เนื้อหาด้านใน (Gallery) */}
-            <div className="max-w-6xl mx-auto">
-                <div className="flex justify-between items-end mb-10">
-                    <div className="mb-8">
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 inline-block relative">
-                            Gallery & Content
-                            {/* เส้นขีดใต้ปรับให้บางลงและชิดขึ้น */}
-                            <span className="absolute bottom-[-8px] left-0 w-1/2 h-1 bg-[#7edad2] rounded-full"></span>
-                        </h2>
+            {/* ส่วนที่ 2: ภาพรวมเนื้อหา */}
+            <section className="max-w-6xl mx-auto">
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#2f9c93]">Content Overview</p>
+                        <h2 className="mt-1 text-2xl md:text-3xl font-bold text-gray-900">{project.galleryTitle || "เกี่ยวกับเนื้อหา"}</h2>
                     </div>
                     {isAdmin && (
-                        <button onClick={openAddItem} className="bg-[#7edad2] hover:bg-[#6bcbc0] text-white px-4 py-2 md:px-6 md:py-3 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-[#7edad2]/40 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 active:scale-95 text-sm md:text-base">
-                            <PlusIcon /> <span>เพิ่มเนื้อหาใหม่</span>
+                        <button onClick={openEditGalleryContent} className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-sm hover:border-[#7edad2] hover:text-[#2f9c93] transition-colors">
+                            <EditIcon /> แก้ไขคำอธิบาย
                         </button>
                     )}
                 </div>
 
-                <div className="relative overflow-hidden mb-10 rounded-[2rem] border border-[#7edad2]/30 bg-gradient-to-br from-[#effcfb] via-white to-[#f7fffe] p-6 md:p-9 shadow-[0_12px_35px_rgba(74,169,162,0.12)]">
-                    <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[#7edad2]/20 blur-2xl" />
-                    <div className="relative flex items-start gap-4">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7edad2] text-white shadow-lg shadow-[#7edad2]/30">
-                            <span className="text-xl">✦</span>
-                        </div>
-                        <div className="min-w-0">
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-[#4aa9a2]">Content Overview</p>
-                            <h3 className="mb-3 text-xl font-bold text-gray-800 md:text-2xl">{project.galleryTitle || "เกี่ยวกับเนื้อหา"}</h3>
-                            <p className="whitespace-pre-wrap text-sm leading-7 text-gray-600 md:text-base">
-                                {project.galleryDescription || "เพิ่มคำอธิบายเพื่อเล่าให้ผู้ชมเข้าใจว่า Gallery นี้เกี่ยวกับอะไร และคุณทำอะไรไว้บ้าง"}
-                            </p>
+                <div className="rounded-3xl border border-gray-200/70 bg-white p-6 md:p-10 shadow-sm">
+                    <div className={`relative ${isOverviewCollapsed ? "max-h-[520px] overflow-hidden" : ""}`}>
+                        {project.galleryDescription ? (
+                            <Markdown>{project.galleryDescription}</Markdown>
+                        ) : (
+                            <p className="text-gray-400">เพิ่มคำอธิบายเพื่อเล่าให้ผู้ชมเข้าใจว่า Gallery นี้เกี่ยวกับอะไร และคุณทำอะไรไว้บ้าง</p>
+                        )}
+                        {isOverviewCollapsed && (
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-white/80 to-transparent" />
+                        )}
+                    </div>
+                    {(isOverviewLong || project.galleryLink) && (
+                        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-5">
+                            {isOverviewLong && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsOverviewExpanded(prev => !prev)}
+                                    className="rounded-full bg-gray-900 px-5 py-2 text-sm font-semibold text-white hover:bg-black transition-colors"
+                                >
+                                    {isOverviewExpanded ? "ย่อเนื้อหา" : "อ่านเพิ่มเติม"}
+                                </button>
+                            )}
                             {project.galleryLink && (
                                 <a
                                     href={project.galleryLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#4aa9a2] hover:text-[#287f79]"
+                                    className="inline-flex items-center gap-2 rounded-full border border-[#7edad2]/50 px-5 py-2 text-sm font-semibold text-[#2f9c93] hover:bg-[#7edad2]/10 transition-colors"
                                 >
                                     <LinkIcon /> เปิดลิงก์ที่เกี่ยวข้อง
                                 </a>
                             )}
                         </div>
+                    )}
+                </div>
+            </section>
+
+            {/* ส่วนที่ 3: Gallery */}
+            <section className="max-w-6xl mx-auto mt-14 md:mt-20">
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#2f9c93]">Gallery</p>
+                        <h2 className="mt-1 text-2xl md:text-3xl font-bold text-gray-900">
+                            ภาพผลงาน <span className="text-base font-medium text-gray-400">({listedItems.length})</span>
+                        </h2>
                     </div>
+                    {isAdmin && (
+                        <div className="flex items-center gap-3">
+                            <span className="hidden md:inline text-xs text-gray-400">ลากการ์ดเพื่อจัดลำดับ</span>
+                            <button onClick={openAddItem} className="bg-[#7edad2] hover:bg-[#6bcbc0] text-white px-4 py-2 md:px-5 rounded-full font-bold flex items-center gap-2 shadow-md transition-colors text-sm md:text-base">
+                                <PlusIcon /> <span>เพิ่มเนื้อหาใหม่</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
 
-                {items.length === 0 ? (
-                    <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 flex flex-col items-center">
-                        <span className="text-4xl mb-2">📂</span>
+                {listedItems.length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 flex flex-col items-center gap-2">
+                        <PhotoIcon className="w-10 h-10 text-gray-300" />
                         <span>ยังไม่มีเนื้อหาเพิ่มเติม</span>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {visibleItems.map((item, visibleIndex) => {
-                            const index = pageStartIndex + visibleIndex;
-                            const imgArray = Array.isArray(item.img) ? item.img : (item.img ? [item.img] : []);
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                        {visibleItems.map(({ item, index }) => {
+                            const imgArray = Array.isArray(item.img) ? item.img.filter(Boolean) : (item.img ? [item.img] : []);
                             const hasImages = imgArray.length > 0;
+                            const hasText = Boolean(item.title || item.description);
+                            const isEmpty = isEmptyItem(item);
                             const isDragged = draggedItemIndex === index;
                             const isDropBefore = dropHint.index === index && dropHint.position === "before";
                             const isDropAfter = dropHint.index === index && dropHint.position === "after";
                             return (
-                            <div
+                            <article
                                 key={index}
-                                onClick={() => setViewingItem(item)}
+                                onClick={isEmpty ? undefined : () => setViewingItem(item)}
                                 draggable={isAdmin}
                                 onDragStart={(e) => handleItemDragStart(e, index)}
                                 onDragOver={(e) => handleItemDragOver(e, index)}
                                 onDrop={(e) => handleItemDrop(e, index)}
                                 onDragEnd={handleItemDragEnd}
-                                className={`bg-white rounded-3xl p-5 shadow-md group relative hover:shadow-2xl hover:shadow-[#7edad2]/10 transition-all duration-300 border border-gray-100 cursor-pointer transform hover:-translate-y-2 ${isAdmin ? "cursor-grab active:cursor-grabbing" : ""} ${isDragged ? "opacity-60 scale-[0.98]" : ""}`}
+                                className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-white transition-[border-color,box-shadow] duration-200 hover:border-[#7edad2] hover:shadow-lg ${isEmpty ? "border-dashed border-gray-300" : "border-gray-200/70 shadow-sm cursor-pointer"} ${isAdmin ? "cursor-grab active:cursor-grabbing" : ""} ${isDragged ? "opacity-50" : ""}`}
                             >
                                 {isAdmin && (
                                     <>
-                                        <div className={`absolute left-4 right-4 top-2 z-20 h-1 rounded-full transition-opacity ${isDropBefore ? "bg-[#7edad2] opacity-100" : "opacity-0"}`} />
-                                        <div className={`absolute left-4 right-4 bottom-2 z-20 h-1 rounded-full transition-opacity ${isDropAfter ? "bg-[#7edad2] opacity-100" : "opacity-0"}`} />
-                                        <div className="absolute top-4 left-4 z-10 pointer-events-none">
-                                            <span className="text-[10px] tracking-[0.25em] font-mono text-gray-600 bg-white/90 px-2 py-1 rounded-full border border-gray-200 shadow-sm">
-                                                DRAG
-                                            </span>
+                                        <div className={`absolute left-3 right-3 top-1.5 z-20 h-1 rounded-full ${isDropBefore ? "bg-[#7edad2]" : "hidden"}`} />
+                                        <div className={`absolute left-3 right-3 bottom-1.5 z-20 h-1 rounded-full ${isDropAfter ? "bg-[#7edad2]" : "hidden"}`} />
+                                        <div className="absolute top-3 right-3 z-10 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                            <button onClick={(e) => { e.stopPropagation(); openEditItem(item, index); }} className="p-2 bg-white text-blue-500 rounded-full shadow-md hover:bg-blue-50 border border-gray-100"><EditIcon /></button>
+                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(index); }} className="p-2 bg-white text-red-500 rounded-full shadow-md hover:bg-red-50 border border-gray-100"><TrashIcon /></button>
                                         </div>
                                     </>
                                 )}
-                                {isAdmin && (
-                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 translate-y-2 group-hover:translate-y-0">
-                                        <button onClick={(e) => { e.stopPropagation(); openEditItem(item, index); }} className="p-2.5 bg-white text-blue-500 rounded-full shadow-md hover:bg-blue-50 border border-gray-100"><EditIcon /></button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(index); }} className="p-2.5 bg-white text-red-500 rounded-full shadow-md hover:bg-red-50 border border-gray-100"><TrashIcon /></button>
+
+                                {hasImages && (
+                                    <div className="relative aspect-[16/10] overflow-hidden bg-gray-100 border-b border-gray-100">
+                                        <Image
+                                            src={imgArray[0]}
+                                            alt={item.title || project.title || "gallery image"}
+                                            fill
+                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+                                            className="object-cover object-top"
+                                        />
+                                        {imgArray.length > 1 && (
+                                            <span className="absolute bottom-3 right-3 rounded-full bg-black/70 px-2.5 py-1 text-xs font-semibold text-white">
+                                                +{imgArray.length - 1} รูป
+                                            </span>
+                                        )}
                                     </div>
                                 )}
-                                <div className="relative w-full h-56 bg-gray-50 rounded-2xl overflow-hidden mb-5 border border-gray-100">
-                                    {hasImages ? (
-                                        <>
-                                            <Image
-                                                src={imgArray[0]}
-                                                alt={item.title || "item"}
-                                                fill
-                                                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                            />
-                                        </>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-2">
-                                            <PhotoIcon className="w-10 h-10" />
-                                            <span className="text-xs text-gray-400">ไม่มีรูปภาพ</span>
-                                        </div>
-                                    )}
-                                </div>
-                                {item.link && (
-                                    <div className="mt-4 pt-3 border-t border-gray-100 flex justify-start">
-                                        <a
-                                            href={item.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[#7edad2] transition-colors group/link"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 group-hover/link:scale-110 transition-transform">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                                            </svg>
-                                            <span>เปิดลิงก์</span>
-                                        </a>
+
+                                {(hasText || item.link) && (
+                                    <div className={`flex flex-1 flex-col gap-1.5 p-4 md:p-5 ${hasImages ? "" : "border-l-4 border-[#7edad2]"}`}>
+                                        {item.title && (
+                                            <h3 className="font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2f9c93] transition-colors">{item.title}</h3>
+                                        )}
+                                        {item.description && (
+                                            <p className={`text-sm leading-6 text-gray-500 ${hasImages ? "line-clamp-2" : "line-clamp-5"}`}>{toPlainText(item.description)}</p>
+                                        )}
+                                        {item.link && (
+                                            <a
+                                                href={item.link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="mt-auto pt-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#2f9c93] hover:text-[#1f7f77] transition-colors"
+                                            >
+                                                <LinkIcon /> <span>เปิดลิงก์</span>
+                                            </a>
+                                        )}
                                     </div>
                                 )}
-                            </div>
+
+                                {isEmpty && (
+                                    <div className="flex h-40 flex-col items-center justify-center gap-2 text-gray-400">
+                                        <PhotoIcon className="w-8 h-8" />
+                                        <span className="text-xs">รายการว่าง (เห็นเฉพาะ Admin) — ลบได้</span>
+                                    </div>
+                                )}
+                            </article>
                             );
                         })}
                     </div>
@@ -784,18 +804,19 @@ export default function ExperienceEditor({ slug }) {
                             ถัดไป
                         </button>
                         <span className="w-full text-center text-xs text-gray-400">
-                            หน้า {currentPage} จาก {pageCount} ({items.length} รูป)
+                            หน้า {currentPage} จาก {pageCount} ({listedItems.length} รายการ)
                         </span>
                     </div>
                 )}
-            </div>
+            </section>
 
             {/* ... Modals (คงเดิม ไม่มีการเปลี่ยนแปลงในส่วน Modals) ... */}
             {typeof document !== 'undefined' && createPortal(
                 <>
                     {/* Toast Notification */}
-                    <div className={`fixed bottom-6 right-6 z-[10001] transition-all duration-500 transform ${toast.show ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                        <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${toast.type === "success" ? "bg-white/90 border-[#7edad2]" : "bg-red-50 border-red-200"}`}>
+                    {toast.show && (
+                    <div className="fixed bottom-6 right-6 z-[10001] animate-in fade-in slide-in-from-bottom-4 duration-200">
+                        <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-xl border ${toast.type === "success" ? "bg-white border-[#7edad2]" : "bg-red-50 border-red-200"}`}>
                             {toast.type === "success" ? <CheckCircleIcon /> : <span className="text-red-500">⚠️</span>}
                             <div>
                                 <h4 className={`font-bold text-sm ${toast.type === "success" ? "text-gray-800" : "text-red-600"}`}>
@@ -805,10 +826,11 @@ export default function ExperienceEditor({ slug }) {
                             </div>
                         </div>
                     </div>
+                    )}
 
                     {/* Auth Modal */}
                     {isAuthModalOpen && (
-                        <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
                             <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center relative overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-2 bg-[#7edad2]"></div>
                                 <h3 className="text-2xl font-bold mb-2 text-gray-800">Admin Access</h3>
@@ -833,12 +855,12 @@ export default function ExperienceEditor({ slug }) {
 
                     {/* Edit Modal */}
                     {isModalOpen && (
-                        <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
                             <div className="bg-white p-6 md:p-10 rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto text-black relative">
                                 <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
                                     <h3 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-3">
                                         <span className="w-2 h-8 bg-[#7edad2] rounded-full"></span>
-                                        {editMode === 'PROJECT' ? "แก้ไขหน้าปก" : (editingItemIndex !== null ? "แก้ไขรูปภาพและคำอธิบาย" : "เพิ่มรูปภาพและคำอธิบาย")}
+                                        {editMode === 'PROJECT' ? "แก้ไขหน้าปก" : editMode === 'CONTENT' ? "แก้ไขภาพรวมเนื้อหา" : (editingItemIndex !== null ? "แก้ไขรูปภาพและคำอธิบาย" : "เพิ่มรูปภาพและคำอธิบาย")}
                                     </h3>
                                     <button onClick={() => setIsModalOpen(false)} className="text-gray-300 hover:text-red-500 text-3xl transition-colors">&times;</button>
                                 </div>
@@ -858,11 +880,24 @@ export default function ExperienceEditor({ slug }) {
                                                 <label className="block text-sm font-bold mb-2 text-gray-700">คำอธิบายทั้งหมด</label>
                                                 <textarea
                                                     required
-                                                    rows={10}
-                                                    className="border border-gray-200 p-4 rounded-xl w-full bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#7edad2] focus:bg-white transition-all shadow-sm resize-y"
+                                                    rows={14}
+                                                    className="border border-gray-200 p-4 rounded-xl w-full bg-gray-50 text-gray-800 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#7edad2] focus:bg-white transition-all shadow-sm resize-y"
                                                     value={formData.description}
                                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
                                                     placeholder="อธิบายภาพรวมของ Gallery นี้ว่าทำอะไรไปบ้าง..."
+                                                />
+                                                <p className="mt-2 text-xs text-gray-400">
+                                                    รองรับ Markdown: <code>## หัวข้อ</code> <code>### หัวข้อย่อย</code> <code>**ตัวหนา**</code> <code>- รายการ</code> — บรรทัดใต้หัวข้อ &quot;Technologies &amp; Tools&quot; ที่คั่นด้วย , จะแสดงเป็นป้าย
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold mb-2 text-gray-700">ลิงก์ที่เกี่ยวข้อง (Optional)</label>
+                                                <input
+                                                    type="url"
+                                                    className="border border-gray-200 p-4 rounded-xl w-full bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#7edad2] focus:bg-white transition-all shadow-sm"
+                                                    value={formData.link || ""}
+                                                    onChange={e => setFormData({ ...formData, link: e.target.value })}
+                                                    placeholder="https://www.example.com"
                                                 />
                                             </div>
                                         </>
@@ -988,77 +1023,73 @@ export default function ExperienceEditor({ slug }) {
                     )}
                     {viewingItem && (
                         <div
-                            className="fixed inset-0 bg-black/98 z-[10000] flex items-center justify-center backdrop-blur-md animate-in fade-in duration-500"
-                            onClick={() => {
-                                setViewingItem(null);
-                                setZoomLevel(100);
-                                setShowZoomBar(false);
-                                setIsDescExpanded(false);
-                            }}
+                            className="fixed inset-0 bg-black/95 z-[10000] flex items-center justify-center animate-in fade-in duration-200"
+                            onClick={() => setViewingItem(null)}
                         >
                             <div
-                                className="bg-[#0a0a0a] md:rounded-[2.5rem] overflow-hidden w-full max-w-[100vw] md:max-w-[90vw] h-full md:h-[92vh] flex flex-col relative shadow-2xl"
+                                className="bg-[#0a0a0a] md:rounded-[2rem] overflow-hidden w-full md:max-w-[90vw] h-full md:h-[92vh] flex flex-col relative shadow-2xl"
                                 onClick={e => e.stopPropagation()}
                             >
-                                {/* ปุ่มปิด Modal หลัก */}
                                 <button
-                                    onClick={() => { setViewingItem(null); setZoomLevel(100); setShowZoomBar(false); }}
-                                    className="absolute top-4 right-4 z-50 p-3 bg-black/40 text-white rounded-full backdrop-blur-xl border border-white/10"
+                                    onClick={() => setViewingItem(null)}
+                                    className="absolute top-4 right-4 z-50 p-3 bg-black/70 text-white rounded-full border border-white/10 hover:bg-black"
                                 >
                                     <CloseIcon />
                                 </button>
 
-                                {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
-                                {/* --- ส่วนที่ 1: พื้นที่รูปภาพ (Focus Area) --- */}
-                                <div className="relative w-full h-full bg-[#050505] flex-1 overflow-hidden group">
-
-                                    {/* ปุ่ม Zoom controls (ถ้ามี) วางตรงนี้ */}
-
-                                    {/* พื้นที่ Scroll รูปภาพ */}
-                                    <div className="w-full h-full overflow-y-auto overflow-x-hidden custom-scrollbar snap-y snap-mandatory">
-                                        <div
-                                            className="flex flex-col items-center min-w-full min-h-full py-8 md:py-12 gap-4 md:gap-8"
-                                            style={{ width: `${zoomLevel}%`, transition: zoomLevel === 100 ? 'width 0.3s' : 'none' }}
-                                        >
-                                            {Array.isArray(viewingItem.img) && viewingItem.img.length > 0 ? (
-                                                viewingItem.img.map((url, index) => (
+                                {viewingImages.length > 0 && (
+                                    <div className="relative flex-1 min-h-0 bg-[#050505]">
+                                        <div className="h-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory">
+                                            <div className="flex flex-col items-center gap-4 md:gap-8 py-6 md:py-10">
+                                                {viewingImages.map((url, index) => (
                                                     <div
-                                                        key={index}
-                                                        // ✅ แก้ไขบรรทัดนี้: บังคับความสูง h-[50vh] สำหรับมือถือ และ h-[85vh] สำหรับจอคอม
-                                                        className="relative w-full shrink-0 snap-center flex items-center justify-center p-2 h-[64vh] md:h-[85vh]"
+                                                        key={url + index}
+                                                        className="relative w-full shrink-0 snap-center p-2 md:px-8 h-[64vh] md:h-[80vh]"
                                                     >
-                                                        <div className="relative w-full h-full rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/50">
+                                                        <div className="relative w-full h-full">
                                                             <Image
                                                                 src={url}
-                                                                alt={`${viewingItem.title}-${index + 1}`}
+                                                                alt={`${viewingItem.title || project.title}-${index + 1}`}
                                                                 fill
+                                                                sizes="90vw"
                                                                 className="object-contain"
                                                                 priority={index === 0}
                                                             />
                                                         </div>
-
-                                                        {/* ตัวเลขบอกลำดับภาพ */}
-                                                        {viewingItem.img.length > 1 && zoomLevel === 100 && (
-                                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-white/80 px-4 py-1.5 rounded-full text-sm font-medium border border-white/10 pointer-events-none z-20">
-                                                                {index + 1} / {viewingItem.img.length}
+                                                        {viewingImages.length > 1 && (
+                                                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white/80 px-4 py-1.5 rounded-full text-sm font-medium border border-white/10 pointer-events-none">
+                                                                {index + 1} / {viewingImages.length}
                                                             </div>
                                                         )}
                                                     </div>
-                                                ))
-                                            ) : (
-                                                // Fallback กรณีมีรูปเดียว หรือเป็น string
-                                                <div className="relative w-full h-[64vh] md:h-[85vh] p-4 flex items-center justify-center">
-                                                    <Image
-                                                        src={Array.isArray(viewingItem.img) ? (viewingItem.img[0] || "") : viewingItem.img}
-                                                        alt={viewingItem.title}
-                                                        fill
-                                                        className="object-contain"
-                                                    />
-                                                </div>
-                                            )}
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {(viewingItem.title || viewingItem.description || viewingItem.link) && (
+                                    <div
+                                        className={`border-t border-white/10 px-6 md:px-10 py-5 md:py-7 text-white overflow-y-auto ${viewingImages.length > 0 ? "shrink-0 max-h-[35vh]" : "flex-1 pt-16"}`}
+                                    >
+                                        {viewingItem.title && (
+                                            <h3 className="text-lg md:text-2xl font-bold mb-3 pr-12">{viewingItem.title}</h3>
+                                        )}
+                                        {viewingItem.description && (
+                                            <Markdown tone="dark">{viewingItem.description}</Markdown>
+                                        )}
+                                        {viewingItem.link && (
+                                            <a
+                                                href={viewingItem.link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#7edad2] hover:text-[#a6ebe4]"
+                                            >
+                                                <LinkIcon /> เปิดลิงก์ที่เกี่ยวข้อง
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
 
                             </div>
                         </div>

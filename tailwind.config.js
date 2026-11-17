@@ -48,11 +48,16 @@ module.exports = {
 			shimmer: {
 				'0%': { transform: 'translateX(-100%)' },
 				'100%': { transform: 'translateX(200%)' }
+			},
+			marquee: {
+				'0%': { transform: 'translateX(0)' },
+				'100%': { transform: 'translateX(-50%)' }
 			}
 		},
 		animation: {
 			'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
 			'shimmer': 'shimmer 2s ease-in-out',
+			'marquee': 'marquee var(--marquee-duration, 60s) linear infinite',
 		}
   	}
   },

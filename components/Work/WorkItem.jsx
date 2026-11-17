@@ -44,14 +44,14 @@ const WorkItem = ({ slug, category, specialTopic, specialTopics, img, title, cre
         <div className="relative w-full h-[320px] bg-gray-100 overflow-hidden">
 
           {/* Badge Top Left (Category - ของเดิม) */}
-          <Badge className="absolute top-5 left-5 z-20 bg-white/90 backdrop-blur-md text-gray-900 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-sm border border-white/50 hover:bg-white">
+          <Badge className="absolute top-5 left-5 z-20 bg-white/95 text-gray-900 px-4 py-1.5 text-xs font-bold uppercase tracking-wider shadow-sm border border-white/50 hover:bg-white">
             {displayCategory}
           </Badge>
 
           {topicChips.length > 0 && (
             <div className="absolute bottom-5 right-5 z-20 flex flex-wrap justify-end gap-1.5 max-w-[72%]">
               {topicChips.map((tag) => (
-                <span key={tag} className="text-[10px] leading-none px-2 py-1 rounded-md bg-black/45 text-white border border-white/20 backdrop-blur-sm">
+                <span key={tag} className="text-[10px] leading-none px-2 py-1 rounded-md bg-black/60 text-white border border-white/20">
                   {tag}
                 </span>
               ))}

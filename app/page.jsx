@@ -6,6 +6,7 @@ import Services from "@/components/Services";
 import About from "@/components/About";
 import Journey from "@/components/Journey";
 import Work from "@/components/Work/Work";
+import LiveProject from "@/components/LiveProject";
 import Contact from "@/components/Contact";
 import FixedMenu from "@/components/FixedMenu";
 import Testimonial from "@/components/Testimonial";
@@ -18,9 +19,10 @@ const Home = () => {
     <>
       <Hero />
       <FixedMenu />
+      <LiveProject />
       {/* <Services /> */}
       {/* --- แก้ไขจุดนี้ครับ --- */}
-      <section id="Learning"> 
+      <section id="Experience">
         <Work />
       </section>
       {/* -------------------- */}

@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createPortal } from "react-dom";
 import AnimatedText from "../AnimatedText";
 import WorkItem from "./WorkItem";
+import ExperienceGraph from "./ExperienceGraph";
+import { COUNTED_TOPICS, hasSpecialTopic, isYearCategory, matchesTab } from "./topics";
 
 // --- Icons ---
 const TrashIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>);
@@ -15,34 +17,6 @@ const CheckCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="
 const XCircleIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-red-500"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" /></svg>);
 const SkullIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-red-600"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>);
 
-const COUNTED_TOPICS = ["Cloud", "Network", "DevSecOps", "Certificate", "Event"];
-
-const isYearCategory = (value) => /^\d{4}$/.test(String(value || "").trim());
-
-const hasSpecialTopic = (item, topic) => {
-  const topics = Array.isArray(item.specialTopics)
-    ? item.specialTopics.map((value) => value === "Community" ? "Event" : value)
-    : [];
-  if (topics.includes(topic)) return true;
-  if (item.specialTopic === topic) return true;
-  if (topic === "Cloud") return item.isCloud === true;
-  if (topic === "Network") return item.isNetwork === true;
-  if (topic === "DevSecOps") return item.isDevSecOps === true;
-  if (topic === "Certificate") return item.isCertificate === true;
-  if (topic === "Event") return item.isEvent === true || item.isCommunity === true;
-  return false;
-};
-
-const matchesTab = (item, tabValue) => {
-  if (tabValue === "all") return true;
-  if (tabValue === "Best") return item.isBest === true;
-  if (tabValue === "Cloud") return hasSpecialTopic(item, "Cloud");
-  if (tabValue === "Network") return hasSpecialTopic(item, "Network");
-  if (tabValue === "DevSecOps") return hasSpecialTopic(item, "DevSecOps");
-  if (tabValue === "Certificate") return hasSpecialTopic(item, "Certificate");
-  if (tabValue === "Event") return hasSpecialTopic(item, "Event");
-  return item.category === tabValue;
-};
 
 const buildTopicCounts = (projects) => {
   const counts = { Best: 0, Cloud: 0, Network: 0, DevSecOps: 0, Certificate: 0, Event: 0 };
@@ -423,6 +397,13 @@ export default function Work() {
     });
   };
 
+  // Clicking a topic/year hub in the graph filters the cards; clicking the active hub again clears it.
+  const handleGraphFilter = (value) => {
+    const nextTab = tabValue === value ? "all" : value;
+    if (isYearCategory(nextTab)) setIsYearsCollapsed(false);
+    setTabValue(nextTab);
+  };
+
   // --- Auth & CRUD handlers ---
   const handleLogin = (e) => {
     e.preventDefault();
@@ -660,6 +641,10 @@ export default function Work() {
 
         {/* --- Tabs --- */}
         <Tabs value={tabValue} onValueChange={setTabValue} className="w-full flex flex-col">
+          <div className="mb-6">
+            <ExperienceGraph projects={projects} focusTab={tabValue} onSelectFilter={handleGraphFilter} />
+          </div>
+
           <div className="flex items-center mb-[30px]">
             <TabsList className="w-full md:w-auto max-w-full h-auto flex flex-row flex-wrap items-center justify-center md:justify-start gap-1 p-2 rounded-[28px] border-[#7edad2]/80 shadow-[0_0_0_1px_rgba(126,218,210,0.35),0_0_18px_rgba(126,218,210,0.22)] mx-auto md:mx-0">
               {tabData.map((item, index) => (
