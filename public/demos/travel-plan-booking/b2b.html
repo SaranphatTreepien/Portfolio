@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Merchant Manager · mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Mock of the merchant side (B2B): web dashboard + the same bot inside LINE / WhatsApp / Telegram.
+   All shops, customers and numbers are fictional; nothing talks to a real agent or chat platform. */
+:root{--font:"IBM Plex Sans Thai",system-ui,sans-serif;--ink:#172033;--muted:#7a8499;--line:#e6e9f0;--bg:#f4f6fb;
+  --brand:#4f46e5;--brand2:#0ea5e9;--ok:#16a34a;--warn:#d97706;--bad:#dc2626}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);color:var(--ink);background:var(--bg);padding:14px;min-height:100vh}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:38px;height:38px}
+.brand b{display:block;font-size:16px;line-height:1.2}
+.brand span{font-size:12px;color:var(--muted)}
+.shop{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 6px;font-size:13px;font-weight:600}
+.shop i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#fff1f2;font-style:normal}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.dot.off{background:var(--bad)}
+.sim{margin-left:auto;border:0;border-radius:999px;padding:9px 16px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--brand2),var(--brand));box-shadow:0 6px 18px -8px rgba(79,70,229,.7)}
+.flag{width:100%;font-size:12px;color:var(--muted);margin-top:-4px}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:16px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;min-width:0}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);padding:6px 8px 0;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:0 0 auto;border:0;background:none;padding:9px 12px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--brand);border-color:var(--brand)}
+.tabs .n{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:11px}
+.view{padding:16px;display:none}
+.view.on{display:block}
+h2{font-size:16px;margin:0 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.kpi{border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.kpi b{display:block;font-size:24px;line-height:1.2}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi.w b{color:var(--warn)}.kpi.x b{color:var(--bad)}
+.two{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+.box{border:1px solid var(--line);border-radius:14px;padding:12px}
+.box h3{margin:0 0 10px;font-size:13.5px;color:var(--muted);font-weight:600}
+.bars{display:flex;align-items:flex-end;gap:8px;height:120px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;font-size:11px;color:var(--muted)}
+.bars i{display:block;width:100%;border-radius:6px 6px 2px 2px;background:#c7d2fe;transition:height .3s}
+.bars .today i{background:linear-gradient(var(--brand2),var(--brand))}
+.chrow{display:grid;grid-template-columns:76px minmax(0,1fr) 24px;align-items:center;gap:8px;font-size:12.5px;margin:6px 0}
+.chrow .tr{height:8px;border-radius:99px;background:#eef1f7;overflow:hidden}
+.chrow .tr i{display:block;height:100%;border-radius:99px}
+.next li{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.next{list-style:none;margin:0;padding:0}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.filters button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.filters button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.new td{animation:hl 2.4s ease-out}
+@keyframes hl{from{background:#fef9c3}to{background:transparent}}
+td small{display:block;color:var(--muted);font-size:12px}
+.st{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.st.pending{background:#fef3c7;color:#92400e}.st.confirmed{background:#dbeafe;color:#1e40af}.st.arrived{background:#dcfce7;color:#166534}.st.cancelled{background:#fee2e2;color:#991b1b}
+.ch{font-size:12px;font-weight:600;border-radius:6px;padding:1px 6px;background:#f1f5f9}
+.ab{display:flex;gap:4px;flex-wrap:wrap}
+.ab button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 9px;font-size:12.5px;font-weight:600}
+.ab .y{border-color:#bbf7d0;color:#166534}.ab .x{border-color:#fecaca;color:#991b1b}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:14px}
+.switch small{display:block;color:var(--muted);font-size:12px}
+.tg{position:relative;width:44px;height:26px;flex:0 0 auto;border-radius:99px;border:0;background:#cbd5e1;transition:.2s}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.tg[aria-checked="true"]{background:var(--ok)}
+.tg[aria-checked="true"]::after{left:21px}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.slot{border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:13px;text-align:left;background:#fff}
+.slot b{font-size:14px}
+.slot .cap{height:6px;border-radius:99px;background:#eef1f7;margin:6px 0 4px;overflow:hidden}
+.slot .cap i{display:block;height:100%;background:var(--brand2)}
+.slot small{color:var(--muted)}
+.slot.closed{background:#f8fafc;opacity:.6}
+.slot.closed b{text-decoration:line-through}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+.form input,.form select,.form textarea{font-size:14px;color:var(--ink);border:1px solid #d7dce6;border-radius:10px;padding:8px 10px;min-width:0}
+.form .full{grid-column:1/-1}
+.prev{border:1px dashed #c7d2fe;border-radius:14px;padding:12px;background:#f8f9ff}
+.prev .lab{font-size:12px;color:var(--muted);margin-bottom:8px}
+.rc{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:center;background:#fff;border:1px solid #f9c6e1;border-radius:14px;padding:10px}
+.rc .ph{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:#f6f3fa}
+.rc b{display:block}.rc small{color:var(--muted);font-size:12.5px}
+.rc p{grid-column:1/-1;margin:4px 0 0;font-size:13px;color:#4b5563}
+.btn{border:0;border-radius:10px;padding:9px 14px;font-weight:700;color:#fff;background:var(--brand)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.row2{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+
+/* phone */
+.phonewrap{position:sticky;top:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.pctl{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.chs{display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px}
+.chs button{border:0;background:none;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.chs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.phone{width:100%;max-width:360px;height:min(700px,calc(100vh - 110px));min-height:540px;border-radius:36px;background:#111;padding:10px;box-shadow:0 30px 60px -30px rgba(23,32,51,.6)}
+.scr{height:100%;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;background:var(--pbg)}
+.ph-line{--pbg:#8cabd8;--ph:#ffffff;--pht:#111;--me:#06c755;--met:#fff;--btn:#06c755}
+.ph-whatsapp{--pbg:#efeae2;--ph:#008069;--pht:#fff;--me:#d9fdd3;--met:#111;--btn:#008069}
+.ph-telegram{--pbg:#c8d9b4;--ph:#517da2;--pht:#fff;--me:#effdde;--met:#111;--btn:#3390ec}
+.sbar{display:flex;justify-content:space-between;padding:8px 18px 2px;font-size:11px;font-weight:600;background:var(--ph);color:var(--pht)}
+.phd{display:flex;align-items:center;gap:8px;padding:6px 12px 10px;background:var(--ph);color:var(--pht);border-bottom:1px solid rgba(0,0,0,.08)}
+.phd svg{width:30px;height:30px}
+.phd b{display:block;font-size:14px;line-height:1.2}
+.phd span{font-size:11px;opacity:.8}
+.msgs{flex:1;min-height:0;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:86%;background:#fff;border-radius:14px;padding:8px 11px;font-size:13px;line-height:1.5;white-space:pre-line;box-shadow:0 1px 1px rgba(0,0,0,.08);overflow-wrap:anywhere}
+.m.me{align-self:flex-end;background:var(--me);color:var(--met);border-bottom-right-radius:4px}
+.m.bot{border-top-left-radius:4px}
+.m .t{display:block;text-align:right;font-size:10px;color:#8b94a7;margin-top:2px}
+.m.me .t{color:inherit;opacity:.7}
+.m .acts{display:flex;gap:6px;margin-top:8px;white-space:normal}
+.m .acts button{flex:1;border:1px solid var(--btn);background:#fff;color:var(--btn);border-radius:8px;padding:5px 6px;font-size:12.5px;font-weight:700}
+.ph-telegram .m .acts button{background:rgba(51,144,236,.12);border-color:transparent}
+.m .acts .res{flex:1;text-align:center;font-size:12.5px;font-weight:700;padding:5px;border-radius:8px;background:#f1f5f9;color:#475569}
+.kb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:#d6d6d6;border-top:1px solid #ccc}
+.kb button{border:0;background:#fff;padding:9px 4px;font-size:12px;font-weight:600;color:#222;display:flex;flex-direction:column;align-items:center;gap:2px}
+.kb button i{font-style:normal;font-size:18px}
+.ph-telegram .kb{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:5px;background:#e8ecef}
+.ph-telegram .kb button{flex-direction:row;justify-content:center;border-radius:8px;font-size:12.5px;gap:6px}
+.ph-telegram .kb button i{font-size:14px}
+.ph-whatsapp .kb{display:flex;overflow-x:auto;gap:6px;padding:6px 8px;background:transparent;border:0;scrollbar-width:none}
+.ph-whatsapp .kb button{flex:0 0 auto;flex-direction:row;border-radius:999px;padding:6px 12px;color:#008069;gap:5px;box-shadow:0 1px 1px rgba(0,0,0,.1)}
+.ph-whatsapp .kb button i{font-size:14px}
+.inp{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;font-size:12.5px;color:#9aa1ae}
+.inp span{flex:1;border:1px solid #e5e7eb;border-radius:999px;padding:7px 12px}
+.menu-lbl{font-size:11px;text-align:center;color:#666;background:#f3f3f3;padding:3px}
+.ph-whatsapp .menu-lbl,.ph-telegram .menu-lbl{display:none}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:#fff;font-size:13px;padding:8px 14px;border-radius:999px;transition:.25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media(max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr)}.phonewrap{position:static}}
+@media(max-width:640px){
+  body{padding:8px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .two,.form{grid-template-columns:minmax(0,1fr)}
+  .sim{margin-left:0;width:100%}
+  .hide-sm{display:none}
+  td,th{padding:7px 5px}
+  .phone{height:620px;min-height:0}
+}
+@media(prefers-reduced-motion:reduce){tr.new td{animation:none}.bars i,.tg,.tg::after{transition:none}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0ea5e9"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs><rect width="48" height="48" rx="14" fill="url(#mg)"/><path d="M12 19l3-7h18l3 7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 19c0 2.2 1.8 3.6 4 3.6s4-1.4 4-3.6c0 2.2 1.8 3.6 4 3.6s4-1.4 4-3.6c0 2.2 1.8 3.6 4 3.6s4-1.4 4-3.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><path d="M14.5 24v12h19V24M21 36v-7h6v7" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
+    <div><b>Merchant Manager</b><span>จัดการร้านและการจอง</span></div>
+  </div>
+  <div class="shop"><i>🍲</i>ครัวริมน้ำ ท่าเตียน <span class="dot" id="opendot"></span></div>
+  <button class="sim" id="sim">+ จำลองการจองใหม่</button>
+  <div class="flag">เดโมจำลอง · ร้าน ลูกค้า และตัวเลขเป็นข้อมูลสมมติทั้งหมด · ไม่ได้ต่อ agent หรือแอปแชตจริง</div>
+</div>
+
+<div class="wrap">
+  <section class="panel" aria-label="แดชบอร์ดร้าน">
+    <div class="tabs" role="tablist">
+      <button role="tab" data-v="ov" aria-selected="true">ภาพรวม</button>
+      <button role="tab" data-v="bk" aria-selected="false">การจอง<span class="n" id="pendN">0</span></button>
+      <button role="tab" data-v="sl" aria-selected="false">เวลา & โต๊ะ</button>
+      <button role="tab" data-v="sh" aria-selected="false">หน้าร้าน</button>
+      <button role="tab" data-v="nt" aria-selected="false">แจ้งเตือน</button>
+    </div>
+
+    <div class="view on" id="v-ov">
+      <div class="kpis" id="kpis"></div>
+      <div class="two">
+        <div class="box"><h3>การจอง 7 วันล่าสุด</h3><div class="bars" id="bars"></div></div>
+        <div class="box"><h3>ช่องทางที่ลูกค้าจองวันนี้</h3><div id="chs"></div><h3 style="margin-top:12px">ลูกค้าที่กำลังจะมา</h3><ul class="next" id="next"></ul></div>
+      </div>
+    </div>
+
+    <div class="view" id="v-bk">
+      <div class="filters" id="filters">
+        <button data-f="all" aria-pressed="true">ทั้งหมด</button><button data-f="pending" aria-pressed="false">รอยืนยัน</button><button data-f="confirmed" aria-pressed="false">ยืนยันแล้ว</button><button data-f="arrived" aria-pressed="false">มาแล้ว</button><button data-f="cancelled" aria-pressed="false">ยกเลิก</button>
+      </div>
+      <div style="overflow-x:auto"><table><thead><tr><th>เวลา</th><th>ลูกค้า</th><th>คน</th><th class="hide-sm">ช่องทาง</th><th>สถานะ</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+    </div>
+
+    <div class="view" id="v-sl">
+      <div class="switch"><div>รับจองวันนี้<small>ปิดแล้ว agent จะบอกลูกค้าว่าวันนี้เต็ม และเสนอวันอื่นแทน</small></div><button class="tg" id="openTg" role="switch" aria-checked="true" aria-label="รับจองวันนี้"></button></div>
+      <h2>ช่วงเวลาวันนี้ <small style="font-weight:500;color:var(--muted);font-size:12px">กดที่ช่องเพื่อเปิด/ปิดรับ · 8 โต๊ะต่อรอบ</small></h2>
+      <div class="slots" id="slots"></div>
+    </div>
+
+    <div class="view" id="v-sh">
+      <div class="two">
+        <form class="form" id="shopForm">
+          <label class="full">ชื่อร้าน<input name="name" value="ครัวริมน้ำ ท่าเตียน"></label>
+          <label>ประเภท<select name="cuisine"><option>อาหารไทยริมแม่น้ำ</option><option>ซีฟู้ด</option><option>คาเฟ่</option><option>ปิ้งย่าง</option></select></label>
+          <label>ย่าน<input name="area" value="ท่าเตียน · กรุงเทพฯ"></label>
+          <label>ราคาต่อคน<input name="price" value="฿400–800"></label>
+          <label>มัดจำ (บาท)<input name="deposit" value="0" inputmode="numeric"></label>
+          <label class="full">จุดเด่น<textarea name="desc" rows="3">โต๊ะริมน้ำมองเห็นวัดอรุณตอนพระอาทิตย์ตก อาหารไทยภาคกลางและซีฟู้ดสดทุกวัน</textarea></label>
+          <div class="full row2"><button class="btn" type="submit">บันทึกหน้าร้าน</button></div>
+        </form>
+        <div class="prev"><div class="lab">ลูกค้าจะเห็นร้านในแชตแบบนี้</div><div class="rc" id="rc"></div></div>
+      </div>
+    </div>
+
+    <div class="view" id="v-nt">
+      <h2>ช่องทางที่เชื่อมไว้</h2>
+      <div id="conn"></div>
+      <h2 style="margin-top:16px">แจ้งเตือนอะไรบ้าง</h2>
+      <div id="evts"></div>
+      <div class="row2"><button class="btn" id="sendSum">ส่งสรุปวันนี้เข้าแชตตอนนี้</button></div>
+    </div>
+  </section>
+
+  <aside class="phonewrap" aria-label="บอทร้านในแอปแชต">
+    <div class="pctl">
+      <div class="chs" id="pch" role="group" aria-label="เลือกแอปแชต">
+        <button data-ch="line" aria-pressed="true">LINE</button><button data-ch="whatsapp" aria-pressed="false">WhatsApp</button><button data-ch="telegram" aria-pressed="false">Telegram</button>
+      </div>
+      <div class="chs" id="plang" role="group" aria-label="ภาษาของบอท">
+        <button data-lang="th" aria-pressed="true">ไทย</button><button data-lang="en" aria-pressed="false">EN</button><button data-lang="zh" aria-pressed="false">中文</button>
+      </div>
+    </div>
+    <div class="phone"><div class="scr ph-line" id="scr">
+      <div class="sbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+      <div class="phd"><svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="24" fill="url(#mg)"/><path d="M14.5 24v10h19V24M12 20l3-7h18l3 7z" fill="none" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/></svg><div><b>Merchant Manager</b><span id="phsub">LINE Official Account</span></div></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="menu-lbl" id="menuLbl">เมนูร้าน ▾</div>
+      <div class="kb" id="kb"></div>
+      <div class="inp"><span>Aa</span>➤</div>
+    </div></div>
+  </aside>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// Merchant side (B2B) mock. The web dashboard stays in Thai; the bot inside LINE / WhatsApp / Telegram
+// talks to the shop in Thai, English or Chinese (the real agent handles any language).
+// All shops, customers and numbers are fictional; nothing talks to a real agent or chat platform.
+
+// ---------- state (fictional) ----------
+const CH_COLOR = {Web:"#a855f7",LINE:"#06c755",WhatsApp:"#25d366",Telegram:"#3390ec"};
+let bookings = [
+  {id:48190,name:{th:"คุณมาลี ส.",en:"Malee S."},size:4,time:"12:00",ch:"LINE",status:"arrived"},
+  {id:48195,name:{th:"คุณเจมส์ ว.",en:"James W."},size:2,time:"13:30",ch:"Web",status:"arrived"},
+  {id:48199,name:{th:"คุณนิด ป.",en:"Nid P."},size:2,time:"17:00",ch:"LINE",status:"cancelled"},
+  {id:48201,name:{th:"คุณปิยะ ร.",en:"Piya R."},size:6,time:"18:00",ch:"WhatsApp",status:"pending",note:"bday"},
+  {id:48207,name:{th:"คุณอร ก.",en:"Orn K."},size:2,time:"18:30",ch:"Telegram",status:"confirmed"},
+  {id:48210,name:{th:"คุณต้น ม.",en:"Ton M."},size:3,time:"19:30",ch:"Web",status:"pending"},
+];
+const NOTES = {
+  bday:{th:"วันเกิด ขอโต๊ะริมน้ำ",en:"Birthday, riverside table please",zh:"过生日，想要河边座位"},
+  kid:{th:"ขอเก้าอี้เด็ก 1 ตัว",en:"Needs 1 high chair",zh:"需要 1 张儿童椅"},
+  anniv:{th:"ฉลองครบรอบ",en:"Anniversary dinner",zh:"纪念日晚餐"},
+  shrimp:{th:"แพ้กุ้ง",en:"Shrimp allergy",zh:"对虾过敏"},
+};
+const POOL = [[{th:"คุณแพร ท.",en:"Prae T."},2,"Web","kid"],[{th:"คุณบอย ช.",en:"Boy C."},4,"LINE"],[{th:"คุณมิว น.",en:"Mew N."},2,"Telegram","anniv"],[{th:"คุณเก่ง อ.",en:"Keng A."},5,"WhatsApp"],[{th:"คุณฝน จ.",en:"Fon J."},3,"Web","shrimp"]];
+let seq = 48213, poolI = 0, openToday = true, filter = "all", channel = "line", lang = "th";
+const SLOT_TIMES = []; for (let m = 11 * 60; m <= 20 * 60 + 30; m += 30) SLOT_TIMES.push(`${String(Math.floor(m / 60)).padStart(2,"0")}:${m % 60 ? "30" : "00"}`);
+const slotOpen = Object.fromEntries(SLOT_TIMES.map((x) => [x, x !== "15:00" && x !== "15:30"]));
+const CAP = 8;
+const WEEK = [{d:"ศ.",n:9},{d:"ส.",n:17},{d:"อา.",n:15},{d:"จ.",n:6},{d:"อ.",n:8},{d:"พ.",n:11}];
+const conn = {LINE:true,WhatsApp:true,Telegram:false};
+const evts = [["การจองใหม่","ส่งทันที พร้อมปุ่มยืนยัน/ปฏิเสธ",true],["ลูกค้ายกเลิก","ส่งทันที",true],["เตือนก่อนลูกค้ามา 30 นาที","",true],["สรุปรายวัน","ทุกวัน 22:00",true],["สรุปรายสัปดาห์","ทุกวันจันทร์ 09:00",false]];
+let msgs = [];
+
+// ---------- bot text in 3 languages (dashboard stays Thai) ----------
+const SHOP = {th:"ครัวริมน้ำ ท่าเตียน",en:"Krua Rim Nam Tha Tien",zh:"塔田河畔厨房"};
+const BOT = {
+  th:{
+    menuLbl:"เมนูร้าน ▾", menu:{queue:"คิววันนี้",pending:"รอยืนยัน",summary:"สรุปยอด",toggle:"ปิดรับวันนี้",reopen:"เปิดรับวันนี้",free:"ช่วงที่ว่าง",settings:"ตั้งค่า"},
+    st:{pending:"รอยืนยัน",confirmed:"ยืนยันแล้ว",arrived:"มาแล้ว",cancelled:"ยกเลิก"}, yes:"✓ ยืนยัน", no:"✕ ปฏิเสธ", didYes:"✓ ยืนยันแล้ว", didNo:"✕ ปฏิเสธแล้ว",
+    people:(n)=>`${n} คน`, guests:(n)=>`${n} ท่าน`,
+    morning:(s,rows)=>`สวัสดีครับ ☀️ <b>คิววันนี้</b> ของ${s}\n${rows}\nกดเมนูด้านล่างเพื่อดูคิว สรุปยอด หรือปิดรับได้เลยครับ`,
+    newB:(id,n,g,tm,ch,note)=>`🔔 <b>การจองใหม่ #TPB-${id}</b>\n${n} · ${g}\nวันนี้ ${tm} · ผ่าน ${ch}${note?`\n📝 ${note}`:""}`,
+    pendB:(id,n,g,tm,ch,note)=>`⏳ <b>รอยืนยัน #TPB-${id}</b>\n${n} · ${g}\nวันนี้ ${tm} · ผ่าน ${ch}${note?`\n📝 ${note}`:""}`,
+    custCancel:(n,id,tm,p)=>`❌ ${n} ยกเลิกการจอง #TPB-${id} (${tm} · ${p}) โต๊ะว่างแล้วครับ`,
+    queue:"📋 <b>คิววันนี้</b>", noPending:"ไม่มีการจองที่รอยืนยันครับ 👍",
+    summary:(b,p,a,w,x,top)=>`📊 <b>สรุปวันนี้</b>\nการจอง ${b} รายการ · ${p} คน\nมาแล้ว ${a} · รอยืนยัน ${w} · ยกเลิก ${x}\nช่องทางยอดนิยม: ${top}`,
+    closedNow:"⛔ ปิดรับจองวันนี้แล้ว agent จะเสนอวันอื่นให้ลูกค้าแทน", openNow:"✅ เปิดรับจองวันนี้แล้ว ลูกค้าจองผ่าน agent ได้ตามปกติ",
+    free:(s)=>`🕒 <b>ช่วงที่ยังว่างวันนี้</b>\n${s}`, closedToday:"วันนี้ปิดรับจองอยู่ครับ",
+    settings:"⚙️ ตั้งค่าเวลาเปิด จำนวนโต๊ะ มัดจำ และการแจ้งเตือนได้ในแดชบอร์ดเว็บครับ (เดโม: แท็บ “เวลา & โต๊ะ” และ “แจ้งเตือน” ด้านซ้าย)",
+    confirmed:(id,n)=>`✓ ยืนยัน #TPB-${id} แล้ว agent แจ้งลูกค้า ${n} ให้แล้วครับ`, rejected:(id)=>`✕ ปฏิเสธ #TPB-${id} แล้ว agent เสนอเวลาอื่นให้ลูกค้าแทนครับ`,
+    shopSaved:(s)=>`🏪 อัปเดตหน้าร้าน “${s}” แล้ว ลูกค้าจะเห็นข้อมูลใหม่ในแชตทันทีครับ`, dashClosed:"⛔ ปิดรับจองวันนี้แล้ว (ตั้งจากแดชบอร์ด)", dashOpen:"✅ เปิดรับจองวันนี้แล้ว (ตั้งจากแดชบอร์ด)",
+  },
+  en:{
+    menuLbl:"Shop menu ▾", menu:{queue:"Today's queue",pending:"Pending",summary:"Summary",toggle:"Close today",reopen:"Open today",free:"Free slots",settings:"Settings"},
+    st:{pending:"pending",confirmed:"confirmed",arrived:"arrived",cancelled:"cancelled"}, yes:"✓ Confirm", no:"✕ Decline", didYes:"✓ Confirmed", didNo:"✕ Declined",
+    people:(n)=>`${n} ppl`, guests:(n)=>`${n} guests`,
+    morning:(s,rows)=>`Good morning ☀️ <b>Today's queue</b> at ${s}\n${rows}\nUse the menu below to see the queue, get a summary or stop taking bookings.`,
+    newB:(id,n,g,tm,ch,note)=>`🔔 <b>New booking #TPB-${id}</b>\n${n} · ${g}\nToday ${tm} · via ${ch}${note?`\n📝 ${note}`:""}`,
+    pendB:(id,n,g,tm,ch,note)=>`⏳ <b>Pending #TPB-${id}</b>\n${n} · ${g}\nToday ${tm} · via ${ch}${note?`\n📝 ${note}`:""}`,
+    custCancel:(n,id,tm,p)=>`❌ ${n} cancelled #TPB-${id} (${tm} · ${p}). The table is free again.`,
+    queue:"📋 <b>Today's queue</b>", noPending:"No bookings waiting for you 👍",
+    summary:(b,p,a,w,x,top)=>`📊 <b>Today so far</b>\n${b} bookings · ${p} guests\nArrived ${a} · pending ${w} · cancelled ${x}\nTop channel: ${top}`,
+    closedNow:"⛔ Closed for today. The agent will offer customers another day.", openNow:"✅ Open for bookings today. Customers can book through the agent again.",
+    free:(s)=>`🕒 <b>Free slots today</b>\n${s}`, closedToday:"Bookings are closed for today.",
+    settings:"⚙️ Opening hours, tables, deposits and alerts are set in the web dashboard. (Demo: the “เวลา & โต๊ะ” and “แจ้งเตือน” tabs on the left.)",
+    confirmed:(id,n)=>`✓ #TPB-${id} confirmed. The agent has let ${n} know.`, rejected:(id)=>`✕ #TPB-${id} declined. The agent is offering the customer another time.`,
+    shopSaved:(s)=>`🏪 Shop page “${s}” updated. Customers see the new details in chat right away.`, dashClosed:"⛔ Closed for today (set from the dashboard)", dashOpen:"✅ Open for bookings today (set from the dashboard)",
+  },
+  zh:{
+    menuLbl:"店铺菜单 ▾", menu:{queue:"今日排队",pending:"待确认",summary:"营业汇总",toggle:"今日停止接单",reopen:"今日恢复接单",free:"空闲时段",settings:"设置"},
+    st:{pending:"待确认",confirmed:"已确认",arrived:"已到店",cancelled:"已取消"}, yes:"✓ 确认", no:"✕ 拒绝", didYes:"✓ 已确认", didNo:"✕ 已拒绝",
+    people:(n)=>`${n} 人`, guests:(n)=>`${n} 位`,
+    morning:(s,rows)=>`早上好 ☀️ <b>${s} 今日排队</b>\n${rows}\n点下方菜单可查看排队、营业汇总或暂停接单。`,
+    newB:(id,n,g,tm,ch,note)=>`🔔 <b>新预订 #TPB-${id}</b>\n${n} · ${g}\n今天 ${tm} · 来自 ${ch}${note?`\n📝 ${note}`:""}`,
+    pendB:(id,n,g,tm,ch,note)=>`⏳ <b>待确认 #TPB-${id}</b>\n${n} · ${g}\n今天 ${tm} · 来自 ${ch}${note?`\n📝 ${note}`:""}`,
+    custCancel:(n,id,tm,p)=>`❌ ${n} 取消了预订 #TPB-${id}（${tm} · ${p}），座位已空出。`,
+    queue:"📋 <b>今日排队</b>", noPending:"没有待确认的预订 👍",
+    summary:(b,p,a,w,x,top)=>`📊 <b>今日汇总</b>\n预订 ${b} 笔 · ${p} 人\n已到店 ${a} · 待确认 ${w} · 已取消 ${x}\n最多来自：${top}`,
+    closedNow:"⛔ 今日已停止接单，agent 会为顾客推荐其他日期。", openNow:"✅ 今日已恢复接单，顾客可以照常通过 agent 预订。",
+    free:(s)=>`🕒 <b>今日空闲时段</b>\n${s}`, closedToday:"今天已停止接单。",
+    settings:"⚙️ 营业时间、桌数、定金和通知请在网页后台设置。（演示：左侧的“เวลา & โต๊ะ”和“แจ้งเตือน”标签）",
+    confirmed:(id,n)=>`✓ 已确认 #TPB-${id}，agent 已通知 ${n}。`, rejected:(id)=>`✕ 已拒绝 #TPB-${id}，agent 正在为顾客推荐其他时间。`,
+    shopSaved:(s)=>`🏪 店铺页面“${s}”已更新，顾客在聊天中会立即看到新信息。`, dashClosed:"⛔ 今日已停止接单（在后台设置）", dashOpen:"✅ 今日已恢复接单（在后台设置）",
+  },
+};
+const T = (k, ...a) => { const v = BOT[lang][k]; return typeof v === "function" ? v(...a) : v; };
+const nm = (b, l = lang) => b.name[l === "th" ? "th" : "en"];
+const note = (b, l = lang) => (b.note ? NOTES[b.note][l] : "");
+
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clock = () => new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit",hour12:false});
+const ST = {pending:"รอยืนยัน",confirmed:"ยืนยันแล้ว",arrived:"มาแล้ว",cancelled:"ยกเลิก"};
+const live = () => bookings.filter((b) => b.status !== "cancelled");
+function toast(s){ const el = $("toast"); el.textContent = s; el.classList.add("show"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2200); }
+const sorted = () => [...bookings].sort((a, b) => a.time.localeCompare(b.time));
+function topCh(){ const c = {}; live().forEach((b) => (c[b.ch] = (c[b.ch] || 0) + 1)); return Object.entries(c).sort((a, b) => b[1] - a[1])[0]?.[0] || "-"; }
+
+// ---------- dashboard (Thai) ----------
+function renderDash(){
+  const l = live(), pend = bookings.filter((b) => b.status === "pending").length;
+  $("pendN").textContent = pend; $("pendN").style.display = pend ? "" : "none";
+  $("opendot").classList.toggle("off", !openToday);
+  $("kpis").innerHTML = [
+    ["การจองวันนี้", l.length, ""], ["ลูกค้าที่จะมา (คน)", l.reduce((s, b) => s + b.size, 0), ""],
+    ["รอยืนยัน", pend, "w"], ["ยกเลิก", bookings.length - l.length, "x"]].map(([k, v, c]) => `<div class="kpi ${c}"><b>${v}</b><span>${k}</span></div>`).join("");
+  const days = [...WEEK, {d:"วันนี้", n:l.length, today:true}], max = Math.max(...days.map((d) => d.n), 1);
+  $("bars").innerHTML = days.map((d) => `<div class="${d.today ? "today" : ""}"><span>${d.n}</span><i style="height:${Math.round(d.n / max * 82)}%"></i>${d.d}</div>`).join("");
+  const byCh = {}; l.forEach((b) => (byCh[b.ch] = (byCh[b.ch] || 0) + 1));
+  $("chs").innerHTML = Object.keys(CH_COLOR).map((c) => `<div class="chrow"><span>${c}</span><span class="tr"><i style="width:${(byCh[c] || 0) / Math.max(l.length, 1) * 100}%;background:${CH_COLOR[c]}"></i></span><b>${byCh[c] || 0}</b></div>`).join("");
+  const up = sorted().filter((b) => b.status === "confirmed" || b.status === "pending").slice(0, 3);
+  $("next").innerHTML = up.map((b) => `<li><span><b>${b.time}</b> ${esc(nm(b, "th"))} · ${b.size} คน</span><span class="st ${b.status}">${ST[b.status]}</span></li>`).join("") || "<li>ไม่มีคิวที่รออยู่</li>";
+
+  $("tb").innerHTML = sorted().filter((b) => filter === "all" || b.status === filter).map((b) => `<tr data-id="${b.id}" class="${b.fresh ? "new" : ""}"><td><b>${b.time}</b></td><td>${esc(nm(b, "th"))}<small>#TPB-${b.id}${b.note ? " · " + esc(note(b, "th")) : ""}</small></td><td>${b.size}</td><td class="hide-sm"><span class="ch" style="color:${CH_COLOR[b.ch]}">${b.ch}</span></td><td><span class="st ${b.status}">${ST[b.status]}</span></td><td><div class="ab">${
+    b.status === "pending" ? `<button class="y" data-act="confirm" data-id="${b.id}">ยืนยัน</button><button class="x" data-act="reject" data-id="${b.id}">ปฏิเสธ</button>` :
+    b.status === "confirmed" ? `<button class="y" data-act="arrive" data-id="${b.id}">มาแล้ว</button>` : ""}</div></td></tr>`).join("") || `<tr><td colspan="6" style="color:var(--muted)">ไม่มีรายการ</td></tr>`;
+  bookings.forEach((b) => delete b.fresh);
+
+  $("openTg").setAttribute("aria-checked", openToday);
+  $("slots").innerHTML = SLOT_TIMES.map((x) => { const n = l.filter((b) => b.time === x).length, on = openToday && slotOpen[x];
+    return `<button class="slot ${on ? "" : "closed"}" data-slot="${x}"><b>${x}</b><div class="cap"><i style="width:${n / CAP * 100}%"></i></div><small>${on ? `จองแล้ว ${n}/${CAP} โต๊ะ` : "ปิดรับ"}</small></button>`; }).join("");
+
+  $("conn").innerHTML = Object.keys(conn).map((c) => `<div class="switch"><div>${c} ${c === "LINE" ? "Official Account" : c === "WhatsApp" ? "Business" : "Bot"}<small>${conn[c] ? "เชื่อมแล้ว · ส่งแจ้งเตือนและเปิดเมนูร้านได้" : "ยังไม่เชื่อม"}</small></div><button class="tg" role="switch" aria-checked="${conn[c]}" data-conn="${c}" aria-label="เชื่อม ${c}"></button></div>`).join("");
+  $("evts").innerHTML = evts.map((e, i) => `<div class="switch"><div>${e[0]}<small>${e[1]}</small></div><button class="tg" role="switch" aria-checked="${e[2]}" data-evt="${i}" aria-label="${e[0]}"></button></div>`).join("");
+}
+function renderShop(){
+  const f = Object.fromEntries(new FormData($("shopForm"))), dep = parseInt(f.deposit, 10) || 0;
+  $("rc").innerHTML = `<div class="ph">🍲</div><div><b>${esc(f.name || "ชื่อร้าน")}</b><small>${esc(f.area)} · ${esc(f.cuisine)} · ${esc(f.price)} · ${dep ? `มัดจำ ฿${dep}` : "ไม่มีมัดจำ"}</small></div><p>${esc(f.desc)}</p>`;
+}
+
+// ---------- chat: messages keep a render function, so switching language re-renders the whole history ----------
+const MENU = [["📋","queue"],["🔔","pending"],["📊","summary"],["⛔","toggle"],["🕒","free"],["⚙️","settings"]];
+function push(who, render, booking){ msgs.push({who, render, booking, t: clock()}); renderChat(); }
+const bookingMsg = (b, kind = "newB") => () => T(kind, b.id, esc(nm(b)), T("guests", b.size), b.time, b.ch, esc(note(b)));
+function renderChat(){
+  const box = $("msgs");
+  box.innerHTML = msgs.map((m) => {
+    let acts = "";
+    if (m.booking) { const b = bookings.find((x) => x.id === m.booking);
+      acts = b.status === "pending" ? `<div class="acts"><button data-act="confirm" data-id="${b.id}">${T("yes")}</button><button data-act="reject" data-id="${b.id}">${T("no")}</button></div>`
+        : `<div class="acts"><span class="res">${b.status === "cancelled" ? T("didNo") : T("didYes")}</span></div>`; }
+    return `<div class="m ${m.who}">${m.render()}${acts}<span class="t">${m.t}</span></div>`;
+  }).join("");
+  box.scrollTop = box.scrollHeight;
+  const M = T("menu");
+  $("kb").innerHTML = MENU.map(([i, k]) => { const closedNow = k === "toggle" && !openToday;
+    return `<button data-menu="${k}"><i>${closedNow ? "✅" : i}</i>${closedNow ? M.reopen : M[k]}</button>`; }).join("");
+  $("menuLbl").textContent = T("menuLbl");
+}
+// numbers are captured when the summary is sent; only the wording follows the language
+const summary = () => { const l = live();
+  const n = [l.length, l.reduce((s, b) => s + b.size, 0), bookings.filter((b) => b.status === "arrived").length, bookings.filter((b) => b.status === "pending").length, bookings.length - l.length, topCh()];
+  return () => T("summary", ...n); };
+function menu(k){
+  const wasOpen = openToday;
+  push("me", () => (k === "toggle" ? T("menu")[wasOpen ? "toggle" : "reopen"] : T("menu")[k]));
+  setTimeout(() => {
+    if (k === "queue") { const rows = sorted().filter((b) => b.status !== "cancelled").map((b) => [b, b.status]);
+      push("bot", () => `${T("queue")}\n${rows.map(([b, st]) => `${b.time}  ${esc(nm(b))} · ${T("people", b.size)} · ${T("st")[st]}`).join("\n")}`); }
+    if (k === "pending") { const p = bookings.filter((b) => b.status === "pending");
+      if (!p.length) push("bot", () => T("noPending")); else p.forEach((b) => push("bot", bookingMsg(b, "pendB"), b.id)); }
+    if (k === "summary") push("bot", summary());
+    if (k === "toggle") { openToday = !openToday; renderDash(); const o = openToday; push("bot", () => T(o ? "openNow" : "closedNow")); toast(openToday ? "เปิดรับจองวันนี้" : "ปิดรับจองวันนี้"); }
+    if (k === "free") { const o = openToday, s = SLOT_TIMES.filter((x) => slotOpen[x] && live().filter((b) => b.time === x).length < CAP).slice(-6).join(" · ");
+      push("bot", () => (o ? T("free", s) : T("closedToday"))); }
+    if (k === "settings") push("bot", () => T("settings"));
+  }, 450);
+}
+
+// ---------- actions ----------
+function setStatus(id, status){
+  const b = bookings.find((x) => x.id === +id); if (!b) return;
+  b.status = status; renderDash(); renderChat();
+  toast(`#TPB-${b.id} · ${ST[status]}`);
+  if (status === "confirmed") setTimeout(() => push("bot", () => T("confirmed", b.id, esc(nm(b)))), 350);
+  if (status === "cancelled") setTimeout(() => push("bot", () => T("rejected", b.id)), 350);
+}
+function simulate(){
+  if (!openToday) { toast("วันนี้ปิดรับจองอยู่ เปิดก่อนในแท็บ “เวลา & โต๊ะ”"); return; }
+  const [name, size, ch, nt] = POOL[poolI++ % POOL.length];
+  const free = SLOT_TIMES.filter((x) => slotOpen[x] && x >= "17:00");
+  const b = {id: seq++, name, size, ch, note: nt, time: free[(poolI * 3) % free.length], status: "pending", fresh: true};
+  bookings.push(b); renderDash(); push("bot", bookingMsg(b), b.id); toast(`การจองใหม่ #TPB-${b.id} จาก ${ch}`);
+}
+function setLang(l){
+  lang = l;
+  document.querySelectorAll("#plang button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === l));
+  renderChat();
+}
+document.addEventListener("click", (e) => {
+  const x = e.target.closest("button"); if (!x) return;
+  if (x.dataset.act) setStatus(x.dataset.id, {confirm:"confirmed", reject:"cancelled", arrive:"arrived"}[x.dataset.act]);
+  else if (x.dataset.menu) menu(x.dataset.menu);
+  else if (x.dataset.lang) setLang(x.dataset.lang);
+  else if (x.dataset.v) { document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b === x)); document.querySelectorAll(".view").forEach((v) => v.classList.toggle("on", v.id === "v-" + x.dataset.v)); }
+  else if (x.dataset.f) { filter = x.dataset.f; document.querySelectorAll("#filters button").forEach((b) => b.setAttribute("aria-pressed", b === x)); renderDash(); }
+  else if (x.dataset.slot) { if (!openToday) return toast("เปิดรับจองวันนี้ก่อน"); slotOpen[x.dataset.slot] = !slotOpen[x.dataset.slot]; renderDash(); toast(`${x.dataset.slot} ${slotOpen[x.dataset.slot] ? "เปิดรับ" : "ปิดรับ"}`); }
+  else if (x.id === "openTg") { openToday = !openToday; renderDash(); const o = openToday; push("bot", () => T(o ? "dashOpen" : "dashClosed")); }
+  else if (x.dataset.conn) { conn[x.dataset.conn] = !conn[x.dataset.conn]; renderDash(); toast(`${x.dataset.conn}: ${conn[x.dataset.conn] ? "เชื่อมแล้ว" : "ยกเลิกการเชื่อม"}`); }
+  else if (x.dataset.evt) { evts[x.dataset.evt][2] = !evts[x.dataset.evt][2]; renderDash(); }
+  else if (x.id === "sendSum") { push("bot", summary()); toast("ส่งสรุปเข้าแชตแล้ว"); }
+  else if (x.id === "sim") simulate();
+  else if (x.dataset.ch) { channel = x.dataset.ch; $("scr").className = "scr ph-" + channel; $("phsub").textContent = {line:"LINE Official Account",whatsapp:"WhatsApp Business",telegram:"Telegram Bot"}[channel]; document.querySelectorAll("#pch button").forEach((b) => b.setAttribute("aria-pressed", b === x)); renderChat(); }
+});
+$("shopForm").addEventListener("input", renderShop);
+$("shopForm").addEventListener("submit", (e) => { e.preventDefault(); renderShop(); toast("บันทึกหน้าร้านแล้ว"); const s = esc($("shopForm").name.value); push("bot", () => T("shopSaved", s)); });
+
+// ---------- start ----------
+const byId = (id) => bookings.find((b) => b.id === id);
+msgs = [
+  {who:"bot", t:"08:00", render: () => T("morning", SHOP[lang], [48190, 48195, 48207].map(byId).map((b) => `${b.time} ${esc(nm(b))} · ${T("people", b.size)}`).join("\n"))},
+  {who:"bot", t:"10:12", render: bookingMsg(byId(48201)), booking:48201},
+  {who:"bot", t:"11:40", render: () => T("custCancel", esc(nm(byId(48199))), 48199, "17:00", T("people", 2))},
+  {who:"bot", t:"14:05", render: bookingMsg(byId(48210)), booking:48210},
+];
+renderDash(); renderShop(); renderChat();
+document.fonts?.ready.then(() => { $("msgs").scrollTop = $("msgs").scrollHeight; });
+// ?ch=whatsapp|telegram  ?lang=en|zh
+const q = new URLSearchParams(location.search);
+if (q.get("ch")) document.querySelector(`#pch button[data-ch="${q.get("ch")}"]`)?.click();
+if (BOT[q.get("lang")]) setLang(q.get("lang"));
+</script>
+</body>
+</html>

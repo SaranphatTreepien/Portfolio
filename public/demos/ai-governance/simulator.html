@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gateway case simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: live demo instrument for a committee, every branch of the real pipeline
+   IDEA the employee's chat screen first; under it our gateway drawn as a router: request in, 7 checks, branches out to models, response back
+   PICTURE large chat mock; navy router diagram with glowing wires, the gateway block holding its stations
+   COLOUR cases green / yellow / red; violet = token, green = real value; diagram navy with teal glow in both themes
+   TYPE IBM Plex Sans Thai
+   LAYOUT header with coloured case dropdown; chat mock | step story; diagram full width; stores; controls fixed at the bottom */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#1c1c1e);--panel:light-dark(#f7f7f8,#262628);--side:light-dark(#f9f9f9,#181818);--ink:light-dark(#1f1f1f,#ececec);--head:light-dark(#0d0d0d,#fafafa);--muted:light-dark(#5d5d5d,#a6a6a6);--faint:light-dark(#a3a3a8,#6b6b70);--line:light-dark(#e1e1e6,#3a3a3d);--acc:light-dark(#7c3aed,#a78bfa);--acc-bg:light-dark(#f3eefe,#2c2540);--real:light-dark(#1a7f45,#5cc98f);--real-bg:light-dark(#e3f4ea,#1d3328);--yel:light-dark(#8a6500,#e8c25a);--yel-bg:light-dark(#fdf3d3,#3a3218);--red:light-dark(#c42b2b,#f08080);--red-bg:light-dark(#fdeaea,#3a2222);--amber:light-dark(#b85300,#f0a35c);--amber-bg:light-dark(#fde9d7,#3a2a1a);--brand:linear-gradient(135deg,#3b82f6 0%,#7c3aed 55%,#d946ef 100%);--navy:#0f1d33;--navy2:#172a45;--navy3:#22395a;--nline:#34507a;--ntext:#8fa6c4;--glow:#2dd4bf}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans Thai","Leelawadee UI",Tahoma,sans-serif;overflow-x:clip;padding-bottom:96px}
+.wrap{max-width:1400px;margin:0 auto;padding:14px max(3vw,16px) 24px}
+.top{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.top h1{margin:0;font-size:clamp(22px,2.4vw,28px);color:var(--head);letter-spacing:-.01em;line-height:1.2}
+.top a{color:var(--acc);font-size:14px;margin-left:auto}
+/* coloured case dropdown */
+.dd{position:relative}
+.ddb{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:7px 14px;font-size:15px;font-weight:600;cursor:pointer;min-height:44px;max-width:min(460px,90vw)}
+.ddb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ddb:after{content:"▾";color:var(--muted);font-weight:400}
+.dot{width:11px;height:11px;border-radius:50%;flex:none}
+.dot.g{background:var(--real)}.dot.y{background:var(--yel)}.dot.r{background:var(--red)}
+.ddl{position:absolute;z-index:30;top:calc(100% + 6px);left:0;width:min(420px,92vw);max-height:min(70vh,560px);overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.18);padding:6px;display:none}
+.ddl.show{display:block}
+.ddl h4{margin:8px 10px 4px;font-size:12.5px;color:var(--muted);font-weight:600}
+.ddl button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-radius:9px;padding:8px 10px;font-size:14.5px;cursor:pointer;background:none;min-height:40px}
+.ddl button.g{color:var(--real)}.ddl button.y{color:var(--yel)}.ddl button.r{color:var(--red)}
+.ddl button:hover,.ddl button[aria-current=true]{background:var(--panel)}
+.ddl button[aria-current=true]{font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.case{margin:8px 0 0;color:var(--muted);font-size:15px}
+/* row 1: chat mock | story */
+.row1{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:22px;margin-top:12px;align-items:stretch}
+.story{display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid var(--line);border-radius:16px;padding:14px 18px;flex:1}
+.where{font-size:13px;color:var(--muted);font-weight:600}
+.card h2{margin:2px 0 6px;font-size:21px;color:var(--head);line-height:1.25}
+.pay{margin:8px 0;border-radius:12px;padding:10px 12px;background:var(--panel);font-size:15px;line-height:1.8;overflow-wrap:anywhere}
+.pay small{display:block;font-size:12.5px;color:var(--muted);font-weight:600}
+.note{margin:0;font-size:14.5px}
+.out{border-radius:12px;padding:10px 14px;font-size:14.5px}
+.out b{display:block;font-size:17px}
+.out.ok{background:var(--real-bg);color:var(--real)}.out.block{background:var(--red-bg);color:var(--red)}.out.fail{background:var(--amber-bg);color:var(--amber)}
+.r{background:var(--real-bg);color:var(--real);border-radius:5px;padding:0 4px;font-weight:600}
+.t{background:var(--acc-bg);color:var(--acc);border-radius:5px;padding:0 4px;font-weight:600;white-space:nowrap}
+.k{background:var(--red-bg);color:var(--red);border-radius:5px;padding:0 4px;font-weight:600}
+/* diagram: our gateway as the router */
+.dia{position:relative;margin-top:22px;border-radius:20px;background:var(--navy);color:#e6eef8;padding:22px 22px 18px;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:28px 28px}
+.dhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;font-size:13px;color:var(--ntext);margin-bottom:12px;position:relative;z-index:1}
+.dhead b{color:#e6eef8;font-size:14px}
+.dgrid{position:relative;z-index:1;display:grid;grid-template-columns:150px minmax(0,1fr) 230px;gap:0 96px;align-items:center}
+.wires{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.wires path{fill:none;stroke:#2f4a70;stroke-width:2.5;transition:stroke .3s}
+.wires path.on{stroke:var(--glow);stroke-width:3;filter:drop-shadow(0 0 5px rgba(45,212,191,.8))}
+.wires path.bad{stroke:#f87171;stroke-dasharray:6 6}
+.wires path.amber{stroke:#f0a35c;filter:drop-shadow(0 0 5px rgba(240,163,92,.7))}
+.wires path.red{stroke:#f87171;filter:drop-shadow(0 0 5px rgba(248,113,113,.7))}
+.wires text{font:600 12px "IBM Plex Sans Thai",sans-serif;fill:#8fa6c4;letter-spacing:.06em}
+.wires text.on{fill:#d7fffa}
+.node{border:1.5px solid var(--nline);border-radius:14px;background:var(--navy2);padding:12px;transition:box-shadow .3s,border-color .3s,opacity .3s}
+.emp{text-align:center}
+.emp b,.gwh b{display:block;color:#fff;font-size:16px;letter-spacing:.02em}
+.emp span,.gwh span{font-size:12px;color:var(--ntext)}
+.emp .ico{font-size:22px;color:#6f8db5;font-weight:700;letter-spacing:-.05em}
+.emp .res{display:block;margin-top:6px;font-size:12px;font-weight:600;color:var(--ntext)}
+.node.on{border-color:var(--glow);box-shadow:0 0 18px rgba(45,212,191,.35)}
+.node.now{border-color:#c4b5fd;box-shadow:0 0 0 4px rgba(167,139,250,.25),0 0 22px rgba(167,139,250,.45)}
+.node.stop{border-color:#f87171;box-shadow:0 0 18px rgba(248,113,113,.45)}
+.node.warn{border-color:#f0a35c;box-shadow:0 0 18px rgba(240,163,92,.45)}
+.gw{padding:12px 14px 14px}
+.gwh{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.gwh .chipi{width:34px;height:34px;border:2px solid #5d7aa3;border-radius:7px;display:grid;place-items:center;flex:none}
+.gwh .chipi:after{content:"";width:12px;height:12px;border:2px solid #5d7aa3;border-radius:2px}
+.gwh b{font-size:19px;letter-spacing:.08em}
+.chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px 18px}
+.st{position:relative;border:1.5px solid var(--nline);border-radius:10px;background:var(--navy3);padding:6px 8px;min-height:62px;display:flex;flex-direction:column;transition:border-color .3s,background .3s,box-shadow .3s,opacity .3s}
+.st .no{font-size:10.5px;font-weight:700;color:#6f8db5}
+.st .nm{font-size:13px;font-weight:600;color:#fff;line-height:1.2}
+.st .res{margin-top:auto;padding-top:3px;font-size:11px;font-weight:600;line-height:1.25;color:#6f8db5}
+.st.ok{border-color:var(--glow)}.st.ok .res{color:var(--glow)}
+.st.skip{border-style:dashed;opacity:.55}
+.st.now{border-color:#c4b5fd;background:#2c2552;box-shadow:0 0 0 4px rgba(167,139,250,.22)}.st.now .res{color:#ddd6fe}
+.st.stop{border-color:#f87171;background:#3a1f2a;box-shadow:0 0 0 4px rgba(248,113,113,.2)}.st.stop .res{color:#fca5a5}
+.st.warn{border-color:#f0a35c;background:#3a2a1f;box-shadow:0 0 0 4px rgba(240,163,92,.2)}.st.warn .res{color:#fbbf8a}
+.st.dim{opacity:.35}
+.st::after{position:absolute;font-size:15px;line-height:1;color:#4a668e;font-weight:700}
+.st[data-a=r]::after{content:"→";right:-15px;top:50%;transform:translateY(-50%)}
+.st[data-a=l]::after{content:"←";left:-15px;top:50%;transform:translateY(-50%)}
+.st[data-a=d]::after{content:"↓";bottom:-17px;left:50%;transform:translateX(-50%)}
+.st.lit::after{color:var(--glow)}
+.gwnote{grid-column:1/span 2;align-self:center;font-size:12px;color:var(--ntext);line-height:1.4}
+.models{display:flex;flex-direction:column;gap:14px}
+.mdl{display:flex;align-items:center;gap:10px;padding:9px 10px}
+.mdl .ic{width:36px;height:36px;border-radius:9px;background:var(--navy3);display:grid;place-items:center;flex:none}
+.mdl b{display:block;font-size:14px;color:#fff;line-height:1.2}
+.mdl small{display:block;font-size:11.5px;color:var(--ntext)}
+.mdl.off{opacity:.45}
+.mdl.bad{border-color:#f87171;box-shadow:0 0 14px rgba(248,113,113,.35)}
+.outlab{position:absolute;z-index:1;top:16px;right:22px;font-size:12.5px;color:var(--ntext)}
+/* data packet */
+.pk{position:absolute;z-index:6;min-width:58px;height:40px;border:0;border-radius:10px;background:#22a06b;color:#fff;display:grid;place-items:center;padding:2px 8px;font-size:12px;font-weight:700;line-height:1.15;text-align:center;box-shadow:0 6px 16px rgba(0,0,0,.4);transition:left .55s cubic-bezier(.5,0,.3,1),top .55s cubic-bezier(.5,0,.3,1),background .3s;cursor:pointer}
+.pk small{display:block;font-size:10.5px;font-weight:500;opacity:.9}
+.pk.m{background:#7c3aed}.pk.x{background:#dc2626}.pk.w{background:#d97706}.pk.g{background:#64748b}
+.pop{position:absolute;z-index:7;width:min(380px,calc(100% - 16px));background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 14px 34px rgba(0,0,0,.35);font-size:14.5px;line-height:1.75;display:none;overflow-wrap:anywhere}
+.pop.show{display:block}
+.pop small{display:block;font-size:12.5px;color:var(--muted);font-weight:600}
+.pop button{float:right;border:0;background:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0 0 4px 8px}
+/* stores */
+.stores{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:18px}
+.sto{border:1px solid var(--line);border-radius:12px;padding:8px 11px;transition:border-color .3s,box-shadow .3s}
+.sto.hit{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-bg)}
+.sto b{display:block;font-size:13.5px;color:var(--head)}
+.sto em{display:block;font-style:normal;font-size:12px;color:var(--muted)}
+.sto ul{margin:4px 0 0;padding:0;list-style:none;font-size:12.5px}
+.sto li{padding:1px 0}
+.sto li.del{color:var(--faint);text-decoration:line-through}
+.sto .empty{color:var(--faint)}
+/* chat app mock */
+.web{border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 40px rgba(30,20,60,.12),0 2px 6px rgba(0,0,0,.05);background:var(--bg);display:flex;flex-direction:column;height:520px}
+.wbar{height:34px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 12px;flex:none}
+.wbar i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.wbar span{margin-left:12px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-size:12px;color:var(--muted);padding:1px 12px;flex:1;max-width:320px;white-space:nowrap;overflow:hidden}
+.wapp{flex:1;display:grid;grid-template-columns:168px minmax(0,1fr);min-height:0}
+.wside{background:var(--side);border-right:1px solid var(--line);padding:12px 9px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.wside .brand{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--head);margin-bottom:10px;font-size:14px}
+.logo{width:22px;height:22px;border-radius:50%;background:conic-gradient(from 200deg,#6c5cff,#2fd0ff,#ff5ca8,#6c5cff);flex:none}
+.wside .new{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:6px 9px;color:var(--ink);margin-bottom:8px}
+.wside div{padding:5px 8px;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wside .sel{background:var(--acc-bg);color:var(--ink)}
+.wside .me{margin-top:auto;display:flex;align-items:center;gap:7px;color:var(--ink)}
+.av{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:600;flex:none}
+.wmain{display:flex;flex-direction:column;min-height:0;padding:10px 16px 14px}
+.whead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;flex:none}
+.model{font-weight:600;color:var(--head);padding:4px 10px;border-radius:9px;background:var(--panel);white-space:nowrap}
+.shield{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--real);background:var(--real-bg);padding:2px 9px;border-radius:99px;font-weight:600;white-space:nowrap}
+.thread{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:10px 2px;font-size:14px;line-height:1.7;justify-content:flex-end}
+.hello{flex:1;display:grid;place-items:center;text-align:center}
+.hello b{display:block;font-size:24px;color:var(--head)}
+.hello span{color:var(--muted)}
+.ub{align-self:flex-end;background:var(--panel);border-radius:18px;padding:8px 14px;max-width:84%;overflow-wrap:anywhere}
+.bb{max-width:96%;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin-top:4px}
+.stat{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--acc);background:var(--acc-bg);border-radius:99px;padding:3px 12px}
+.stat:before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.mblock{background:var(--red-bg);border:1px solid color-mix(in srgb,var(--red) 30%,transparent);color:var(--red);border-radius:14px;padding:10px 14px}
+.mwarn{background:var(--amber-bg);border:1px solid color-mix(in srgb,var(--amber) 30%,transparent);color:var(--amber);border-radius:14px;padding:10px 14px}
+.mblock b,.mwarn b{display:block}
+.comp{flex:none;border:1px solid var(--line);border-radius:22px;padding:10px 12px 8px 16px;background:var(--bg);box-shadow:0 4px 14px rgba(0,0,0,.05)}
+.comp.on{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-bg)}
+.comp .tx{font-size:14px;min-height:22px;overflow-wrap:anywhere}
+.comp .ph{color:var(--faint)}
+.comp .row{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.send{margin-left:auto;width:30px;height:30px;border-radius:50%;background:var(--brand);display:grid;place-items:center;flex:none}
+.send.off{background:var(--line)}
+.fchip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:4px 10px 4px 6px;font-size:12.5px;background:var(--panel);margin-bottom:6px}
+.fchip b{background:#e54848;color:#fff;font-size:9px;border-radius:4px;padding:5px 4px}
+.login{flex:1;display:grid;place-items:center}
+.login div{width:min(300px,90%);border:1px solid var(--line);border-radius:16px;padding:20px;text-align:center;font-size:14px}
+.login b{display:block;font-size:17px;color:var(--head);margin:8px 0 4px}
+.login .gbtn{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:8px;font-weight:600}
+/* bottom bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+.bar .in{max-width:1360px;margin:0 auto;padding:10px max(3vw,16px);display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+button{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 16px;cursor:pointer;min-height:44px;font-size:15px}
+.btn:hover{background:var(--panel)}
+.btn.pri{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:600;padding:8px 28px}
+.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.dots{display:flex;gap:5px;align-items:center;margin:0 6px}
+.dots button{width:12px;height:12px;border-radius:50%;border:0;background:var(--line);padding:0;cursor:pointer}
+.dots button.on{background:var(--acc)}.dots button.cur{background:var(--acc);box-shadow:0 0 0 3px var(--acc-bg)}
+.pos{font-size:14px;color:var(--muted);white-space:nowrap}
+.sw{margin-left:auto;display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.sw button{border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;min-height:38px;font-size:14px}
+.sw button[aria-pressed=true]{background:var(--bg);color:var(--head);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+.web{height:100%;min-height:600px}
+@media(max-width:1100px){.row1{grid-template-columns:minmax(0,1fr)}.stores{grid-template-columns:repeat(auto-fit,minmax(11em,1fr))}.dgrid{grid-template-columns:120px minmax(0,1fr) 200px;gap:0 64px}}
+@media(max-width:860px){body{padding-bottom:140px}.dgrid{grid-template-columns:minmax(0,1fr);gap:34px 0}.wires{display:none}.emp,.models{max-width:340px;width:100%;margin:0 auto}.dgrid>*:not(:last-child)::after{content:"↓";display:block;text-align:center;color:#4a668e;font-size:20px;margin-bottom:-30px;transform:translateY(8px)}.chips{grid-template-columns:repeat(3,minmax(0,1fr))}.st::after{content:none!important}.gwnote{grid-column:1/-1}.web{min-height:540px}}
+@media(max-width:520px){.chips{grid-template-columns:repeat(2,minmax(0,1fr))}.sw{margin-left:0}.dots{display:none}body{padding-bottom:160px}.wapp{grid-template-columns:minmax(0,1fr)}.wside{display:none}.web{min-height:470px}.top a{margin-left:0}}
+@media(prefers-reduced-motion:reduce){.pk,.st,.sto,.node,.wires path{transition:none}.stat:before{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>จำลองทุกเคส</h1>
+    <div class="dd" id="dd">
+      <button class="ddb" id="ddb" aria-haspopup="listbox" aria-expanded="false"><i class="dot" id="ddot"></i><span id="ct"></span></button>
+      <div class="ddl" id="ddl" role="listbox" aria-label="เลือกเคส"></div>
+    </div>
+    <div class="legend"><span><i class="dot g"></i>ผ่านตรง ๆ</span><span><i class="dot y"></i>ผ่านแบบปกปิด</span><span><i class="dot r"></i>ไม่ถูกส่ง / ไม่แสดง</span></div>
+    <a href="data-flow.html">กลับไปหน้า Data flow</a>
+  </div>
+  <p class="case" id="cd"></p>
+
+  <div class="row1">
+    <div class="web" aria-label="หน้าจอพนักงาน (จำลอง)">
+      <div class="wbar"><i></i><i></i><i></i><span>gateway.example.co.th/chat</span></div>
+      <div class="wapp">
+        <div class="wside">
+          <div class="brand"><span class="logo"></span>Gateway</div>
+          <div class="new">+ แชตใหม่</div>
+          <div class="sel" id="wtitle">แชตนี้</div><div>ร่างอีเมลลูกค้า</div><div>สรุปประชุมทีม</div>
+          <div class="me"><span class="av">กท</span>กิตติ ทดสอบดี</div>
+        </div>
+        <div class="wmain" id="wmain"></div>
+      </div>
+    </div>
+    <div class="story"><div class="card" id="step"></div><div id="out"></div></div>
+  </div>
+
+  <div class="dia" id="dia">
+    <svg class="wires" id="wires" aria-hidden="true"></svg>
+    <div class="dhead"><b>เบื้องหลัง: gateway ของเราทำหน้าที่เป็น router</b><span>ด่านทั้งหมดอยู่ในบริษัท · ออกไปนอกบริษัทได้แค่ข้อความ masked</span></div>
+    <div class="dgrid">
+      <div class="node emp" id="emp"><div class="ico">&lt;/&gt;</div><b>พนักงาน</b><span>เบราว์เซอร์</span><span class="res" id="rs-emp"></span></div>
+      <div class="node gw" id="gw">
+        <div class="gwh"><span class="chipi"></span><div><b>GATEWAY</b><span>ProviderClient · LiteLLM · ในบริษัท</span></div></div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="models" id="models"></div>
+    </div>
+    <button class="pk" id="pk" aria-label="ดูข้อมูลในขั้นนี้"></button>
+    <div class="pop" id="pop" role="dialog" aria-label="ข้อมูลในขั้นนี้"></div>
+  </div>
+
+  <div class="stores" id="stores"></div>
+</div>
+
+<div class="bar"><div class="in">
+  <button class="btn" id="b-prev">ย้อน</button>
+  <button class="btn pri" id="b-next">ถัดไป</button>
+  <button class="btn" id="b-auto">เล่นอัตโนมัติ</button>
+  <button class="btn" id="b-reset">เริ่มใหม่</button>
+  <div class="dots" id="dots"></div>
+  <span class="pos" id="pos"></span>
+  <div class="sw" role="group" aria-label="การเก็บข้อมูล"><button id="m-demo" aria-pressed="false">demo ตอนนี้</button><button id="m-target" aria-pressed="true">เป้าหมาย</button></div>
+</div></div>
+
+<script>
+{
+const ST=[["browser","เบราว์เซอร์","B"],["auth","Auth","1"],["detect","Detect","2"],["policy","Policy","3"],["mask","Mask + vault","M"],["egress","ตรวจก่อนส่ง","E"],["ai","AI ภายนอก","4"],["output","Output check","5"],["restore","Restore","6"],["audit","Audit","7"],["end","ผู้ใช้เห็น","✓"]];
+const SI=Object.fromEntries(ST.map((s,i)=>[s[0],i]));
+const STORES=[["browser","เบราว์เซอร์พนักงาน","ในเครื่อง"],["vault","Redis vault","หน่วยความจำ, เข้ารหัส"],["pg","Postgres","ถาวร"],["log","Program log","stdout"],["ai","AI ภายนอก","นอกบริษัท"]];
+const r=x=>`<span class="r">${x}</span>`,t=x=>`<span class="t">${x}</span>`,k=x=>`<span class="k">${x}</span>`;
+const NAME="กิตติ ทดสอบดี",ID="1-1001-00001-00-1",PH="081-234-5678",EM="kitti.t@example.co.th";
+
+/* step: at, kind(ok|skip|stop|warn), packet colour(r=real m=masked x=stopped w=warn g=none), title, payload label, payload, note, writes[[store,text,flag]] flag: d=demo only t=target only x=deletes vault entries */
+const S=(at,kind,pk,h,pl,p,n,w=[])=>({at,kind,pk,h,pl,p,n,w});
+const auth=S("auth","ok","r","ตรวจ session","ยังเป็นค่าจริง อยู่ในหน่วยความจำ",null,"Next.js เปลี่ยนคุกกี้ gov_token เป็น Bearer แล้ว gateway ตรวจ JWT (อายุ 8 ชม.) ว่าเป็นใครและอยู่ role อะไร");
+const skipMask=S("mask","skip","r","ไม่มีอะไรต้องปกปิด",null,null,"ไม่มีการเขียนลง vault เลย เพราะไม่มีค่าที่ต้องจำ");
+const egress=(p)=>S("egress","ok",p.includes('class="t"')?"m":"r","สแกนซ้ำก่อนออกจากบริษัท","สิ่งที่กำลังจะส่ง",p,"ใช้ตัวตรวจชุดเดิมสแกนทุกอย่างที่จะออก (ประวัติ + ข้อความใหม่) ถ้ายังเจอค่าที่ต้องปกปิด จะไม่ส่งและตอบ 503",[["log","egress_check clean=True"]]);
+const endKeep=(n)=>[["pg","conversations / messages: ข้อความจริง + ฉบับ masked (เข้ารหัส) 90 วัน","d"],["pg","request_log: ข้อความ/คำตอบ ฉบับ masked 90 วัน","d"],["vault","คงอยู่จนหมด TTL 60 นาที","d"],["vault","ลบ mapping ทันทีหลังถอดกลับ","tx"],["browser","บันทึกแชตนี้เป็นประวัติในเครื่อง","t"]];
+const endBlocked=[["pg","request_log: แถวที่ถูกบล็อก ไม่มีข้อความ","d"]];
+
+const C=[
+{g:"allow",n:"คำถามทั่วไป",d:"ไม่มีข้อมูลอ่อนไหวเลย ส่งออกไปทั้งข้อความโดยไม่แตะ vault",in:"ช่วยสรุปข้อดีข้อเสียของการทำงานแบบ hybrid มา 5 ข้อ",out:["ok","200 ผ่าน","ผู้ใช้ได้คำตอบตามปกติ ไม่มีค่าใดถูกเก็บใน vault"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง","ช่วยสรุปข้อดีข้อเสียของการทำงานแบบ hybrid มา 5 ข้อ","ส่งผ่าน HTTPS ไปที่ Next.js proxy"),auth,
+ S("detect","ok","r","ไม่พบข้อมูลอ่อนไหว",null,null,"กฎ/regex ทำงานก่อน ตามด้วย Presidio และ PyThaiNLP ผลคือ 0 รายการ",[["log","detect findings=0"]]),
+ S("policy","ok","r","Allow","",null,"ไม่มีอะไรให้ตัดสิน จึง Allow route = external",[["log","policy decision=allow"]]),skipMask,
+ egress("ช่วยสรุปข้อดีข้อเสียของการทำงานแบบ hybrid มา 5 ข้อ"),
+ S("ai","ok","r","ส่งให้โมเดล","AI ได้รับ","ช่วยสรุปข้อดีข้อเสียของการทำงานแบบ hybrid มา 5 ข้อ","ข้อความทั่วไปไม่มีค่าจริงของใคร จึงส่งได้ตรง ๆ",[["ai","ข้อความทั่วไป (ไม่มีข้อมูลบุคคล)"]]),
+ S("output","ok","r","ตรวจคำตอบ: สะอาด","คำตอบ","1. ประหยัดเวลาเดินทาง 2. ยืดหยุ่น ...",null),
+ S("restore","skip","r","ไม่มี token ให้ถอด",null,null,"คำตอบไม่มี token จึงข้ามขั้นนี้"),
+ S("audit","ok","g","บันทึก metadata",null,null,"audit เก็บแค่เวลา ผู้ใช้ Allow ประเภทข้อมูลที่เจอ (ไม่มี) provider และจำนวน token",[["pg","audit_events: Allow · findings 0 · gemini · tokens 42/310"]]),
+ S("end","ok","r","ผู้ใช้เห็นคำตอบ","หน้าจอ","1. ประหยัดเวลาเดินทาง 2. ยืดหยุ่น ...","เส้นทางสั้นที่สุด: ไม่มีอะไรต้องปกปิดหรือถอดกลับ",endKeep())]},
+
+{g:"allow",n:"ตัวเลขที่ดูเหมือนแต่ไม่ใช่",d:"ยอดเงินมีจุดทศนิยมและคอมมา ไม่ใช่เลขบัตร ระบบจึงไม่ปกปิดให้คำตอบเพี้ยน",in:"ยอดขาย Q3 คือ 4,111.50 ล้านบาท โต 12% ช่วยเขียนสรุปให้ผู้บริหาร",out:["ok","200 ผ่าน","ไม่ปกปิดเกินจำเป็น ตัวเลขธุรกิจยังใช้งานได้"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง","ยอดขาย Q3 คือ 4,111.50 ล้านบาท โต 12% ช่วยเขียนสรุปให้ผู้บริหาร","มีตัวเลขขึ้นต้น 4111 เหมือนบัตร Visa"),auth,
+ S("detect","ok","r","ไม่ใช่เลขบัตร",null,null,"ตัวตรวจบัตรแบบแยกชิ้นข้ามตัวเลขที่มีคอมมาหรือทศนิยม เพราะเป็นจำนวนเงิน และไม่ผ่าน Luhn",[["log","detect findings=0"]]),
+ S("policy","ok","r","Allow",null,null,"ไม่มีข้อมูลอ่อนไหว"),skipMask,
+ egress("ยอดขาย Q3 คือ 4,111.50 ล้านบาท โต 12% ช่วยเขียนสรุปให้ผู้บริหาร"),
+ S("ai","ok","r","ส่งให้โมเดล","AI ได้รับ","ยอดขาย Q3 คือ 4,111.50 ล้านบาท โต 12% ...","ตัวเลขธุรกิจไปครบ AI สรุปได้ถูก",[["ai","ข้อความทั่วไป"]]),
+ S("output","ok","r","ตรวจคำตอบ: สะอาด",null,null,null),
+ S("restore","skip","r","ไม่มี token ให้ถอด",null,null,""),
+ S("audit","ok","g","บันทึก metadata",null,null,"",[["pg","audit_events: Allow · findings 0"]]),
+ S("end","ok","r","ผู้ใช้เห็นคำตอบ","หน้าจอ","ไตรมาส 3 ยอดขายแตะ 4,111.50 ล้านบาท เติบโต 12% ...","",endKeep())]},
+
+{g:"mask",n:"ข้อมูลบุคคล (ชื่อ เลขบัตร เบอร์ อีเมล)",d:"Medium และ High ถูกแทนด้วย token ก่อนออก AI ตอบด้วย token แล้ว gateway ถอดกลับให้ผู้ส่ง",in:`ร่างอีเมลนัดสัมภาษณ์ให้คุณ${r(NAME)} เลขบัตร ${r(ID)} โทร ${r(PH)} อีเมล ${r(EM)}`,out:["ok","200 ผ่าน (Mask 4 รายการ)","AI ไม่เคยเห็นค่าจริง ผู้ใช้ได้อีเมลพร้อมใช้"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง (ค่าจริง)",`ร่างอีเมลนัดสัมภาษณ์ให้คุณ${r(NAME)} เลขบัตร ${r(ID)} โทร ${r(PH)} อีเมล ${r(EM)}`,"ค่าจริงเดินทางแค่จากเครื่องพนักงานถึง gateway ผ่าน HTTPS"),auth,
+ S("detect","ok","r","พบ 4 รายการ",null,null,"PERSON (Medium) · TH_ID (High) · PHONE (Medium) · EMAIL (Medium)",[["log","detect PERSON=1 TH_ID=1 PHONE=1 EMAIL=1"]]),
+ S("policy","ok","r","Mask","",null,"Medium และ High = Mask ตามหลักเข้มสุดชนะ (Block > Mask > Allow) ไม่มี Critical จึงไม่บล็อก",[["log","policy decision=mask"]]),
+ S("mask","ok","m","แทนค่าด้วย token","ข้อความหลังปกปิด",`ร่างอีเมลนัดสัมภาษณ์ให้คุณ${t("[PERSON_001]")} เลขบัตร ${t("[TH_ID_001]")} โทร ${t("[PHONE_001]")} อีเมล ${t("[EMAIL_001]")}`,"ค่าจริงถูกเข้ารหัส Fernet แล้วเก็บคู่กับ token ใน Redis ค่าเดิมได้ token เดิมเสมอ (HMAC)",[["vault","[PERSON_001] ↔ ●●●● (Fernet)"],["vault","[TH_ID_001] ↔ ●●●● (Fernet)"],["vault","[PHONE_001] ↔ ●●●● (Fernet)"],["vault","[EMAIL_001] ↔ ●●●● (Fernet)"],["pg","conversation_tokens: token ↔ ค่าจริง (เข้ารหัส)","d"]]),
+ egress(`ร่างอีเมลนัดสัมภาษณ์ให้คุณ${t("[PERSON_001]")} เลขบัตร ${t("[TH_ID_001]")} โทร ${t("[PHONE_001]")} อีเมล ${t("[EMAIL_001]")}`),
+ S("ai","ok","m","ส่งให้โมเดล","AI ได้รับ",`...ให้คุณ${t("[PERSON_001]")} โทร ${t("[PHONE_001]")} อีเมล ${t("[EMAIL_001]")}`,"แนบคำสั่งสั้น ๆ ให้โมเดลคง token ไว้ตามเดิม",[["ai","ข้อความ masked: token 4 ตัว ไม่มีค่าจริง"]]),
+ S("output","ok","m","ตรวจคำตอบ: สะอาด","คำตอบจาก AI",`เรียน คุณ${t("[PERSON_001]")} ขอเชิญสัมภาษณ์... หากสะดวกโปรดยืนยันที่ ${t("[EMAIL_001]")}`,"สแกนคำตอบด้วยตัวตรวจชุดเดิม ไม่พบค่าใหม่"),
+ S("restore","ok","r","ถอด token กลับเป็นค่าจริง","คำตอบหลังถอดกลับ",`เรียน คุณ${r(NAME)} ขอเชิญสัมภาษณ์... หากสะดวกโปรดยืนยันที่ ${r(EM)}`,"ถอดให้ผู้ส่งคนเดียว ใช้ vault ของแชตนี้"),
+ S("audit","ok","g","บันทึก metadata",null,null,"ไม่มีชื่อ ไม่มีเลข มีแค่ชนิดและจำนวน",[["pg","audit_events: Mask · gemini · tokens 120/380"],["pg","audit_findings: PERSON×1 TH_ID×1 PHONE×1 EMAIL×1"]]),
+ S("end","ok","r","ผู้ใช้เห็นค่าจริง","หน้าจอ",`เรียน คุณ${r(NAME)} ... ยืนยันที่ ${r(EM)}`,"มีป้าย ปกปิดก่อนส่ง 4",endKeep())]},
+
+{g:"mask",n:"ลากไฟล์ PDF / รูป",d:"ไฟล์ถูกอ่านเป็นข้อความในหน่วยความจำ ตัวไฟล์ไม่ถูกเก็บและไม่ถึง AI",in:`[ใบสมัคร_ตัวอย่าง.pdf] ช่วยสรุปใบสมัครนี้`,out:["ok","200 ผ่าน (Mask)","AI ได้แค่ข้อความที่ปกปิดแล้ว ไม่ได้ไฟล์"],steps:[
+ S("browser","ok","r","ลากไฟล์เข้า","ส่งไป /api/files/extract","ใบสมัคร_ตัวอย่าง.pdf · 2 หน้า","PDF อ่านข้อความตรง ๆ ส่วนรูปและหน้าสแกนใช้ OCR ทั้งหมดในหน่วยความจำ",[["log","file kind=pdf pages=2 chars=1240 (ไม่มีชื่อไฟล์/เนื้อหา)"]]),
+ S("browser","ok","r","ได้ข้อความคืนมาที่ช่องพิมพ์","ข้อความจากไฟล์",`ผู้สมัคร ${r(NAME)} โทร ${r(PH)} ประสบการณ์บัญชี 5 ปี ... ช่วยสรุปใบสมัครนี้`,"ข้อความคืนให้ผู้ส่งคนเดียว แล้วจึงกดส่งเข้าด่านตรวจเหมือนพิมพ์เอง"),auth,
+ S("detect","ok","r","พบ 2 รายการ",null,null,"PERSON · PHONE",[["log","detect PERSON=1 PHONE=1"]]),
+ S("policy","ok","r","Mask",null,null,"Medium = Mask"),
+ S("mask","ok","m","แทนค่าด้วย token","ข้อความหลังปกปิด",`ผู้สมัคร ${t("[PERSON_001]")} โทร ${t("[PHONE_001]")} ประสบการณ์บัญชี 5 ปี ...`,"",[["vault","[PERSON_001] ↔ ●●●●"],["vault","[PHONE_001] ↔ ●●●●"]]),
+ egress(`ผู้สมัคร ${t("[PERSON_001]")} โทร ${t("[PHONE_001]")} ...`),
+ S("ai","ok","m","ส่งให้โมเดล","AI ได้รับ",`ผู้สมัคร ${t("[PERSON_001]")} โทร ${t("[PHONE_001]")} ...`,"ตัวไฟล์ไม่เคยออกจากบริษัท",[["ai","ข้อความ masked จากไฟล์"]]),
+ S("output","ok","m","ตรวจคำตอบ: สะอาด","คำตอบจาก AI",`${t("[PERSON_001]")} มีประสบการณ์บัญชี 5 ปี เหมาะกับ...`,""),
+ S("restore","ok","r","ถอดกลับ","คำตอบหลังถอดกลับ",`${r(NAME)} มีประสบการณ์บัญชี 5 ปี เหมาะกับ...`,""),
+ S("audit","ok","g","บันทึก metadata",null,null,"",[["pg","audit_findings: PERSON×1 PHONE×1"]]),
+ S("end","ok","r","ผู้ใช้เห็นสรุป","หน้าจอ",`${r(NAME)} มีประสบการณ์บัญชี 5 ปี ...`,"",endKeep())]},
+
+{g:"mask",n:"แชตต่อเนื่อง (อ้างถึงคนเดิม)",d:"ข้อความที่ 2 อ้างถึงคนเดิม ค่าเดิมได้ token เดิม AI จึงเข้าใจต่อได้",in:`(ต่อจากเมื่อกี้) ช่วยร่าง SMS ถึงเบอร์ ${r(PH)} อีกฉบับ`,out:["ok","200 ผ่าน (Mask)","บริบทต่อเนื่อง โดย AI ยังไม่เห็นค่าจริง"],steps:[
+ S("browser","ok","r","ส่งข้อความที่ 2","ข้อความใหม่ + ประวัติ",`ประวัติ: ...โทร ${t("[PHONE_001]")}<br>ใหม่: ช่วยร่าง SMS ถึงเบอร์ ${r(PH)} อีกฉบับ`,"demo: ประวัติ (ฉบับ masked) อ่านจาก Postgres · เป้าหมาย: เบราว์เซอร์ส่งประวัติมาเอง แล้ว gateway ปกปิดใหม่"),auth,
+ S("detect","ok","r","พบ PHONE",null,null,"ตรวจข้อความใหม่ และตรวจต่อท้ายข้อความก่อนหน้าด้วย (กันค่าที่แบ่งส่ง)"),
+ S("policy","ok","r","Mask",null,null,""),
+ S("mask","ok","m","ค่าเดิมได้ token เดิม","ข้อความหลังปกปิด",`ช่วยร่าง SMS ถึงเบอร์ ${t("[PHONE_001]")} อีกฉบับ`,"HMAC(type:value) ตรงกับที่มีใน vault จึงไม่สร้าง token ใหม่",[["vault","[PHONE_001] ใช้ซ้ำ (ต่ออายุ)"]]),
+ egress(`ประวัติ ... ${t("[PHONE_001]")} · ใหม่ ... ${t("[PHONE_001]")}`),
+ S("ai","ok","m","ส่งประวัติ + ข้อความใหม่","AI ได้รับ",`...${t("[PHONE_001]")} ... ช่วยร่าง SMS ถึงเบอร์ ${t("[PHONE_001]")}`,"AI รู้ว่าเป็นคนเดิม เพราะ token ตรงกัน",[["ai","ประวัติ + ข้อความ masked"]]),
+ S("output","ok","m","ตรวจคำตอบ","คำตอบจาก AI",`SMS ถึง ${t("[PHONE_001]")}: ยืนยันนัดสัมภาษณ์...`,""),
+ S("restore","ok","r","ถอดกลับ","คำตอบหลังถอดกลับ",`SMS ถึง ${r(PH)}: ยืนยันนัดสัมภาษณ์...`,""),
+ S("audit","ok","g","บันทึก metadata",null,null,"",[["pg","audit_findings: PHONE×1"]]),
+ S("end","ok","r","ผู้ใช้เห็นค่าจริง","หน้าจอ",`SMS ถึง ${r(PH)}: ยืนยันนัดสัมภาษณ์...`,"",endKeep())]},
+
+{g:"mask",n:"เลขบัตรแบ่งส่ง 2 ข้อความ",d:"ส่งเลขบัตรครึ่งแรกก่อน แล้วอีกครึ่งตามมา ระบบรวมกับข้อความก่อนหน้าแล้วจับได้",in:`ข้อความก่อน: บัตรลูกค้าขึ้นต้น 4111 1111 · ข้อความนี้: ต่อด้วย ${r("1111 1111")} ช่วยเช็กว่าเป็น Visa ไหม`,out:["ok","200 ผ่าน (Mask)","ครึ่งหลังถูกปกปิด ครึ่งแรกเดี่ยว ๆ ไม่พอระบุบัตร"],steps:[
+ S("browser","ok","r","ส่งครึ่งหลัง","ข้อความที่ส่ง",`ต่อด้วย ${r("1111 1111")} ช่วยเช็กว่าเป็น Visa ไหม`,"ครึ่งแรกผ่านไปก่อนแล้ว เพราะ 8 หลักเดี่ยว ๆ ยังไม่ใช่ข้อมูลอ่อนไหว"),auth,
+ S("detect","ok","r","รวมกับข้อความก่อนหน้า: เป็นบัตร",null,null,"4111 1111 + 1111 1111 = 16 หลัก ขึ้นต้นแบบบัตรและผ่าน Luhn จึงเป็น CREDIT_CARD (High)",[["log","detect CREDIT_CARD=1 (split)"]]),
+ S("policy","ok","r","Mask",null,null,"High = Mask"),
+ S("mask","ok","m","ปกปิดครึ่งหลัง","ข้อความหลังปกปิด",`ต่อด้วย ${t("[CREDIT_CARD_001]")} ช่วยเช็กว่าเป็น Visa ไหม`,"",[["vault","[CREDIT_CARD_001] ↔ ●●●●"]]),
+ egress(`ต่อด้วย ${t("[CREDIT_CARD_001]")} ...`),
+ S("ai","ok","m","ส่งให้โมเดล","AI ได้รับ",`ต่อด้วย ${t("[CREDIT_CARD_001]")} ช่วยเช็กว่าเป็น Visa ไหม`,"AI ประกอบเลขบัตรเต็มไม่ได้",[["ai","ข้อความ masked"]]),
+ S("output","ok","m","ตรวจคำตอบ",null,null,""),
+ S("restore","ok","r","ถอดกลับ",null,null,""),
+ S("audit","ok","g","บันทึก metadata",null,null,"",[["pg","audit_findings: CREDIT_CARD×1"]]),
+ S("end","ok","r","ผู้ใช้เห็นคำตอบ","หน้าจอ","เลขที่ขึ้นต้นด้วย 4 เป็นรูปแบบของ Visa ...","",endKeep())]},
+
+{g:"mask",n:"AI แต่งข้อมูลบุคคลขึ้นมาเอง",d:"คำถามไม่มีข้อมูลอ่อนไหว แต่คำตอบมีเบอร์โทร ด่าน 5 จับแล้วเก็บเป็น token ในบริบท",in:"ร่างประกาศรับสมัครพนักงานบัญชี พร้อมช่องทางติดต่อ",out:["ok","200 ผ่าน","ค่าที่ AI สร้างไม่ถูกเก็บดิบในบริบทหรือ log"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง","ร่างประกาศรับสมัครพนักงานบัญชี พร้อมช่องทางติดต่อ",""),auth,
+ S("detect","ok","r","ไม่พบข้อมูลอ่อนไหว",null,null,""),
+ S("policy","ok","r","Allow",null,null,""),skipMask,
+ egress("ร่างประกาศรับสมัครพนักงานบัญชี พร้อมช่องทางติดต่อ"),
+ S("ai","ok","r","ส่งให้โมเดล","AI ได้รับ","ร่างประกาศรับสมัครพนักงานบัญชี พร้อมช่องทางติดต่อ","",[["ai","ข้อความทั่วไป"]]),
+ S("output","warn","w","คำตอบมีเบอร์โทร","คำตอบจาก AI",`...สนใจติดต่อ ${r("02-123-4567")}`,"ตัวตรวจชุดเดิมเจอ PHONE ในคำตอบ จึงเข้า vault เป็น token เพื่อไม่ให้ค่าดิบค้างในบริบทหรือ log",[["vault","[PHONE_001] ↔ ●●●● (จากคำตอบ)"],["log","output_check PHONE=1"]]),
+ S("restore","ok","r","ถอดกลับให้ผู้ส่ง","คำตอบหลังถอดกลับ",`...สนใจติดต่อ ${r("02-123-4567")}`,"ผู้ส่งเห็นตามที่ AI เขียน ส่วนบริบทที่เก็บไว้เป็น token"),
+ S("audit","ok","g","บันทึก metadata",null,null,"",[["pg","audit_events: Allow · output PHONE×1"]]),
+ S("end","ok","r","ผู้ใช้เห็นประกาศ","หน้าจอ",`...สนใจติดต่อ ${r("02-123-4567")}`,"",endKeep())]},
+
+{g:"block",n:"API key / รหัสผ่าน",d:"Critical = Block เสมอ admin override ไม่ได้ ข้อความหยุดที่ด่าน 3",in:`ช่วยดู config นี้ PAYMENT_API_KEY=${k("sk-test-EXAMPLE-0000-0000")} TIMEOUT=30`,out:["block","403 ถูกบล็อก","ไม่มีอะไรถึง AI ภายนอก ผู้ใช้ได้รับคำแนะนำให้ลบ key แล้วส่งใหม่"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง",`ช่วยดู config นี้ PAYMENT_API_KEY=${k("sk-test-EXAMPLE-0000-0000")} TIMEOUT=30`,""),auth,
+ S("detect","ok","r","พบ API_KEY (Critical)",null,null,"",[["log","detect API_KEY=1"]]),
+ S("policy","stop","x","Block","",null,"API_KEY, PASSWORD, PRIVATE_KEY อยู่ใน CRITICAL_TYPES ทุก role ถูกบล็อก ไม่มีการ mask แล้วส่งต่อ",[["log","policy decision=block status=403"],["pg","alerts: blocked_request (critical) ข้อความกลาง ไม่มีค่า key"],["pg","audit_events: Block · API_KEY×1 · route none"]].concat(endBlocked)),
+ S("end","stop","x","ผู้ใช้เห็นคำเตือน","หน้าจอ","ข้อความนี้ไม่ถูกส่งออกไป: พบ API key (ระดับ Critical) ลบ key ออกแล้วส่งใหม่","ด่าน 4-6 ไม่ทำงานเลย vault ไม่ถูกแตะ")]},
+
+{g:"block",n:"รหัสผ่านซ่อนใน base64",d:"ข้อความเข้ารหัส base64 ถูกถอดแล้วตรวจข้างใน ถ้าเจอรหัสผ่านก็บล็อก",in:`ส่ง config ให้หน่อย ${k("cGFzc3dvcmQ9UEBzc3cwcmQtZGVtbw==")}`,out:["block","403 ถูกบล็อก","การเข้ารหัสแบบง่ายไม่ช่วยให้หลุด"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง",`ส่ง config ให้หน่อย ${k("cGFzc3dvcmQ9UEBzc3cwcmQtZGVtbw==")}`,""),auth,
+ S("detect","ok","r","ถอด base64 แล้วเจอ PASSWORD",null,null,"สายอักขระ base64 ยาว 16+ ถูกถอด ได้ password=P@ssw0rd-demo ตัวตรวจข้างในเจอ PASSWORD ช่วงที่เข้ารหัสจึงได้ระดับ Critical",[["log","detect PASSWORD=1 (encoded)"]]),
+ S("policy","stop","x","Block",null,null,"Critical = Block",[["pg","audit_events: Block · PASSWORD×1"],["pg","alerts: blocked_request (critical)"]].concat(endBlocked)),
+ S("end","stop","x","ผู้ใช้เห็นคำเตือน","หน้าจอ","ข้อความนี้ไม่ถูกส่งออกไป: พบรหัสผ่าน (ระดับ Critical)","")]},
+
+{g:"block",n:"ข้อมูลจำนวนมากในครั้งเดียว",d:"รายชื่อลูกค้าทั้งชุดถูกบล็อกตามกฎปริมาณ แม้แต่ละรายการแค่ระดับ Medium",in:`รายชื่อลูกค้า 25 คน: ${r("สมหญิง ทดลอง 089-000-0001")}, ${r("วิชัย ตัวอย่าง 089-000-0002")}, ... ช่วยจัดเป็นตาราง`,out:["block","403 ถูกบล็อก (volume)","กันการดึงข้อมูลลูกค้าทั้งก้อนออกไปข้างนอก"],steps:[
+ S("browser","ok","r","พนักงานวางรายชื่อทั้งชุด","ข้อความที่ส่ง",`รายชื่อลูกค้า 25 คน: ${r("สมหญิง ทดลอง 089-000-0001")}, ...`,""),auth,
+ S("detect","ok","r","พบ 50 รายการ",null,null,"PERSON×25 · PHONE×25",[["log","detect PERSON=25 PHONE=25"]]),
+ S("policy","stop","x","Block (เกินกำหนด)",null,null,"ข้อมูลอ่อนไหวรวม 50 ≥ เพดาน 20 (policy_volume_limit) จึงยกระดับเป็น Block",[["pg","alerts: volume_exceeded (high)"],["pg","audit_events: Block · PERSON×25 PHONE×25"]].concat(endBlocked)),
+ S("end","stop","x","ผู้ใช้เห็นคำเตือน","หน้าจอ","ข้อความนี้ไม่ถูกส่งออกไป: มีข้อมูลอ่อนไหวมากเกินไปในครั้งเดียว (50)","")]},
+
+{g:"block",n:"AI ตอบกลับมาพร้อมความลับ",d:"คำถามปกติ แต่คำตอบมีค่าที่หน้าตาเป็น API key ด่าน 5 ไม่แสดงคำตอบนั้น",in:"ขอตัวอย่างไฟล์ .env สำหรับต่อ payment gateway",out:["block","200 แต่ไม่แสดงคำตอบ","ความลับที่ AI สร้างมาไม่ถึงหน้าจอ และไม่ถูกเก็บ"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง","ขอตัวอย่างไฟล์ .env สำหรับต่อ payment gateway",""),auth,
+ S("detect","ok","r","ไม่พบข้อมูลอ่อนไหว",null,null,""),
+ S("policy","ok","r","Allow",null,null,""),skipMask,
+ egress("ขอตัวอย่างไฟล์ .env สำหรับต่อ payment gateway"),
+ S("ai","ok","r","ส่งให้โมเดล","AI ได้รับ","ขอตัวอย่างไฟล์ .env สำหรับต่อ payment gateway","",[["ai","ข้อความทั่วไป"]]),
+ S("output","stop","x","คำตอบมี API_KEY (Critical)","คำตอบจาก AI",`PAYMENT_API_KEY=${k("sk-live-●●●●●●●●")}`,"Critical ในคำตอบ = ทิ้งคำตอบทั้งก้อน (output_blocked)",[["pg","alerts: output_blocked (critical)"],["log","output_check API_KEY=1 blocked=True"]]),
+ S("restore","skip","x","ไม่มีคำตอบให้ถอด",null,null,""),
+ S("audit","ok","g","บันทึก metadata",null,null,"",[["pg","audit_events: Allow · output_blocked"]]),
+ S("end","stop","x","ผู้ใช้เห็นคำแจ้ง","หน้าจอ","คำตอบนี้มีข้อมูลลับ จึงไม่แสดง ลองถามใหม่โดยขอให้ใช้ค่าตัวอย่าง","")]},
+
+{g:"fail",n:"session หมดอายุ",d:"JWT หมดอายุหรือไม่มีคุกกี้ หยุดที่ด่านแรก",in:"ช่วยแปลย่อหน้านี้เป็นอังกฤษ ...",out:["fail","401 ต้อง login ใหม่","ไม่มีการตรวจ ไม่มีการส่ง ไม่มีการเขียนข้อมูล"],steps:[
+ S("browser","ok","r","พนักงานกดส่งหลังทิ้งไว้ข้ามคืน","ข้อความที่ส่ง","ช่วยแปลย่อหน้านี้เป็นอังกฤษ ...","คุกกี้อายุ 8 ชม. หมดไปแล้ว"),
+ S("auth","stop","x","401 Unauthorized",null,null,"ไม่รู้ว่าเป็นใคร จึงไม่เลือก policy และไม่แตะข้อความ"),
+ S("end","stop","x","กลับไปหน้า login","หน้าจอ","เข้าสู่ระบบใหม่เพื่อใช้งานต่อ","")]},
+
+{g:"fail",n:"Redis ล่ม (fail closed)",d:"vault ใช้ไม่ได้ จึงปกปิดอย่างปลอดภัยไม่ได้ ระบบเลือกไม่ส่งแทนการส่งค่าดิบ",in:`ร่างจดหมายถึงคุณ${r(NAME)} โทร ${r(PH)}`,out:["fail","503 ปิดไว้ก่อน","ข้อความดิบไม่ถูกส่งออก นี่คือหลัก fail closed"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง",`ร่างจดหมายถึงคุณ${r(NAME)} โทร ${r(PH)}`,""),auth,
+ S("detect","ok","r","พบ PERSON, PHONE",null,null,""),
+ S("policy","ok","r","Mask",null,null,""),
+ S("mask","warn","w","vault ตอบไม่ได้","",null,"Redis ไม่ตอบ จึงเก็บคู่ token ไม่ได้ ระบบไม่ fallback ไปส่งค่าดิบ",[["log","fail_closed reason=vault error status=503"],["pg","audit_events: error · 503"]]),
+ S("end","warn","w","ผู้ใช้เห็นแจ้งเตือน","หน้าจอ","ระบบตรวจข้อมูลไม่พร้อมชั่วคราว ข้อความยังไม่ถูกส่ง ลองใหม่อีกครั้ง","ถ้าตัวตรวจ (detector) ล่ม ก็ได้ 503 แบบเดียวกันที่ด่าน 2")]},
+
+{g:"fail",n:"ตาข่ายสุดท้ายก่อนส่ง",d:"ถ้ามีค่าที่ต้องปกปิดหลุดมาถึงจังหวะส่ง การสแกนซ้ำจะหยุดไว้ (ไม่ควรเกิด แต่มีไว้พิสูจน์)",in:`ประวัติแชตเก่ามีค่าดิบ ${r(EM)} ติดมา + ข้อความใหม่`,out:["fail","503 ไม่ส่ง + alert","พิสูจน์ได้ว่า AI ไม่มีทางเห็นค่าที่ policy ไม่อนุญาต"],steps:[
+ S("browser","ok","r","ส่งข้อความพร้อมประวัติ","สิ่งที่จะส่ง",`ประวัติ: ...${r(EM)}... · ใหม่: สรุปให้หน่อย`,"สมมติว่ามีค่าดิบหลุดเข้ามาในประวัติ"),auth,
+ S("detect","ok","r","ตรวจข้อความใหม่",null,null,""),
+ S("policy","ok","r","Allow (ข้อความใหม่)",null,null,""),skipMask,
+ S("egress","stop","x","เจอ EMAIL ในสิ่งที่จะส่ง","สิ่งที่จะส่ง",`...${r(EM)}...`,"สแกนทุกอย่างที่กำลังจะออก (ประวัติ + ข้อความใหม่) เจอค่าที่ policy สั่ง Mask จึงไม่เรียก AI",[["log","egress_check clean=False status=503"],["pg","alerts: egress_blocked (critical)"]]),
+ S("end","warn","w","ผู้ใช้เห็นแจ้งเตือน","หน้าจอ","ระบบหยุดการส่งเพื่อความปลอดภัย ข้อความยังไม่ถูกส่ง","")]},
+
+{g:"fail",n:"Gemini ล่ม: สลับโมเดลสำรอง",d:"โมเดลหลักตอบ error ชั่วคราว ระบบ retry แล้วสลับไปโมเดลสำรอง โดยส่งข้อความ masked ชุดเดิม",in:`สรุปอีเมลจากคุณ${r(NAME)} ให้หน่อย`,out:["ok","200 ผ่าน (ใช้โมเดลสำรอง)","ถ้าทุกโมเดลล่ม จะได้ 502 และ audit จดไว้"],steps:[
+ S("browser","ok","r","พนักงานกดส่ง","ข้อความที่ส่ง",`สรุปอีเมลจากคุณ${r(NAME)} ให้หน่อย`,""),auth,
+ S("detect","ok","r","พบ PERSON",null,null,""),
+ S("policy","ok","r","Mask",null,null,""),
+ S("mask","ok","m","แทนค่าด้วย token","ข้อความหลังปกปิด",`สรุปอีเมลจากคุณ${t("[PERSON_001]")} ให้หน่อย`,"",[["vault","[PERSON_001] ↔ ●●●●"]]),
+ egress(`สรุปอีเมลจากคุณ${t("[PERSON_001]")} ให้หน่อย`),
+ S("ai","warn","w","โมเดลหลักไม่ตอบ: retry แล้วสลับ","AI ได้รับ (ทั้งสองโมเดล)",`สรุปอีเมลจากคุณ${t("[PERSON_001]")} ให้หน่อย`,"error ชั่วคราว (เช่น 429/503) ลองซ้ำ 1 ครั้ง แล้วไปโมเดลสำรอง ทุกครั้งส่งข้อความ masked ชุดเดิม",[["log","provider retry → fallback model"],["ai","ข้อความ masked (โมเดลสำรอง)"]]),
+ S("output","ok","m","ตรวจคำตอบ",null,null,""),
+ S("restore","ok","r","ถอดกลับ","คำตอบหลังถอดกลับ",`คุณ${r(NAME)} แจ้งว่า...`,""),
+ S("audit","ok","g","บันทึก metadata",null,null,"",[["pg","audit_events: Mask · provider gemini (fallback)"]]),
+ S("end","ok","r","ผู้ใช้เห็นคำตอบ","หน้าจอ",`คุณ${r(NAME)} แจ้งว่า...`,"",endKeep())]}
+];
+
+
+const X=[
+ {col:"g"},{col:"g"},{col:"y",m:4},{col:"y",m:2,file:"ใบสมัคร_ตัวอย่าง.pdf",msg:"ช่วยสรุปใบสมัครนี้"},
+ {col:"y",m:1,prev:[["u",`ร่างอีเมลนัดสัมภาษณ์ให้คุณ${r(NAME)} โทร ${r(PH)}`],["b",`ร่างเรียบร้อย: เรียน คุณ${r(NAME)} ...`]],msg:`ช่วยร่าง SMS ถึงเบอร์ ${r(PH)} อีกฉบับ`},
+ {col:"y",m:1,prev:[["u","บัตรลูกค้าขึ้นต้น 4111 1111"],["b","ต้องการให้ช่วยตรวจอะไรกับเลขนี้ครับ"]],msg:`ต่อด้วย ${r("1111 1111")} ช่วยเช็กว่าเป็น Visa ไหม`},
+ {col:"y",m:1},{col:"r"},{col:"r"},{col:"r"},{col:"r"},{col:"r",login:1},{col:"r"},
+ {col:"r",prev:[["u",`ส่งต่อให้ ${r(EM)} ด้วยนะ`],["b","รับทราบครับ"]],msg:"สรุปให้หน่อย"},
+ {col:"y",m:1,model:"Llama 3.3 70B",fb:1}
+];
+const MODELS=[["gemini","Gemini 2.5 Flash","Google","หลัก"],["llama","Llama 3.3 70B","Groq","สำรอง"],["gpt","GPT","OpenAI","ยังไม่เปิด"]];
+const GROUPS=[["allow","ผ่าน (Allow)"],["mask","ปกปิดแล้วส่ง (Mask)"],["block","บล็อก (Block)"],["fail","ระบบป้องกันตัวเอง"]];
+const NUM={browser:"เริ่ม",auth:"ด่าน 1",detect:"ด่าน 2",policy:"ด่าน 3",mask:"ด่าน 3",egress:"ก่อนด่าน 4",ai:"ด่าน 4",output:"ด่าน 5",restore:"ด่าน 6",audit:"ด่าน 7",end:"จบ"};
+const STATUS={auth:"ตรวจ session",detect:"กำลังตรวจข้อมูลอ่อนไหว",policy:"ตัดสินตาม policy",mask:"ปกปิดข้อมูลก่อนส่ง",egress:"ตรวจซ้ำก่อนส่งออก",ai:"AI กำลังตอบ (เห็นแค่ token)",output:"ตรวจคำตอบ",restore:"ถอดค่าจริงกลับให้คุณ",audit:"บันทึก audit"};
+/* inside the gateway: row 1 left to right, row 2 right to left (cols 3-5) */
+const ROW1=["auth","detect","policy","mask","egress"],ROW2=["audit","restore","output"];
+const ARROW={auth:"r",detect:"r",policy:"r",mask:"r",egress:"",output:"l",restore:"l",audit:""};
+const $=id=>document.getElementById(id);
+const stHTML=id=>`<div class="st" id="bx-${id}" data-a="${ARROW[id]||""}"><span class="no">${NUM[id]}</span><span class="nm">${ST[SI[id]][1]}</span><span class="res" id="rs-${id}"></span></div>`;
+const narrow=matchMedia("(max-width:860px)");
+const icon=`<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#9fb6d6" stroke-width="1.6"><circle cx="10" cy="10" r="3"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3M4.3 4.3l2.1 2.1M13.6 13.6l2.1 2.1M4.3 15.7l2.1-2.1M13.6 6.4l2.1-2.1"/></svg>`;
+const layout=()=>{
+  $("chips").innerHTML=narrow.matches?[...ROW1,"output","restore","audit"].map(stHTML).join(""):ROW1.map(stHTML).join("")+`<div class="gwnote">ข้อความเข้าแถวบน ออกขวาไปหาโมเดล คำตอบกลับเข้าแถวล่าง แล้วออกซ้ายกลับไปหาพนักงาน</div>`+ROW2.map(stHTML).join("");
+  $("models").innerHTML=MODELS.map(m=>`<div class="node mdl" id="md-${m[0]}"><span class="ic">${icon}</span><div><b>${m[1]}</b><small>${m[2]} · ${m[3]}</small></div></div>`).join("");
+};
+layout();
+const dd=()=>GROUPS.map(([g,h])=>`<h4>${h}</h4>`+C.map((c,i)=>c.g===g?`<button class="${X[i].col}" role="option" data-i="${i}" aria-current="${i===ci}"><i class="dot ${X[i].col}"></i>${c.n}</button>`:"").join("")).join("");
+
+let ci=2,si=0,mode="target",timer=null;
+const visible=f=>{if(!f)return true;const d=f.includes("d"),tt=f.includes("t");if(d&&!tt)return mode==="demo";if(tt&&!d)return mode==="target";return true};
+const RES={ok:"ผ่าน",skip:"ข้าม",stop:"หยุดที่นี่",warn:"สะดุด"};
+const PKL={r:"ค่าจริง",m:"masked",x:"หยุด",w:"สะดุด",g:"metadata"};
+let wire={req:"",out:{},resp:""};
+
+const rel=(el,box)=>{const r=el.getBoundingClientRect();return{l:r.left-box.left,r:r.right-box.left,t:r.top-box.top,b:r.bottom-box.top,cy:r.top-box.top+r.height/2,w:r.width,h:r.height}};
+const drawWires=()=>{
+  const D=$("dia"),db=D.getBoundingClientRect(),svg=$("wires");if(narrow.matches){svg.innerHTML="";return}
+  svg.setAttribute("viewBox",`0 0 ${db.width} ${db.height}`);
+  const e=rel($("emp"),db),g=rel($("gw"),db),r1=rel($("bx-auth"),db),r2=rel($("bx-audit"),db),eg=rel($("bx-egress"),db);
+  const head=(x,y,dir)=>`M${x-9*dir} ${y-6} L${x} ${y} L${x-9*dir} ${y+6}`;
+  let s="";
+  // request: employee to the top row
+  const ya=e.cy-14,yb=r1.cy,xm=(e.r+g.l)/2;
+  s+=`<path class="${wire.req}" d="M${e.r} ${ya} C${xm} ${ya} ${xm} ${yb} ${g.l-4} ${yb}"/><path class="${wire.req}" d="${head(g.l-4,yb,1)}"/>`;
+  s+=`<text class="${wire.req?"on":""}" x="${e.r+8}" y="${ya-10}">REQUEST</text>`;
+  // response: bottom row back to the employee
+  const yc=r2.cy,yd=e.cy+22;
+  s+=`<path class="${wire.resp}" d="M${g.l} ${yc} C${xm} ${yc} ${xm} ${yd} ${e.r+4} ${yd}"/><path class="${wire.resp}" d="${head(e.r+4,yd,-1)}"/>`;
+  s+=`<text class="${wire.resp?"on":""}" x="${e.r+8}" y="${Math.max(yc,yd)+24}">RESPONSE</text>`;
+  // branches: gateway right edge to each model
+  const x0=g.r,y0=eg.cy;
+  MODELS.forEach(([id,,,label])=>{const m=rel($("md-"+id),db),x1=m.l-4,y1=m.cy,mx=(x0+x1)/2,cls=wire.out[id]||"";
+    s+=`<path class="${cls}" d="M${x0} ${y0} C${mx} ${y0} ${mx} ${y1} ${x1} ${y1}"/><path class="${cls}" d="${head(x1,y1,1)}"/>`;
+    s+=`<text class="${cls==="on"?"on":""}" x="${x1-14}" y="${y1-9}" text-anchor="end">${label}</text>`;});
+  svg.innerHTML=s;
+};
+const place=()=>{
+  const s=C[ci].steps[si],D=$("dia"),x=X[ci];
+  const target=s.at==="browser"||s.at==="end"?$("emp"):s.at==="ai"?$("md-"+(x.fb?"llama":"gemini")):$("bx-"+s.at);if(!target)return;
+  const db=D.getBoundingClientRect(),r=target.getBoundingClientRect(),pk=$("pk"),pop=$("pop");
+  const px=Math.min(r.right-db.left-40,db.width-pk.offsetWidth-6),py=Math.max(4,r.top-db.top-16);
+  pk.style.left=px+"px";pk.style.top=py+"px";
+  const pw=pop.offsetWidth||360;pop.style.left=Math.max(8,Math.min(px-pw/2+30,db.width-pw-8))+"px";pop.style.top=(py+48)+"px";
+  drawWires();
+};
+
+/* the employee's screen for this step */
+const web=(c,x,steps,s)=>{
+  const stopAt=c.out[0]==="ok"?-1:steps.findIndex(st=>st.kind==="stop"||st.kind==="warn");
+  const halted=stopAt>-1&&si>=stopAt?steps[stopAt]:null;
+  const firstB=steps.filter(st=>st.at==="browser").pop();
+  const msg=x.msg||(firstB&&firstB.p)||c.in;
+  const final=steps[steps.length-1];
+  const prev=(x.prev||[]).map(([w,h])=>w==="u"?`<div class="ub">${h}</div>`:`<div class="bb">${h}</div>`).join("");
+  const file=x.file?`<div class="fchip"><b>PDF</b>${x.file} · อ่านแล้ว 2 หน้า</div>`:"";
+  if(x.login&&halted)return `<div class="whead"><span class="model">Gateway</span></div><div class="login"><div><span class="logo" style="display:inline-block;width:40px;height:40px"></span><b>session หมดอายุ</b>เข้าสู่ระบบใหม่เพื่อใช้งานต่อ<div class="gbtn">เข้าสู่ระบบด้วย Google</div></div></div>`;
+  const head=`<div class="whead"><span class="model">Gemini 2.5 Flash ▾</span><span class="shield">✓ ด่านตรวจทำงาน</span></div>`;
+  const sentB=`${file?`<div class="ub" style="padding-top:6px">${file}<br>${msg}</div>`:`<div class="ub">${msg}</div>`}`;
+  let body,comp;
+  if(s.at==="browser"){
+    body=prev?`<div class="thread">${prev}</div>`:`<div class="hello"><div><b>สวัสดี คุณกิตติ</b><span>วันนี้ให้ช่วยอะไรดี</span></div></div>`;
+    comp=`<div class="comp on">${file}<div class="tx">${msg}</div><div class="row">+ แนบไฟล์<span class="send"></span></div></div>`;
+  }else{
+    let tail;
+    if(halted){
+      const blockLike=halted.kind==="stop";
+      tail=`<div class="${blockLike?"mblock":"mwarn"}"><b>${blockLike?(halted.at==="output"?"คำตอบนี้ไม่แสดง":"ข้อความนี้ถูกบล็อก ไม่ได้ส่งให้ AI"):"ข้อความยังไม่ถูกส่ง"}</b>${final.p||halted.h}</div>`;
+    }else if(s.at==="end"){
+      tail=`<div class="bb">${final.p}<div class="meta">${x.m?`<span class="shield">✓ ปกปิดก่อนส่ง ${x.m}</span>`:""}<span>ตอบโดย ${x.model||"Gemini"}</span></div></div>`;
+    }else tail=`<span class="stat">${STATUS[s.at]||""}…</span>`;
+    body=`<div class="thread">${prev}${sentB}${tail}</div>`;
+    comp=`<div class="comp"><div class="tx ph">พิมพ์ข้อความ หรือถามอะไรก็ได้...</div><div class="row">+ แนบไฟล์<span class="send off"></span></div></div>`;
+  }
+  return head+body+comp;
+};
+
+
+const draw=()=>{
+  const c=C[ci],x=X[ci],steps=c.steps,s=steps[si],last=si===steps.length-1;
+  $("ct").textContent=c.n;$("ddot").className="dot "+x.col;$("cd").textContent=c.d;$("wtitle").textContent=c.n;$("ddl").innerHTML=dd();
+  const seen={};steps.slice(0,si+1).forEach(v=>seen[v.at]=v);
+  const reach=new Set(steps.map(v=>v.at));
+  [...ROW1,...ROW2].forEach(id=>{const b=$("bx-"+id);const v=seen[id];let cls="st";
+    if(id===s.at)cls+=" "+(s.kind==="ok"?"now":s.kind);else if(v)cls+=" "+v.kind;else if(!reach.has(id))cls+=" dim";
+    if(v&&v.kind!=="stop"&&id!==s.at)cls+=" lit";b.className=cls;
+    $("rs-"+id).textContent=v?(id===s.at||v.kind==="ok"?v.h:RES[v.kind]+": "+v.h):(!reach.has(id)?"ไม่ถึง":"");});
+  // employee node
+  const emp=$("emp"),endK=steps[steps.length-1].kind;
+  emp.className="node emp"+(s.at==="browser"||s.at==="end"?(s.at==="end"&&endK!=="ok"?" "+endK:" now"):"");
+  $("rs-emp").textContent=s.at==="browser"?"กำลังส่ง":s.at==="end"?(endK==="ok"?"ได้คำตอบค่าจริง":endK==="stop"?"เห็นคำเตือน":"เห็นแจ้งเตือน"):"";
+  // gateway + models + wires
+  const ai=seen.ai;
+  $("gw").className="node gw"+(si>0&&s.at!=="end"?" on":"");
+  MODELS.forEach(([id])=>{const m=$("md-"+id);m.className="node mdl"+(ai&&x.fb&&id==="gemini"?" bad":ai&&id===(x.fb?"llama":"gemini")?" on":id==="gpt"?" off":"")});
+  wire={req:seen.auth?"on":"",out:ai?(x.fb?{gemini:"bad",llama:"on"}:{gemini:"on"}):{},resp:s.at==="end"?(endK==="ok"?"on":endK==="stop"?"red":"amber"):""};
+  const k=s.pk||"r",pk=$("pk");pk.className="pk "+(k==="r"?"":k);pk.innerHTML=`${PKL[k]}<small>กดดู</small>`;
+  $("pop").innerHTML=`<button id="pop-x">ปิด</button><small>${s.pl||"ข้อมูลในขั้นนี้"}</small>${s.p||`<span style="color:var(--muted)">${s.n||s.h}</span>`}`;
+  $("wmain").innerHTML=web(c,x,steps,s);
+  const th=document.querySelector(".thread");if(th)th.scrollTop=th.scrollHeight;
+  place();
+  $("step").innerHTML=`<div class="where">ขั้น ${si+1} / ${steps.length} · ${NUM[s.at]} · ${ST[SI[s.at]][1]}</div><h2>${s.h}</h2>${s.p?`<div class="pay"><small>${s.pl||"ข้อมูลตอนนี้"}</small>${s.p}</div>`:""}${s.n?`<p class="note">${s.n}</p>`:""}`;
+  $("out").innerHTML=last?`<div class="out ${c.out[0]}"><b>${c.out[1]}</b>${c.out[2]}</div>`:"";
+  const acc=Object.fromEntries(STORES.map(v=>[v[0],[]]));const hit=new Set((s.w||[]).filter(w=>visible(w[2])).map(w=>w[0]));
+  steps.slice(0,si+1).forEach(v=>(v.w||[]).forEach(([key,text,f])=>{if(!visible(f))return;if(f&&f.includes("x"))acc.vault.forEach(e=>e.del=true);acc[key].push({text,del:false})}));
+  $("stores").innerHTML=STORES.map(([key,name,sub])=>`<div class="sto${hit.has(key)?" hit":""}"><b>${name}</b><em>${sub}</em><ul>${acc[key].length?acc[key].map(e=>`<li class="${e.del?"del":""}">${e.text}</li>`).join(""):`<li class="empty">ยังว่าง</li>`}</ul></div>`).join("");
+  $("dots").innerHTML=steps.map((v,i)=>`<button aria-label="ขั้น ${i+1}" class="${i===si?"cur":i<si?"on":""}" data-s="${i}"></button>`).join("");
+  $("pos").textContent=`ขั้น ${si+1} / ${steps.length}`;
+  $("b-prev").disabled=si===0;$("b-next").textContent=last?"เคสถัดไป":"ถัดไป";
+  $("b-auto").textContent=timer?"หยุดเล่น":"เล่นอัตโนมัติ";
+};
+const closePop=()=>$("pop").classList.remove("show");
+const closeDD=()=>{$("ddl").classList.remove("show");$("ddb").setAttribute("aria-expanded","false")};
+const stopAuto=()=>{clearInterval(timer);timer=null};
+const go=f=>{stopAuto();closePop();f();draw()};
+const next=()=>{if(si<C[ci].steps.length-1)si++;else{ci=(ci+1)%C.length;si=0}};
+$("b-next").addEventListener("click",()=>go(next));
+$("b-prev").addEventListener("click",()=>go(()=>{if(si>0)si--}));
+$("b-reset").addEventListener("click",()=>go(()=>{si=0}));
+$("b-auto").addEventListener("click",()=>{if(timer){stopAuto();draw()}else{closePop();timer=setInterval(()=>{if(si<C[ci].steps.length-1){si++;draw()}else{stopAuto();draw()}},1800);draw()}});
+$("ddb").addEventListener("click",e=>{e.stopPropagation();const l=$("ddl");l.classList.toggle("show");$("ddb").setAttribute("aria-expanded",l.classList.contains("show"))});
+$("ddl").addEventListener("click",e=>{const b=e.target.closest("button[data-i]");if(b){closeDD();go(()=>{ci=+b.dataset.i;si=0})}});
+document.addEventListener("click",e=>{if(!e.target.closest("#dd"))closeDD()});
+$("dots").addEventListener("click",e=>{const b=e.target.closest("button");if(b)go(()=>{si=+b.dataset.s})});
+$("pk").addEventListener("click",()=>{$("pop").classList.toggle("show");place()});
+$("pop").addEventListener("click",e=>{if(e.target.id==="pop-x")closePop()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePop();closeDD();return}if($("ddl").classList.contains("show"))return;if(e.key==="ArrowRight")go(next);if(e.key==="ArrowLeft")go(()=>{if(si>0)si--})});
+const setMode=m=>{mode=m;$("m-demo").setAttribute("aria-pressed",m==="demo");$("m-target").setAttribute("aria-pressed",m==="target");draw()};
+$("m-demo").addEventListener("click",()=>setMode("demo"));$("m-target").addEventListener("click",()=>setMode("target"));
+narrow.addEventListener("change",()=>{layout();draw()});
+const ro=new ResizeObserver(place);ro.observe($("dia"));
+draw();
+}
+</script>
+</body>
+</html>

@@ -1,17 +1,19 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import AnimatedText from "./AnimatedText";
+import { useLang } from "./LanguageProvider";
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaUser } from "react-icons/fa"; // Import Icons
 
 const About = () => {
+  const { t, lang } = useLang();
   // ข้อมูลส่วนตัวแยกออกมาเพื่อให้แก้ได้ง่าย
   const info = [
-    { icon: <FaUser />, field: "Name", value: "Saranphat (Max)" },
-    { icon: <FaMapMarkerAlt />, field: "Location", value: "Bangkok" },
-    { icon: <FaPhoneAlt />, field: "Phone", value: "+66 61 446 1930" },
+    { icon: <FaUser />, field: t("about.field.name"), value: "Saranphat (Max)" },
+    { icon: <FaMapMarkerAlt />, field: t("about.field.location"), value: t("about.locationValue") },
+    { icon: <FaPhoneAlt />, field: t("about.field.phone"), value: "+66 61 446 1930" },
     {
       icon: <FaEnvelope />,
-      field: "Email",
+      field: t("about.field.email"),
       value: "saranphat.tre289@gmail.com",
     },
   ];
@@ -76,33 +78,44 @@ const About = () => {
             {/* Header */}
             <div className="mb-6">
               <span className="text-accent font-semibold tracking-wider uppercase text-sm">
-                About Me
+                {t("about.eyebrow")}
               </span>
               <AnimatedText
-                text="My Name is Max"
+                text={t("about.name")}
                 textStyles="h2 text-4xl font-bold mt-2 mb-2"
               />
               <p className="text-xl text-primary font-medium">
-                B.Eng., Computer Engineering
+                {t("about.degree")}
               </p>
             </div>
 
             {/* Main Description */}
             <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 max-w-[700px]">
-              I am passionate about{" "}
-              <span className="text-accent font-semibold">
-                Network Infrastructure
-              </span>
-              , enjoying the challenge of managing servers, switches, and
-              routers. My expertise extends to{" "}
-              <span className="text-accent font-semibold">
-                AI & Computer Vision
-              </span>{" "}
-              for safety solutions and{" "}
-              <span className="text-accent font-semibold">IoT protocols</span>{" "}
-              (MQTT, HTTP, I2C). I love combining hardware knowledge with data
-              analysis to build practical, intelligent systems that solve
-              real-world problems.
+              {lang === "th" ? (
+                <>
+                  ผมสนใจด้าน{" "}
+                  <span className="text-accent font-semibold">Network Infrastructure</span>{" "}
+                  และชอบความท้าทายในการดูแลเซิร์ฟเวอร์ สวิตช์ และเราเตอร์ นอกจากนี้ยังถนัดด้าน{" "}
+                  <span className="text-accent font-semibold">AI & Computer Vision</span>{" "}
+                  สำหรับงานด้านความปลอดภัย และ{" "}
+                  <span className="text-accent font-semibold">IoT protocols</span>{" "}
+                  (MQTT, HTTP, I2C) ผมชอบนำความรู้ด้านฮาร์ดแวร์มาผสานกับการวิเคราะห์ข้อมูล
+                  เพื่อสร้างระบบอัจฉริยะที่ใช้งานได้จริงและแก้ปัญหาในชีวิตจริง
+                </>
+              ) : (
+                <>
+                  I am passionate about{" "}
+                  <span className="text-accent font-semibold">Network Infrastructure</span>
+                  , enjoying the challenge of managing servers, switches, and
+                  routers. My expertise extends to{" "}
+                  <span className="text-accent font-semibold">AI & Computer Vision</span>{" "}
+                  for safety solutions and{" "}
+                  <span className="text-accent font-semibold">IoT protocols</span>{" "}
+                  (MQTT, HTTP, I2C). I love combining hardware knowledge with data
+                  analysis to build practical, intelligent systems that solve
+                  real-world problems.
+                </>
+              )}
             </p>
 
             {/* Skills Tags (Optional: ดีไซน์แบบป้ายกำกับ) */}

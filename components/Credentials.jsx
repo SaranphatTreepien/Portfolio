@@ -4,13 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { FiAward, FiChevronLeft, FiChevronRight, FiExternalLink } from "react-icons/fi";
 import { credlyProfileUrl, googleSkillsProfile } from "@/data/credentials";
+import { useLang } from "./LanguageProvider";
 
 const AUTOPLAY_MS = 3500;
 const CARD_SHELL =
     "w-[calc((100%-1rem)/2)] shrink-0 snap-start rounded-2xl border border-white/60 bg-white/90 p-3 shadow-[0_8px_30px_rgb(0,0,0,0.06)]";
 
-const formatDate = (date) =>
-    new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+const formatDate = (date, lang) =>
+    new Date(date).toLocaleDateString(lang === "th" ? "th-TH" : "en-US", { month: "short", year: "numeric" });
 
 const GoogleWordmark = () => (
     <span className="text-[10px] font-medium tracking-tight">
@@ -37,6 +38,7 @@ const CompletionBadge = ({ name }) => (
 );
 
 const BadgeCard = ({ badge }) => {
+    const { lang } = useLang();
     const isCertificate = badge.type === "certificate";
     const linkProps = isCertificate ? {} : { target: "_blank", rel: "noopener noreferrer" };
 
@@ -64,7 +66,7 @@ const BadgeCard = ({ badge }) => {
             </p>
             <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-gray-400">
                 <span className="truncate">{badge.issuer}</span>
-                <span className="shrink-0">{formatDate(badge.issuedAt)}</span>
+                <span className="shrink-0">{formatDate(badge.issuedAt, lang)}</span>
             </div>
         </a>
     );
@@ -72,11 +74,12 @@ const BadgeCard = ({ badge }) => {
 
 const ArrowButton = ({ direction, onClick }) => {
     const Icon = direction === "prev" ? FiChevronLeft : FiChevronRight;
+    const { t } = useLang();
     return (
         <button
             type="button"
             onClick={onClick}
-            aria-label={direction === "prev" ? "เลื่อนไปทางซ้าย" : "เลื่อนไปทางขวา"}
+            aria-label={direction === "prev" ? t("cred.prev") : t("cred.next")}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm hover:border-[#7edad2] hover:text-[#2f9c93] transition-colors"
         >
             <Icon className="h-5 w-5" />
@@ -84,7 +87,9 @@ const ArrowButton = ({ direction, onClick }) => {
     );
 };
 
-const SummaryHeader = ({ badgeCount, certificateCount, onPrev, onNext }) => (
+const SummaryHeader = ({ badgeCount, certificateCount, onPrev, onNext }) => {
+    const { t } = useLang();
+    return (
     <div className="mb-4 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -92,9 +97,9 @@ const SummaryHeader = ({ badgeCount, certificateCount, onPrev, onNext }) => (
                     <FiAward className="h-5 w-5 text-[#2f9c93]" />
                 </span>
                 <div className="min-w-0 text-left">
-                    <h3 className="text-lg font-bold leading-tight text-white lg:text-gray-800">Badges & Certifications</h3>
+                    <h3 className="text-lg font-bold leading-tight text-white lg:text-gray-800">{t("cred.title")}</h3>
                     <p className="text-xs font-medium text-white/80 lg:text-gray-500">
-                        {badgeCount} badges · {certificateCount} certificates · Google Cloud · AWS · Cisco
+                        {t("cred.counts", badgeCount, certificateCount)} · Google Cloud · AWS · Cisco
                     </p>
                 </div>
             </div>
@@ -118,11 +123,12 @@ const SummaryHeader = ({ badgeCount, certificateCount, onPrev, onNext }) => (
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
             >
-                ดูทั้งหมดบน Credly <FiExternalLink />
+                {t("cred.viewAll")} <FiExternalLink />
             </a>
         </div>
     </div>
-);
+    );
+};
 
 export default function Credentials() {
     const [badges, setBadges] = useState(null);

@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import AnimatedText from "../AnimatedText";
 import WorkItem from "./WorkItem";
 import ExperienceGraph from "./ExperienceGraph";
+import { useLang } from "../LanguageProvider";
 import { COUNTED_TOPICS, hasSpecialTopic, isYearCategory, matchesTab } from "./topics";
 
 // --- Icons ---
@@ -120,6 +121,7 @@ const WorkCard = memo(function WorkCard({
 });
 
 export default function Work() {
+  const { t } = useLang();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
@@ -361,7 +363,7 @@ export default function Work() {
 
   const tabData = useMemo(() => {
     const specialCategories = [
-      { category: "all", label: `All (${projects.length})` },
+      { category: "all", label: t("work.all", projects.length) },
       { category: "Best", label: `⭐ Best (${topicCounts.Best})` },
       { category: "Cloud", label: `☁️ Cloud (${topicCounts.Cloud})` },
       { category: "Network", label: `🌐 Network (${topicCounts.Network})` },
@@ -372,7 +374,7 @@ export default function Work() {
 
     const displayedYears = !canCollapseYears || !isYearsCollapsed ? yearCategories : [];
     return [...specialCategories, ...displayedYears];
-  }, [topicCounts, yearCategories, canCollapseYears, isYearsCollapsed]);
+  }, [topicCounts, yearCategories, canCollapseYears, isYearsCollapsed, projects.length, t]);
 
   const filterWork = useMemo(
     () => projects.filter((item) => matchesTab(item, tabValue)),
@@ -586,7 +588,7 @@ export default function Work() {
   if (loading) return (
     <div className="pt-24 flex flex-col items-center justify-center gap-3">
       <div className="w-8 h-8 border-4 border-[#7edad2]/20 border-t-[#7edad2] rounded-full animate-spin"></div>
-      <div className="text-center animate-pulse text-[#7edad2] font-semibold tracking-wide">กำลังโหลดข้อมูล...</div>
+      <div className="text-center animate-pulse text-[#7edad2] font-semibold tracking-wide">{t("work.loading")}</div>
     </div>
   );
 
@@ -596,7 +598,7 @@ export default function Work() {
 
         {/* --- Header & ปุ่ม Admin --- */}
         <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 gap-4">
-          <AnimatedText text="My Experience" textStyles="h2" />
+          <AnimatedText text={t("work.title")} textStyles="h2" />
           {!isAdmin ? (
             <button onClick={() => setIsAuthModalOpen(true)} className="text-xs text-gray-400 hover:text-[#00ff99] transition-colors">
               Admin Access
@@ -660,7 +662,7 @@ export default function Work() {
                   onClick={handleToggleYears}
                   className="inline-flex items-center justify-center gap-1 whitespace-nowrap h-[40px] rounded-full px-4 text-sm font-medium transition-all text-gray-500 hover:text-[#00ff99] hover:bg-[#00ff99]/10 border border-[#7edad2]/45"
                 >
-                  <span>{isYearsCollapsed ? `Years(${yearCategories.length})` : 'Hide'}</span>
+                  <span>{isYearsCollapsed ? t("work.years", yearCategories.length) : t("work.hide")}</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -678,7 +680,7 @@ export default function Work() {
 
           <TabsContent value={tabValue} className="w-full">
             {filterWork.length === 0 ? (
-              <div className="text-center text-gray-500 py-10">ยังไม่มีข้อมูลในหมวดนี้</div>
+              <div className="text-center text-gray-500 py-10">{t("work.empty")}</div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
                 {visibleWork.map((item) => (
@@ -706,7 +708,7 @@ export default function Work() {
                   onClick={() => setVisibleItems(prev => prev + 6)} 
                   className="btn btn-accent rounded-full px-6 hover:scale-105 active:scale-95 transition-transform"
                 >
-                  Load more ({filterWork.length - visibleItems})
+                  {t("work.loadMore", filterWork.length - visibleItems)}
                 </button>
               </div>
             )}

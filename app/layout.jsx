@@ -1,5 +1,6 @@
-import { Inter, Bebas_Neue } from 'next/font/google'
+import { Inter, Bebas_Neue, IBM_Plex_Sans_Thai } from 'next/font/google'
 import './globals.css'
+import { LanguageProvider } from '@/components/LanguageProvider'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next' // ✅ เพิ่มตรงนี้
 
@@ -13,6 +14,13 @@ const bebasNeue = Bebas_Neue({
   weight: "400",
   subsets: ['latin'],
   variable: '--font-bebas',
+});
+
+// Thai glyphs for the language switch; Inter and Bebas Neue have none
+const thai = IBM_Plex_Sans_Thai({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['thai'],
+  variable: '--font-thai',
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://saranphattree-me.vercel.app'
@@ -52,10 +60,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`antialiased ${inter.variable} ${bebasNeue.variable}`}
+        className={`antialiased ${inter.variable} ${bebasNeue.variable} ${thai.variable}`}
         suppressHydrationWarning={true}
       >
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
         <Analytics />
         <SpeedInsights /> {/* ✅ เพิ่มตรงนี้ */}
       </body>

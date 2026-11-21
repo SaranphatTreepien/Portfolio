@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // The CV page used to live at /resume
+  async redirects() {
+    return [{ source: '/resume', destination: '/cv', permanent: false }]
+  },
   images: {
     // รูปแบบไฟล์ที่รองรับ (ของเดิม)
     formats: ['image/avif', 'image/webp'],

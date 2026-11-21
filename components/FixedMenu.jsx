@@ -7,8 +7,10 @@ import { FiMapPin, FiPhoneCall, FiMail, FiX } from "react-icons/fi";
 // components
 import Nav from "./Nav";
 import Socials from "./Socials";
+import { LanguageToggle, useLang } from "./LanguageProvider";
 
 const FixedMenu = () => {
+  const { t } = useLang();
   const [showMenuButton, setShowMenuButton] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -55,6 +57,7 @@ const FixedMenu = () => {
             className="pointer-events-auto mb-4 w-[calc(100%-2rem)] md:w-auto md:max-w-[1170px] max-w-md max-h-[70vh] overflow-y-auto scrollbar-hide rounded-2xl shadow-2xl"
           >
             <div className="bg-white p-8 md:p-12 w-full flex flex-col md:flex-row items-center gap-8 md:gap-12 relative overflow-hidden">
+              <LanguageToggle className="absolute right-4 top-4" />
               
               {/* Navigation */}
               <Nav
@@ -70,17 +73,17 @@ const FixedMenu = () => {
                 <div className="flex gap-8">
                   <div className="flex flex-col">
                     <div className="text-[24px] text-accent mb-1"><FiMapPin /></div>
-                    <p className="font-semibold text-primary text-base">Location</p>
-                    <p className="text-sm text-gray-600">Bangkok, Thailand</p>
+                    <p className="font-semibold text-primary text-base">{t("menu.location")}</p>
+                    <p className="text-sm text-gray-600">{t("menu.locationValue")}</p>
                   </div>
                   <div className="flex flex-col">
                     <div className="text-[24px] text-accent mb-1"><FiPhoneCall /></div>
-                    <p className="font-semibold text-primary text-base">Phone</p>
+                    <p className="font-semibold text-primary text-base">{t("menu.phone")}</p>
                     <p className="text-sm text-gray-600">+66614461930</p>
                   </div>
                   <div className="flex flex-col">
                     <div className="text-[24px] text-accent mb-1"><FiMail /></div>
-                    <p className="font-semibold text-primary text-base">Email</p>
+                    <p className="font-semibold text-primary text-base">{t("menu.email")}</p>
                     <p className="text-sm text-gray-600">saranphat.tre289@gmail.com</p>
                   </div>
                 </div>
@@ -105,6 +108,7 @@ const FixedMenu = () => {
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onClick={() => setShowMenu(!showMenu)}
+            aria-label={showMenu ? t("menu.close") : t("menu.open")}
             className={`
               pointer-events-auto
               w-[56px] h-[56px] rounded-full shadow-lg flex items-center justify-center transition-colors duration-300 z-50

@@ -1,5 +1,6 @@
 "use client";
 import { Link as ScrollLink } from "react-scroll";
+import { useLang } from "./LanguageProvider";
 
 const links = [
   { name: "Home" },
@@ -10,7 +11,8 @@ const links = [
   { name: "Contact" },
 ];
 
-const Nav = ({ containerStyles, listStyles, linkStyles, spy }) => {
+const Nav = ({ containerStyles, listStyles, linkStyles, spy, onLinkClick }) => {
+  const { t, lang } = useLang();
   return (
     <nav className={containerStyles}>
       <ul
@@ -30,11 +32,13 @@ const Nav = ({ containerStyles, listStyles, linkStyles, spy }) => {
             smooth={true}
             duration={500}
             offset={-70}
+            onClick={onLinkClick}
             className={`
               ${linkStyles}
               relative cursor-pointer
               inline-flex items-center justify-center
-              h-[40px] px-4 rounded-full
+              h-[40px] rounded-full whitespace-nowrap
+              ${lang === "th" ? "px-3 !tracking-normal" : "px-4"}
               border border-transparent
               text-gray-400
               transition-all duration-300
@@ -48,7 +52,7 @@ const Nav = ({ containerStyles, listStyles, linkStyles, spy }) => {
               [&.active-nav-link]:border-[#7edad2]/45
             `}
           >
-            {link.name}
+            {t(`nav.${link.name}`)}
           </ScrollLink>
         ))}
       </ul>

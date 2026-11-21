@@ -9,11 +9,13 @@ import { FiFileText, FiArrowRight, FiX } from "react-icons/fi";
 // components
 import Header from "./Header";
 import Credentials from "./Credentials";
+import { useLang } from "./LanguageProvider";
 
 const LUMA_PROFILE_URL = "https://luma.com/user/max289";
 
 const Hero = () => {
   const [isLumaModalOpen, setIsLumaModalOpen] = useState(false);
+  const { t } = useLang();
 
   useEffect(() => {
     if (!isLumaModalOpen) return;
@@ -81,11 +83,11 @@ const Hero = () => {
           {/* --- Resume, profiles & Badges carousel --- */}
           <div className="relative z-30 w-full lg:w-[50%] order-2 lg:order-1">
             <div className="mb-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-3 justify-center lg:justify-start">
-              <Link href="/resume" passHref className="w-full max-w-[280px] sm:w-auto">
+              <Link href="/cv" passHref className="w-full max-w-[280px] sm:w-auto">
                 <button className="flex w-full sm:w-auto items-center justify-center gap-2 sm:gap-3 h-[50px] sm:h-[56px] px-6 rounded-full border-2 border-white/30 lg:border-gray-300 text-white lg:text-gray-600 font-bold bg-white/5 lg:bg-white">
                   <FiFileText className="text-lg sm:text-xl" />
                   <span className="font-bold tracking-wide text-xs sm:text-sm uppercase whitespace-nowrap">
-                    Resume
+                    {t("hero.resume")}
                   </span>
                   <FiArrowRight className="text-lg" />
                 </button>
@@ -174,7 +176,7 @@ const Hero = () => {
                 type="button"
                 onClick={() => setIsLumaModalOpen(false)}
                 className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-accent/10 hover:text-accent transition-colors"
-                aria-label="Close"
+                aria-label={t("hero.close")}
               >
                 <FiX className="h-5 w-5" />
               </button>
@@ -194,9 +196,9 @@ const Hero = () => {
                     id="luma-modal-title"
                     className="text-base sm:text-lg font-bold text-gray-800"
                   >
-                    PREVIEW
+                    {t("hero.lumaPreview")}
                   </p>
-                  <p className="text-sm text-gray-500">Event attendance proof</p>
+                  <p className="text-sm text-gray-500">{t("hero.lumaProof")}</p>
                 </div>
 
                 <a
@@ -205,7 +207,7 @@ const Hero = () => {
                   rel="noopener noreferrer"
                   className="mt-5 flex items-center justify-center gap-2 w-full py-3 px-4 rounded-full bg-accent text-white font-bold text-sm sm:text-base shadow-lg shadow-accent/25 hover:bg-[#00a8a8] transition-colors"
                 >
-                  View Luma Profile
+                  {t("hero.lumaView")}
                   <FiArrowRight className="h-4 w-4" />
                 </a>
               </div>

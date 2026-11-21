@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY } from "d3-force";
 import { FiMaximize, FiMinus, FiPlus, FiRotateCcw } from "react-icons/fi";
 import { COUNTED_TOPICS, hasSpecialTopic, isYearCategory, matchesTab } from "./topics";
+import { useLang } from "../LanguageProvider";
 
 const TOPIC_STYLE = {
     Cloud: { color: "#38bdf8", label: "☁️ Cloud" },
@@ -68,6 +69,7 @@ const formatDate = (date) =>
 const truncate = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
 export default function ExperienceGraph({ projects, focusTab = "all", onSelectFilter }) {
+    const { t } = useLang();
     const router = useRouter();
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
@@ -358,7 +360,7 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
     };
 
     const legend = [
-        { color: YEAR_COLOR, label: "ปี (เส้นประ = ไทม์ไลน์)" },
+        { color: YEAR_COLOR, label: t("graph.year") },
         ...COUNTED_TOPICS.map((topic) => ({ color: TOPIC_STYLE[topic].color, label: TOPIC_STYLE[topic].label })),
     ];
 
@@ -390,14 +392,14 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
             </div>
 
             <div className="absolute right-4 top-4 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-black/40 text-white/80">
-                <button type="button" onClick={() => zoomBy(1.3)} className="p-2 hover:bg-white/10" aria-label="ซูมเข้า"><FiPlus /></button>
-                <button type="button" onClick={() => zoomBy(1 / 1.3)} className="p-2 hover:bg-white/10" aria-label="ซูมออก"><FiMinus /></button>
-                <button type="button" onClick={fitToView} className="p-2 hover:bg-white/10" aria-label="พอดีจอ" title="พอดีจอ"><FiMaximize /></button>
-                <button type="button" onClick={resetLayout} className="border-t border-white/10 p-2 hover:bg-white/10" aria-label="รีเซ็ตตำแหน่ง" title="รีเซ็ตตำแหน่งกลับเป็นแบบเดิม"><FiRotateCcw /></button>
+                <button type="button" onClick={() => zoomBy(1.3)} className="p-2 hover:bg-white/10" aria-label={t("graph.zoomIn")}><FiPlus /></button>
+                <button type="button" onClick={() => zoomBy(1 / 1.3)} className="p-2 hover:bg-white/10" aria-label={t("graph.zoomOut")}><FiMinus /></button>
+                <button type="button" onClick={fitToView} className="p-2 hover:bg-white/10" aria-label={t("graph.fit")} title={t("graph.fit")}><FiMaximize /></button>
+                <button type="button" onClick={resetLayout} className="border-t border-white/10 p-2 hover:bg-white/10" aria-label={t("graph.reset")} title={t("graph.reset")}><FiRotateCcw /></button>
             </div>
 
             <p className="pointer-events-none absolute bottom-3 left-4 text-[11px] text-white/40">
-                คลิกหัวข้อ/ปีเพื่อกรองผลงานด้านล่าง · คลิกจุดเพื่อเปิดผลงาน · ลากเพื่อเลื่อน · Ctrl + scroll เพื่อซูม
+                {t("graph.help")}
             </p>
 
             {tooltip && (

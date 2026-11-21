@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gateway data flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: technical reference shown to a thesis committee and a mentor
+   IDEA a data-protection map, like a DPIA data-flow sheet: every hop, every store, how long
+   PICTURE one wide system diagram, colour of each arrow = what kind of data travels (real / masked / metadata)
+   COLOUR our app: white or #212121, ink, violet #7c3aed for masked, green for real values, grey for metadata
+   TYPE IBM Plex Sans Thai
+   LAYOUT title + mode switch + four change figures, diagram full width, numbered journey, then the store table */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#1c1c1e);--panel:light-dark(#f7f7f8,#262628);--ink:light-dark(#1f1f1f,#ececec);--head:light-dark(#0d0d0d,#fafafa);--muted:light-dark(#5d5d5d,#a6a6a6);--line:light-dark(#e4e4e7,#3a3a3d);--acc:light-dark(#7c3aed,#a78bfa);--acc-bg:light-dark(#f3eefe,#2c2540);--real:light-dark(#1a7f45,#5cc98f);--real-bg:light-dark(#e3f4ea,#1d3328);--meta:light-dark(#8f8f8f,#8a8a8a);--red:light-dark(#c42b2b,#f08080);--red-bg:light-dark(#fdeaea,#3a2222);--zone:light-dark(#faf8ff,#232029)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans Thai","Leelawadee UI",Tahoma,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1,h2{color:var(--head);letter-spacing:-.02em;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(32px,4.4vw,48px)}
+h2{font-size:clamp(24px,3vw,32px);margin-bottom:8px}
+.lead{font-size:17px;max-width:68ch;margin:12px 0 0;color:var(--ink)}
+.sub{color:var(--muted);max-width:68ch;margin:0 0 20px}
+.top{display:flex;flex-wrap:wrap;gap:20px 40px;align-items:flex-end;justify-content:space-between}
+.switch{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.switch button{font:inherit;font-size:15px;border:0;background:none;color:var(--muted);padding:9px 16px;border-radius:9px;cursor:pointer;min-height:44px}
+.switch button[aria-pressed=true]{background:var(--bg);color:var(--head);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.switch button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(13em,1fr));gap:12px;margin-top:26px}
+.fg{border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.fg b{display:block;font-size:clamp(20px,2.2vw,26px);color:var(--head);line-height:1.2}
+.fg span{font-size:13.5px;color:var(--muted)}
+.fg .was{text-decoration:line-through;color:var(--muted);font-weight:500;font-size:.75em;margin-right:6px}
+.scroll{overflow-x:auto}
+.diagram{margin:26px 0 0}
+.diagram svg{display:block;width:100%;min-width:920px;height:auto}
+svg text{fill:var(--ink);font-family:inherit;font-size:13px}
+svg .h{font-weight:600;font-size:14.5px;fill:var(--head)}
+svg .s{fill:var(--muted);font-size:12px}
+svg .box{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+svg .zone{fill:var(--zone);stroke:var(--acc);stroke-width:1.5;stroke-dasharray:6 5}
+svg .chip{fill:var(--acc-bg);stroke:none}
+svg .bad{fill:var(--red)}
+svg .real{stroke:var(--real)}
+svg .mask{stroke:var(--acc)}
+svg .meta{stroke:var(--meta)}
+svg .ln{fill:none;stroke-width:2.2}
+svg .lbl{paint-order:stroke;stroke:var(--bg);stroke-width:5px;font-size:12px}
+svg .lr{fill:var(--real)}
+svg .lm{fill:var(--acc)}
+svg .lg{fill:var(--meta)}
+:root[data-mode=demo] .t-only{display:none}
+:root[data-mode=target] .d-only{display:none}
+figcaption{font-size:14px;color:var(--muted);margin-top:10px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;color:var(--muted);margin-top:12px}
+.legend i{display:inline-block;width:22px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.alt{background:var(--panel)}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.steps li{display:grid;grid-template-columns:56px minmax(0,1fr) minmax(0,1fr);gap:8px 24px;padding:18px 0;border-top:1px solid var(--line)}
+.steps .n{font-size:30px;font-weight:700;color:var(--acc);line-height:1}
+.steps h3{margin:0 0 4px;font-size:18px;color:var(--head)}
+.steps p{margin:0;font-size:15px}
+.kept{font-size:14px;border-left:3px solid var(--line);padding-left:14px}
+.kept div{margin-bottom:4px}
+.k{font-weight:600}
+.k.r{color:var(--real)}.k.m{color:var(--acc)}.k.g{color:var(--muted)}.k.x{color:var(--red)}
+.pill{display:inline-block;font-size:12px;font-weight:600;border-radius:99px;padding:1px 9px;margin-left:6px;white-space:nowrap}
+.pill.d{background:var(--red-bg);color:var(--red)}
+.pill.t{background:var(--acc-bg);color:var(--acc)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:600}
+td:first-child{font-weight:600;color:var(--head)}
+td code{font-size:12.5px;color:var(--muted);font-weight:400;overflow-wrap:anywhere}
+.yes{color:var(--real);font-weight:600;white-space:nowrap}
+.no{color:var(--muted);white-space:nowrap}
+tr.removed td{color:var(--muted)}
+tr.removed td:first-child{text-decoration:line-through}
+.note{font-size:13.5px;color:var(--muted);margin-top:14px}
+@media(max-width:760px){.steps li{grid-template-columns:40px minmax(0,1fr)}.steps .kept{grid-column:2}.steps .n{font-size:24px}}
+@media(max-width:600px){table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--muted);font-weight:500;text-align:left}.stack td:first-child{text-align:left}.stack td:first-child::before{content:none}.stack tr{border-bottom:1px solid var(--line)}}
+@media(prefers-reduced-motion:no-preference){.flow{stroke-dasharray:7 9;animation:run 1.6s linear infinite}@keyframes run{to{stroke-dashoffset:-32}}}
+</style>
+</head>
+<body>
+
+<section class="band">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>ข้อมูลวิ่งไปไหน และเก็บไว้ที่ไหน</h1>
+        <p style="margin:0 0 10px;font-size:15px"><a href="simulator.html" style="color:var(--acc);font-weight:600">เปิดหน้าจำลองทุกเคส (15 เคส) ดูข้อความวิ่งทีละด่าน</a></p>
+        <p class="lead">ค่าจริงอยู่ได้แค่ 2 ที่: เครื่องของพนักงาน กับหน่วยความจำของ gateway ระหว่างทำ request ส่วน AI ภายนอกได้รับเฉพาะข้อความที่ปกปิดแล้ว ในแผนต่อไป gateway จะเลิกเก็บเนื้อหาแชตทั้งหมด และเหลือแค่ metadata</p>
+      </div>
+      <div class="switch" role="group" aria-label="เลือกมุมมอง">
+        <button id="m-demo" aria-pressed="false">demo ตอนนี้</button>
+        <button id="m-target" aria-pressed="true">เป้าหมาย: zero-retention</button>
+      </div>
+    </div>
+    <div class="figs" id="figs"></div>
+
+    <figure class="diagram">
+      <div class="scroll">
+      <svg viewBox="0 0 1200 670" role="img" aria-label="ข้อความจริงเดินจากเบราว์เซอร์ผ่าน proxy เข้า gateway 7 ด่าน ที่ปกปิดก่อนส่งให้ AI ภายนอก ค่าจริงเข้ารหัสอยู่ใน Redis vault ส่วน Postgres และ log เก็บแค่ metadata">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker>
+        </defs>
+
+        <!-- identity -->
+        <g class="t-only">
+          <rect class="box" x="20" y="24" width="190" height="74" rx="12"/>
+          <text class="h" x="36" y="54">Google Workspace</text>
+          <text class="s" x="36" y="76">ยืนยันตัวตน (OIDC)</text>
+          <path class="ln meta" d="M115 98V196" marker-end="url(#ar)"/>
+          <text class="lbl lg" x="124" y="150">id token: email</text>
+        </g>
+
+        <!-- browser -->
+        <rect class="box" x="20" y="200" width="190" height="190" rx="14"/>
+        <text class="h" x="36" y="230">เบราว์เซอร์พนักงาน</text>
+        <text class="s" x="36" y="256">คุกกี้ gov_token</text>
+        <text class="s" x="36" y="274">(JWT 8 ชม., httpOnly)</text>
+        <text class="s d-only" x="36" y="300">login: email + รหัสผ่าน</text>
+        <text class="s t-only" x="36" y="300">ประวัติแชต (เก็บในเครื่อง)</text>
+        <text class="s" x="36" y="326">ไฟล์ PDF / รูป</text>
+        <text class="s" x="36" y="344">ค่าจริงเห็นได้ที่นี่</text>
+
+        <!-- proxy -->
+        <rect class="box" x="250" y="238" width="120" height="78" rx="12"/>
+        <text class="h" x="264" y="266">Next.js</text>
+        <text class="s" x="264" y="288">cookie เป็น</text>
+        <text class="s" x="264" y="304">Bearer</text>
+        <path class="ln real flow" d="M210 262H246" marker-end="url(#ar)"/>
+        <path class="ln real flow" d="M370 262H414" marker-end="url(#ar)"/>
+        <text class="lbl lr" x="216" y="232">ข้อความจริง</text>
+        <text class="lbl lr" x="216" y="248">HTTPS</text>
+
+        <!-- gateway zone -->
+        <rect class="zone" x="418" y="150" width="560" height="270" rx="18"/>
+        <text class="h" x="438" y="180">Gateway (อยู่ในหน่วยความจำเท่านั้น)</text>
+        <g id="chips"></g>
+        <text class="s" x="438" y="330">ข้อความจริงและไฟล์อยู่แค่ระหว่างทำ request แล้วหายไป</text>
+        <text class="s" x="438" y="350">ไม่มีด่านไหนเขียนค่าจริงลงดิสก์แบบไม่เข้ารหัส</text>
+        <text class="s" x="438" y="370">ตัวตรวจหรือ Redis ล่ม: ตอบ 503 ไม่ส่งข้อความดิบออกไป</text>
+
+        <!-- external AI -->
+        <rect class="box" x="1010" y="200" width="170" height="124" rx="14"/>
+        <text class="h" x="1026" y="230">AI ภายนอก</text>
+        <text class="s" x="1026" y="254">Gemini · Groq</text>
+        <text class="s" x="1026" y="278">เห็นแค่ token</text>
+        <text class="s" x="1026" y="296">[PERSON_001]</text>
+        <path class="ln mask flow" d="M978 236H1006" marker-end="url(#ar)"/>
+        <path class="ln mask" d="M1006 290H982" marker-end="url(#ar)"/>
+        <text class="lbl lm" x="1095" y="190" text-anchor="middle">รับ-ส่งแบบ masked</text>
+
+        <!-- answer back to browser -->
+        <path class="ln real" d="M440 420V452H115V394" marker-end="url(#ar)"/>
+        <text class="lbl lr" x="250" y="446">คำตอบค่าจริง (เฉพาะผู้ส่ง)</text>
+
+        <!-- stores -->
+        <rect class="box" x="418" y="500" width="170" height="124" rx="14"/>
+        <text class="h" x="434" y="530">Redis vault</text>
+        <text class="s" x="434" y="552">token ↔ ค่าจริง</text>
+        <text class="s" x="434" y="570">เข้ารหัส Fernet, ไม่ลงดิสก์</text>
+        <text class="s d-only" x="434" y="598">หมดอายุ 60 นาที</text>
+        <text class="s t-only" x="434" y="598">ลบหลังถอดกลับ (≤ 5 นาที)</text>
+        <path class="ln real" d="M490 420V496" marker-end="url(#ar)" marker-start="url(#ar)"/>
+        <text class="lbl lr" x="498" y="484">เข้ารหัส</text>
+
+        <rect class="box" x="610" y="500" width="210" height="124" rx="14"/>
+        <text class="h" x="626" y="530">Postgres</text>
+        <text class="s" x="626" y="552">ผู้ใช้ · role · policy · provider</text>
+        <text class="s" x="626" y="570">audit metadata</text>
+        <text class="s d-only bad" x="626" y="596" style="fill:var(--red)">+ แชตเข้ารหัส + token map</text>
+        <text class="s d-only" x="626" y="614" style="fill:var(--red)">+ log ฉบับ masked (90 วัน)</text>
+        <text class="s t-only" x="626" y="598">ไม่มีเนื้อหาแชต</text>
+        <path class="ln meta" d="M715 420V496" marker-end="url(#ar)"/>
+        <text class="lbl lg" x="723" y="484">metadata</text>
+
+        <rect class="box" x="842" y="500" width="136" height="124" rx="14"/>
+        <text class="h" x="858" y="530">Program log</text>
+        <text class="s" x="858" y="552">stdout</text>
+        <text class="s" x="858" y="570">ขั้น · เวลา · ชนิด</text>
+        <text class="s" x="858" y="588">ไม่มีข้อความ</text>
+        <path class="ln meta" d="M910 420V496" marker-end="url(#ar)"/>
+
+        <g class="t-only">
+          <rect class="box" x="1010" y="500" width="170" height="124" rx="14" style="stroke-dasharray:5 4"/>
+          <text class="h" x="1026" y="530">Grafana ลูกค้า</text>
+          <text class="s" x="1026" y="552">ดึง /metrics เอง</text>
+          <text class="s" x="1026" y="570">เราไม่ต้องสร้าง</text>
+          <text class="s" x="1026" y="588">dashboard</text>
+          <path class="ln meta" d="M978 562H1006" marker-end="url(#ar)"/>
+        </g>
+        <g class="d-only">
+          <rect class="box" x="1010" y="500" width="170" height="124" rx="14"/>
+          <text class="h" x="1026" y="530">Dashboard ในตัว</text>
+          <text class="s" x="1026" y="552">อ่านจาก Postgres</text>
+          <text class="s" x="1026" y="570">ไว้โชว์ใน demo</text>
+          <path class="ln meta" d="M715 624V652H1095V628" marker-end="url(#ar)"/>
+        </g>
+      </svg>
+      </div>
+      <figcaption>สีของเส้นบอกว่ากำลังส่งข้อมูลแบบไหน: เส้นเขียวคือค่าจริงที่ส่งไปแค่ระหว่าง gateway กับเครื่องพนักงาน (หรือเข้ารหัสไว้ใน vault) เส้นม่วงคือข้อความที่ปกปิดแล้ว และเส้นเทาคือ metadata ที่ไม่มีเนื้อหา</figcaption>
+      <div class="legend"><span><i style="background:var(--real)"></i>ค่าจริง</span><span><i style="background:var(--acc)"></i>ปกปิดแล้ว (token)</span><span><i style="background:var(--meta)"></i>metadata</span></div>
+    </figure>
+  </div>
+</section>
+
+<section class="band alt">
+  <div class="wrap">
+    <h2>ตั้งแต่ login ข้อมูลแต่ละชิ้นเดินทางแบบนี้</h2>
+    <p class="sub">คอลัมน์ขวาบอกว่าแต่ละขั้นทิ้งอะไรไว้ที่ไหน ส่วนที่ติดป้ายแดงคือสิ่งที่ demo ตอนนี้ยังเก็บอยู่ และเป้าหมายจะเลิกเก็บ</p>
+    <ol class="steps" id="steps"></ol>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>แต่ละที่เก็บอะไร และนานแค่ไหน</h2>
+    <p class="sub" id="tsub"></p>
+    <div class="scroll">
+      <table class="stack" id="stores"><thead><tr><th>ที่เก็บ</th><th>เก็บอะไร</th><th>นานแค่ไหน</th><th>มีค่าจริงไหม</th></tr></thead><tbody></tbody></table>
+    </div>
+    <p class="note">อ้างอิงจากโค้ด: <code>gateway/app/db/models.py</code>, <code>config.py</code> (token_ttl_s 3600, chat_retention_days 90, request_log_retention_days 90, jwt_expire_hours 8) และ <code>vault/tokens.py</code> ส่วนเป้าหมายเป็นแผนที่ยังไม่ได้ทำ ข้อมูลตัวอย่างทั้งหมดเป็นข้อมูลสังเคราะห์</p>
+  </div>
+</section>
+
+<script>
+{
+const chips=[["1","Auth","ตรวจ JWT",""],["2","Detect","หา PII","และความลับ"],["3","Policy","Allow","Mask / Block"],["4","Provider","ส่งข้อความ","masked"],["5","Output","ตรวจ","คำตอบ"],["6","Restore","ถอดกลับ","ให้ผู้ส่ง"],["7","Audit","จด","metadata"]];
+const g=document.getElementById('chips');
+g.innerHTML=chips.map((c,i)=>{const x=438+i*76;return `<rect class="chip" x="${x}" y="200" width="70" height="96" rx="10"/><text class="h" x="${x+35}" y="230" text-anchor="middle" style="fill:var(--acc)">${c[0]}</text><text x="${x+35}" y="252" text-anchor="middle" style="font-weight:600;font-size:12.5px">${c[1]}</text><text class="s" x="${x+35}" y="274" text-anchor="middle" style="font-size:10.5px">${c[2]}</text><text class="s" x="${x+35}" y="288" text-anchor="middle" style="font-size:10.5px">${c[3]}</text>`}).join('');
+
+const figs={
+  demo:[["4 ตาราง","เก็บเนื้อหาแชต (เข้ารหัส) ใน Postgres"],["60 นาที","อายุของ token map ใน Redis"],["รหัสผ่าน","login ด้วย email + Argon2 hash"],["Dashboard ในตัว","อ่านจาก Postgres"]],
+  target:[["<span class=was>4 ตาราง</span>0","ตารางที่เก็บเนื้อหาแชต"],["<span class=was>60 นาที</span>≤ 5 นาที","ลบ token map ทันทีหลังถอดกลับ"],["<span class=was>รหัสผ่าน</span>Google SSO","gateway ไม่เก็บรหัสผ่าน"],["<span class=was>Dashboard</span>Grafana","ลูกค้าดึง /metrics ไปใช้เอง"]]
+};
+
+const steps=[
+ {h:"Login",p:{demo:"พนักงานกรอก email + รหัสผ่าน gateway เทียบกับ Argon2 hash แล้วออก JWT",target:"พนักงานกด login ด้วย Google ซึ่งยืนยันตัวตนให้ gateway รับแค่ email ที่ยืนยันแล้ว จับคู่กับ role แล้วออก JWT"},
+  k:{demo:[["g","Postgres","users: email, password_hash, role, แผนก"],["g","เบราว์เซอร์","คุกกี้ httpOnly 8 ชม."]],target:[["g","Postgres","users: email, role, แผนก (ไม่มีรหัสผ่าน)"],["g","เบราว์เซอร์","คุกกี้ httpOnly 8 ชม."]]}},
+ {h:"เปิดแชต และเลือกโมเดล",p:{demo:"โหลดรายชื่อ provider และ policy ขององค์กร พร้อมรายการแชตเก่า",target:"โหลดรายชื่อ provider และ policy ขององค์กร โดยรายการแชตเก่าอ่านจากเครื่องของพนักงานเอง"},
+  k:{demo:[["g","Redis","policy cache 5 นาที"],["x","Postgres","conversations: ชื่อแชต (เข้ารหัส)","d"]],target:[["g","Redis","policy cache 5 นาที"],["r","เบราว์เซอร์","ประวัติแชตของตัวเอง"]]}},
+ {h:"ลากไฟล์ PDF หรือรูป",p:{demo:"ส่งไฟล์ไป /api/files/extract แล้วดึงข้อความ (หรือ OCR) ในหน่วยความจำ คืนข้อความให้ผู้ส่งคนเดียว",target:"ส่งไฟล์ไป /api/files/extract แล้วดึงข้อความ (หรือ OCR) ในหน่วยความจำ คืนข้อความให้ผู้ส่งคนเดียว เหมือน demo"},
+  k:{demo:[["g","Program log","ชนิดไฟล์ จำนวนหน้า ตัวอักษร และเวลา"],["g","ตัวไฟล์","ไม่เก็บ และไม่ส่งให้ AI"]],target:[["g","Program log","ชนิดไฟล์ จำนวนหน้า ตัวอักษร และเวลา"],["g","ตัวไฟล์","ไม่เก็บ และไม่ส่งให้ AI"]]}},
+ {h:"ส่งข้อความ: ด่าน 1-3",p:{demo:"Next.js เปลี่ยนคุกกี้เป็น Bearer แล้ว gateway ตรวจ JWT ตามด้วยกฎ/regex, Presidio และ PyThaiNLP จากนั้น policy ตัดสินใจ (Block > Mask > Allow)",target:"Next.js เปลี่ยนคุกกี้เป็น Bearer แล้ว gateway ตรวจ JWT ตามด้วยกฎ/regex, Presidio และ PyThaiNLP จากนั้น policy ตัดสินใจ (Block > Mask > Allow) โดยค่าจริงอยู่แค่ใน vault ชั่วคราว"},
+  k:{demo:[["r","Redis vault","token ↔ ค่าจริง (Fernet) 60 นาที"],["x","Postgres","conversation_tokens: token ↔ ค่าจริง (Fernet) เก็บถาวรตามแชต","d"]],target:[["r","Redis vault","token ↔ ค่าจริง (Fernet) ลบหลังถอดกลับ, TTL 5 นาที"]]}},
+ {h:"ด่าน 4: ส่งให้ AI ภายนอก",p:{demo:"ส่งแค่ข้อความที่ปกปิดแล้ว (พร้อมประวัติแบบ masked) ผ่าน LiteLLM ถ้าล่มจะ retry แล้วสลับโมเดลสำรอง",target:"ส่งแค่ข้อความที่ปกปิดแล้วผ่าน LiteLLM ส่วนประวัติแชต เบราว์เซอร์ส่งมาเองทุกครั้ง แล้ว gateway ปกปิดใหม่ด้วยลำดับเดิม จึงได้ token ชุดเดิม"},
+  k:{demo:[["m","AI ภายนอก","ข้อความ masked ตามเงื่อนไขของผู้ให้บริการ"]],target:[["m","AI ภายนอก","ข้อความ masked ตามเงื่อนไขของผู้ให้บริการ"]]}},
+ {h:"ด่าน 5-6: ตรวจคำตอบ แล้วถอดกลับ",p:{demo:"ตรวจคำตอบซ้ำ แล้วแปลง token กลับเป็นค่าจริงให้ผู้ส่ง จากนั้นบันทึกแชต",target:"ตรวจคำตอบซ้ำ แล้วแปลง token กลับเป็นค่าจริงให้ผู้ส่ง จากนั้นลบ mapping ทันที"},
+  k:{demo:[["x","Postgres","messages: ข้อความจริง + ฉบับ masked (เข้ารหัส) 90 วัน","d"],["x","Postgres","request_log: ข้อความ/คำตอบฉบับ masked 90 วัน","d"]],target:[["r","เบราว์เซอร์","คำตอบค่าจริง เก็บเป็นประวัติในเครื่อง"],["g","Redis vault","ลบแล้ว"]]}},
+ {h:"ด่าน 7: Audit",p:{demo:"จดแค่ metadata ทั้งของ request ที่ผ่านและที่ถูกบล็อก",target:"จด metadata เหมือนเดิม แล้วเปิด /metrics ให้ Grafana ของลูกค้าดึงไปใช้"},
+  k:{demo:[["g","Postgres","audit_events, audit_findings: เวลา ผู้ใช้ ชนิด×จำนวน action provider token"],["g","Program log","บรรทัด metadata ต่อขั้น"]],target:[["g","Postgres","audit_events, audit_findings: เวลา ผู้ใช้ ชนิด×จำนวน action provider token"],["g","Grafana ลูกค้า","metrics รวม ไม่มีเนื้อหา","t"]]}},
+ {h:"Logout หรือหมดเวลา",p:{demo:"ลบคุกกี้ key ใน Redis หมดอายุเอง แชตถูกลบเมื่อสั่งลบหรือไม่ได้ใช้ 90 วัน",target:"ลบคุกกี้ ฝั่ง gateway ไม่เหลือเนื้อหาให้ลบแล้ว"},
+  k:{demo:[["g","ที่เหลือ","audit metadata + แชตเข้ารหัสจนครบ 90 วัน"]],target:[["g","ที่เหลือ","audit metadata เท่านั้น"]]}}
+];
+
+const stores=[
+ ["คุกกี้ <code>gov_token</code>","JWT ระบุผู้ใช้และ role","8 ชม.","no",0,0],
+ ["เบราว์เซอร์ (localStorage)",{demo:"ธีม และภาษา",target:"ธีม ภาษา และประวัติแชตของตัวเอง"},"จนกว่าผู้ใช้จะลบ",{demo:"no",target:"yes"},0,0],
+ ["Gateway (หน่วยความจำ)","ข้อความจริง ไฟล์ คำตอบ ระหว่างทำ request","จบ request ก็หาย","yes",0,0],
+ ["Redis vault","token ↔ ค่าจริง เข้ารหัส Fernet, persistence ปิด",{demo:"60 นาที (TTL)",target:"ลบหลังถอดกลับ · TTL 5 นาที"},"yes",0,0],
+ ["Redis policy cache","policy ที่ใช้งานอยู่","5 นาที","no",0,0],
+ ["Postgres <code>users</code> <code>roles</code> <code>departments</code>",{demo:"email, password_hash (Argon2), role, แผนก",target:"email, role, แผนก"},"ตลอดอายุบัญชี","no",0,0],
+ ["Postgres <code>api_keys</code>","hash ของ key เท่านั้น","จนกว่าจะ revoke","no",0,0],
+ ["Postgres <code>policies</code> <code>policy_rules</code> <code>providers</code>","config ขององค์กร","ถาวร","no",0,0],
+ ["Postgres <code>audit_events</code> <code>audit_findings</code> <code>alerts</code>","metadata: เวลา ผู้ใช้ ชนิด×จำนวน action provider token","ตาม policy ขององค์กร","no",0,0],
+ ["Postgres <code>conversations</code> <code>messages</code>","ชื่อแชต ข้อความจริง และฉบับ masked (เข้ารหัส)","90 วันหลังใช้ครั้งล่าสุด","yes",1,0],
+ ["Postgres <code>conversation_tokens</code>","token ↔ ค่าจริง (เข้ารหัส) ของแชตที่บันทึก","ตามอายุแชต","yes",1,0],
+ ["Postgres <code>request_log</code>","ข้อความที่ส่ง และคำตอบ ฉบับ masked","90 วัน","no",1,0],
+ ["Program log (stdout)","ขั้น เวลา ชนิด×จำนวน provider status","ตามที่เก็บ log","no",0,0],
+ ["<code>/metrics</code> ไป Grafana ลูกค้า","ตัวเลขรวม: จำนวน request, block, mask, latency","ฝั่งลูกค้า","no",0,1],
+ ["AI ภายนอก","ข้อความที่ปกปิดแล้ว","ตามเงื่อนไขของผู้ให้บริการ","no",0,0]
+];
+
+const pick=(v,m)=>typeof v==='object'?v[m]:v;
+const yes={yes:'<span class="yes">มี (เข้ารหัส/ชั่วคราว)</span>',no:'<span class="no">ไม่มี</span>'};
+
+const render=m=>{
+  document.documentElement.dataset.mode=m;
+  document.getElementById('m-demo').setAttribute('aria-pressed',m==='demo');
+  document.getElementById('m-target').setAttribute('aria-pressed',m==='target');
+  document.getElementById('figs').innerHTML=figs[m].map(f=>`<div class="fg"><b>${f[0]}</b><span>${f[1]}</span></div>`).join('');
+  document.getElementById('steps').innerHTML=steps.map((s,i)=>`<li><div class="n">${i+1}</div><div><h3>${s.h}</h3><p>${s.p[m]}</p></div><div class="kept">${s.k[m].map(k=>`<div><span class="k ${k[0]}">${k[1]}</span> ${k[2]}${k[3]==='d'?'<span class="pill d">เลิกเก็บในเป้าหมาย</span>':k[3]==='t'?'<span class="pill t">ใหม่</span>':''}</div>`).join('')}</div></li>`).join('');
+  document.getElementById('tsub').textContent=m==='demo'?'สิ่งที่โค้ดเก็บอยู่จริงตอนนี้ แถวที่ติดป้ายคือส่วนที่จะเลิกเก็บ':'ภาพเป้าหมาย แถวที่ขีดฆ่าคือตารางที่ถูกตัดออก';
+  document.querySelector('#stores tbody').innerHTML=stores.filter(r=>m==='target'||!r[5]).map(r=>{
+    const gone=m==='target'&&r[4];
+    return `<tr class="${gone?'removed':''}"><td>${r[0]}${m==='demo'&&r[4]?'<span class="pill d">เลิกเก็บ</span>':''}${r[5]?'<span class="pill t">ใหม่</span>':''}</td><td data-l="เก็บอะไร">${gone?'ไม่เก็บแล้ว':pick(r[1],m)}</td><td data-l="นานแค่ไหน">${gone?'-':pick(r[2],m)}</td><td data-l="ค่าจริง">${gone?yes.no:yes[pick(r[3],m)]}</td></tr>`}).join('');
+};
+document.getElementById('m-demo').addEventListener('click',()=>render('demo'));
+document.getElementById('m-target').addEventListener('click',()=>render('target'));
+render('target');
+}
+</script>
+</body>
+</html>

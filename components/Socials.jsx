@@ -8,7 +8,7 @@ const socials = [
   { icon: <RiInstagramFill />, path: "https://www.instagram.com/maxtree289_/#", external: true },
   { icon: <FaFacebookF />, path: "https://web.facebook.com/Saranphat7S/", external: true },
   { icon: <FaXTwitter />, path: "https://x.com/maxtree289_", external: true, title: "X" },
-  { icon: <BsFileEarmarkPersonFill />, path: "/resume", title: "Resume" },
+  { icon: <BsFileEarmarkPersonFill />, path: "/cv", title: "CV" },
 ];
 
 const Socials = ({ containerStyles, iconStyles }) => {

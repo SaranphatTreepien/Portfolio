@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="th" id="html">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Travel Plan Booking · mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Mock of a freelance AI concierge (B2C). All names, venues and people are fictional; nothing talks to a real agent. */
+:root{
+  --font:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --ink:#1f1d2b;--muted:#8a8797;--line:#ece9f1;--pink:#ec4899;--purple:#a855f7;--soft:#fdf2f8;
+  /* channel theme (web by default) */
+  --page:#f3f1f6;--cbg:#faf9f7;--hd:#ffffff;--ht:#1f1d2b;--hs:#8a8797;
+  --ub:linear-gradient(90deg,#ec4899,#a855f7);--ut:#fff;--bb:#ffffff;--acc:#a855f7;
+}
+[data-ch="line"]{--cbg:#d9e4f2;--hd:#06c755;--ht:#fff;--hs:#e6ffef;--ub:#06c755;--ut:#fff;--acc:#06a647}
+[data-ch="telegram"]{--cbg:#dfe9d6;--hd:#3390ec;--ht:#fff;--hs:#dcecff;--ub:#effdde;--ut:#1f1d2b;--acc:#3390ec}
+[data-ch="whatsapp"]{--cbg:#efeae2;--hd:#008069;--ht:#fff;--hs:#d7f5ee;--ub:#d9fdd3;--ut:#1f1d2b;--acc:#008069}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--font);color:var(--ink);background:var(--page);display:flex;flex-direction:column;align-items:center;padding:14px;gap:10px}
+button{font:inherit;cursor:pointer}
+.chbar{width:100%;max-width:900px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}
+.chbar b{font-weight:600;color:var(--muted)}
+.chs{display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px}
+.chs button{border:0;background:none;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.chs button[aria-pressed="true"]{background:#1f1d2b;color:#fff}
+.chs.lang{margin-left:auto}
+.mockflag{width:100%;font-size:12px;color:var(--muted)}
+.win{width:100%;max-width:900px;flex:1;min-height:0;display:flex;flex-direction:column;background:var(--cbg);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 20px 50px -30px rgba(31,29,43,.35)}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--hd);color:var(--ht);border-bottom:1px solid rgba(0,0,0,.06)}
+.av{width:40px;height:40px;flex:0 0 auto;position:relative}
+.av svg{width:100%;height:100%;display:block}
+.av::after{content:"";position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:#22c55e;border:2px solid var(--hd)}
+.who{min-width:0;flex:1}
+.who strong,.who span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who strong{font-size:16px;line-height:1.2}
+.who span{font-size:12px;color:var(--hs)}
+.hbtn{display:flex;gap:6px;margin-left:auto}
+.hbtn button{border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.9);color:#1f1d2b;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.hbtn .deal{background:#fff7e6;border-color:#fde2a7}
+.hbtn .mine{background:#f5f0ff;border-color:#e4d7ff}
+.hbtn .reset{padding:6px 10px}
+#log{flex:1;min-height:0;overflow-y:auto;padding:18px 16px 8px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.row{display:flex;gap:8px;align-items:flex-end;max-width:100%}
+.row.me{justify-content:flex-end}
+.row .mini{width:28px;height:28px;flex:0 0 auto;align-self:flex-start}
+.col{display:flex;flex-direction:column;gap:6px;min-width:0;max-width:min(640px,88%)}
+.row.me .col{align-items:flex-end}
+.bub{padding:9px 14px;border-radius:18px;background:var(--bb);font-size:14.5px;line-height:1.55;box-shadow:0 1px 2px rgba(0,0,0,.05);overflow-wrap:anywhere}
+.me .bub{background:var(--ub);color:var(--ut);font-weight:600;border-bottom-right-radius:6px}
+.bot .bub{border-top-left-radius:6px}
+.meta{font-size:11px;color:var(--muted);padding:0 4px}
+.typing{display:inline-flex;gap:4px;padding:12px 14px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#c9c4d6;animation:b 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-4px);opacity:1}}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;font-size:14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card h3{margin:0;font-size:18px}
+.card .sub{color:var(--muted);font-size:13px;margin:2px 0 10px}
+.day{color:var(--acc);font-weight:600;font-size:13px;margin:12px 0 4px}
+.tl{list-style:none;margin:0;padding:0 0 0 14px;border-left:2px solid #e8def8}
+.tl li{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;padding:6px 0}
+.tl li::before{content:"";position:absolute;left:-20px;top:12px;width:10px;height:10px;border-radius:50%;background:#ddd6e8}
+.tl li.meal::before{background:var(--purple)}
+.tl .t{color:var(--acc);font-weight:600;font-size:13px}
+.tl .how{color:var(--muted);font-size:12.5px}
+.pill{display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;text-align:left;border:1px solid #f9c6e1;background:var(--soft);color:var(--ink);border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:600}
+.pill:hover{border-color:var(--pink)}
+.pill em{font-style:normal;color:var(--pink)}
+.dist{font-size:12px;color:var(--muted);margin-top:4px}
+.maplink{display:inline-block;border:0;background:none;color:var(--acc);font-weight:600;font-size:13px;padding:6px 0}
+.note{background:#fff8e6;border:1px solid #fde7b0;border-radius:10px;padding:8px 12px;font-size:12.5px;color:#7a5b12;margin-top:8px}
+.rest{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid #f9c6e1;border-radius:14px;padding:10px 12px;background:#fff}
+.rest .ph{width:56px;height:56px;border-radius:12px;display:grid;place-items:center;font-size:26px;background:#f6f3fa}
+.rest b{display:block;font-size:14.5px}
+.rest small{color:var(--muted);font-size:12.5px}
+.rest .more{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
+.list{display:flex;flex-direction:column;gap:8px}
+.det b.nm{font-size:16px}.det .area{color:var(--muted);font-size:13px}
+.det ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.act{border:1px solid #e4d7ff;background:#fff;color:var(--ink);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600}
+.act:hover:not(:disabled){border-color:var(--purple)}
+.act.pri{background:var(--ub);color:var(--ut);border-color:transparent}
+.act:disabled{opacity:.45;cursor:default}
+.grid{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-width:44px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-size:13.5px;color:#5c5970}
+.chip:hover:not(:disabled){border-color:var(--purple);color:var(--ink)}
+.chip.on{background:var(--ub);color:var(--ut);border-color:transparent;font-weight:600}
+.chip:disabled{text-decoration:line-through;opacity:.45;cursor:default}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(40px,1fr));gap:6px;text-align:center;font-size:12px;color:var(--muted)}
+.cal button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 0;font-size:15px;font-weight:600;color:#5c5970;line-height:1.2}
+.cal button small{display:block;font-size:10px;font-weight:500;color:var(--pink)}
+.cal button:disabled{background:#f2f0f5;text-decoration:line-through;opacity:.6;cursor:default}
+.cal button.on{background:var(--ub);color:var(--ut);border-color:transparent}
+.cal button.on small{color:inherit}
+.lbl{font-size:12px;color:var(--muted);margin:8px 0 4px}
+form.bk{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+form.bk label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:#5c5970}
+form.bk input{font:inherit;font-size:14px;border:1px solid #ddd8e6;border-radius:10px;padding:9px 12px;min-width:0}
+form.bk input:focus{outline:2px solid #e4d7ff;border-color:var(--purple)}
+form.bk .full{grid-column:1/-1}
+.fine{font-size:12px;color:var(--muted);grid-column:1/-1;line-height:1.5}
+.err{color:#dc2626;font-size:12px;grid-column:1/-1;min-height:0}
+.sum{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:14px;margin:8px 0}
+.sum dt{color:var(--muted)}.sum dd{margin:0;font-weight:600}
+.ok{display:flex;align-items:center;gap:8px;font-weight:700;color:#15803d;font-size:15px}
+.bid{font-family:ui-monospace,monospace;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:2px 8px;color:#166534}
+.deal{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px dashed #fbcf6b;background:#fffbeb;border-radius:14px;padding:10px 12px}
+.deal .ic{font-size:24px;text-align:center}
+.deal small{color:#8a6a1e;font-size:12.5px}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.tag.c{background:#dcfce7;color:#166534}.tag.x{background:#fee2e2;color:#991b1b}.tag.d{background:#fef3c7;color:#92400e}
+.sugg{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;border-top:1px solid var(--line);background:rgba(255,255,255,.75);scrollbar-width:none}
+.sugg::-webkit-scrollbar{display:none}
+.sugg button{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:600;color:var(--ink)}
+.sugg button:hover{border-color:var(--purple)}
+.composer{display:flex;align-items:center;gap:8px;padding:10px 14px 14px;background:#fff}
+.composer input{flex:1;min-width:0;font:inherit;font-size:15px;border:1px solid #e5e1ec;border-radius:999px;padding:11px 18px}
+.composer button{border:0;border-radius:999px;padding:10px 18px;font-weight:700;background:var(--ub);color:var(--ut)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:#1f1d2b;color:#fff;font-size:13px;padding:8px 14px;border-radius:999px;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media(max-width:640px){
+  body{padding:8px;gap:8px}
+  .mockflag{display:none}
+  header{padding:10px 10px;gap:8px}
+  .av{width:34px;height:34px}
+  .who strong{font-size:15px}
+  .hbtn{gap:4px}
+  .hbtn button{padding:5px 8px}
+  .hbtn button span{display:none}
+  .col{max-width:94%}
+  form.bk{grid-template-columns:1fr}
+  .rest{grid-template-columns:44px minmax(0,1fr)}
+  .rest .ph{width:44px;height:44px;font-size:20px}
+  .rest .more{grid-column:1/-1;justify-self:start}
+  .deal{grid-template-columns:36px minmax(0,1fr)}
+  .deal .act{grid-column:1/-1;justify-self:start}
+  .cal{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+}
+@media(prefers-reduced-motion:reduce){.typing i{animation:none}#log{scroll-behavior:auto}}
+</style>
+</head>
+<body data-ch="web">
+<div class="chbar">
+  <b data-t="channel">ช่องทาง</b>
+  <div class="chs" id="chs" role="group" aria-label="Channel">
+    <button data-ch="web" aria-pressed="true">Web</button>
+    <button data-ch="line" aria-pressed="false">LINE</button>
+    <button data-ch="telegram" aria-pressed="false">Telegram</button>
+    <button data-ch="whatsapp" aria-pressed="false">WhatsApp</button>
+  </div>
+  <div class="chs lang" id="langs" role="group" aria-label="Language">
+    <button data-lang="th" aria-pressed="true">ไทย</button>
+    <button data-lang="en" aria-pressed="false">English</button>
+    <button data-lang="zh" aria-pressed="false">中文</button>
+  </div>
+  <span class="mockflag" data-t="mockflag"></span>
+</div>
+
+<section class="win" aria-label="Travel Plan Booking chat">
+  <header>
+    <div class="av" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f97316"/><stop offset=".5" stop-color="#ec4899"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect width="48" height="48" rx="24" fill="url(#lg)"/><path d="M24 9.5c-6.3 0-11.3 5-11.3 11.1 0 8.4 11.3 18 11.3 18s11.3-9.6 11.3-18C35.3 14.5 30.3 9.5 24 9.5z" fill="#fff"/><path d="M20.4 15.5v4.6c0 1 .7 1.8 1.6 1.8v6M20.4 15.5v3.6M23.6 15.5v4.6c0 1-.7 1.8-1.6 1.8M28 15.5c-1.5 0-2.3 2-2.3 3.9 0 1.5.9 2.5 2.3 2.7v5.8" fill="none" stroke="#c0398f" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </div>
+    <div class="who"><strong>Travel Plan Booking</strong><span data-t="online"></span></div>
+    <div class="hbtn">
+      <button class="deal" data-go="deals">🏷️ <span data-t="deals"></span></button>
+      <button class="mine" data-go="mine">📋 <span data-t="mine"></span></button>
+      <button class="reset" data-go="reset" data-t-aria="reset">↺</button>
+    </div>
+  </header>
+  <div id="log" aria-live="polite"></div>
+  <nav class="sugg" id="sugg"></nav>
+  <form class="composer" id="composer">
+    <input id="msg" autocomplete="off" data-t-ph="placeholder">
+    <button type="submit" data-t="send"></button>
+  </form>
+</section>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// Mock of a freelance AI concierge (B2C). Venues and people are fictional; landmarks are public places.
+// The real agent answers in any language; this mock covers Thai, English and Chinese.
+// Pick a language with the switch, or just type: the reply follows the language of what you typed.
+
+let lang = "th";
+const LOCALE = {th:"th-TH", en:"en-US", zh:"zh-CN"};
+
+// ---------- text ----------
+const I18N = {
+  th:{
+    channel:"ช่องทาง", mockflag:"เดโมจำลอง · ข้อมูลสมมติทั้งหมด · ไม่ได้ต่อ agent จริง", online:"ออนไลน์ · AI Concierge", deals:"ดีล", mine:"การจองของฉัน", reset:"เริ่มแชตใหม่",
+    placeholder:"พิมพ์ถามได้ทุกภาษา เช่น “เที่ยวกรุงเทพ”, “seafood Chiang Mai”, “普吉岛餐厅”", send:"ส่ง →",
+    chips:{trip:"🗺️ วางแผนเที่ยวกรุงเทพ 2 วัน พร้อมมื้อกลางวันและเย็น",thai:"🍲 หาร้านอาหารไทยในกรุงเทพ",seafood:"🦐 ร้านอาหารทะเลในเชียงใหม่",phuket:"🏝️ ภูเก็ตมีร้านไหนน่าทานบ้าง",qr:"💳 ร้านไหนรับจ่าย QR บ้าง",deals:"ขอดูดีล",mine:"การจองของฉัน"},
+    greet:"สวัสดีค่ะ 👋 บอกได้เลยว่าอยากเที่ยวที่ไหน กินอะไร เดี๋ยวช่วยวางแผนและจองโต๊ะให้จบในแชตนี้ค่ะ ✨ พิมพ์ภาษาไหนก็ได้นะคะ",
+    replied:(n)=>`ตอบใน ${n} วินาที`,
+    tripIntro:"ทริป 2 วันในกรุงเทพฯ ครบทั้งเที่ยว ช้อป และมื้ออร่อยค่ะ ✨ สนใจจองโต๊ะร้านไหนในแผนก่อนดีคะ 😊",
+    tripTitle:"ทริปเที่ยวกรุงเทพฯ 2 วัน 1 คืน", tripSub:"เที่ยววัด ช้อปปิ้ง และร้านอร่อยคัดพิเศษ", mapRoute:"🗺 ดูเส้นทางของวันนี้บนแผนที่ ›",
+    distNote:"ⓘ ระยะทางเป็นค่าประมาณแบบเส้นตรง โปรดตรวจสอบเส้นทางอีกครั้งก่อนเดินทาง", fromPrev:(d)=>`ห่างจากร้านก่อนหน้า ≈ ${d} กม.`,
+    thaiIntro:"ร้านอาหารไทยในกรุงเทพฯ ที่เปิดรับจองผ่านแชตค่ะ 🍲", seafoodIntro:"ร้านอาหารทะเลในเชียงใหม่ที่คนชอบค่ะ 🦐",
+    phuketIntro:"ภูเก็ตมีหลายสไตล์เลยค่ะ ริมหาด เมืองเก่า และรูฟท็อป 🏝️", qrIntro:"ร้านที่รับจ่ายด้วย QR ได้ค่ะ 💳",
+    approx:(p)=>`${p} โดยประมาณ`, more:"ดูเพิ่ม", dealsIntro:"ดีลที่ใช้ได้ตอนนี้ค่ะ 🏷️", useDeal:"ใช้ดีลนี้",
+    mineEmpty:"ยังไม่มีการจองค่ะ ลองกด “วางแผนเที่ยวกรุงเทพ” แล้วเลือกร้านในแผนได้เลย 😊", mineIntro:"การจองของคุณค่ะ 📋",
+    tagOk:"ยืนยันแล้ว", tagX:"ยกเลิกแล้ว", cancelBooking:"ยกเลิกการจอง", cancelDone:(n)=>`ยกเลิกการจองที่ ${n} ให้แล้วค่ะ ร้านได้รับแจ้งแล้ว 🙏`, cancelMsg:(id)=>`ยกเลิกการจอง #TPB-${id}`,
+    restIntro:(n)=>`นี่ค่ะ รายละเอียดของร้าน ${n} 😊`, askDetail:(n)=>`ขอดูรายละเอียด ${n}`, bookMsg:(n)=>`จองร้าน ${n}`,
+    deposit:(n)=>`มัดจำ ฿${n} ต่อการจอง`, noDeposit:"ไม่มีค่ามัดจำ", bookThis:"📅 จองร้านนี้", onMap:"📍 ดูบนแผนที่ →", navi:"🧭 นำทาง →",
+    tMap:"เดโม: ปุ่มนี้เปิดตำแหน่งร้านบนแผนที่", tNav:"เดโม: ปุ่มนี้เปิดแอปนำทาง", tRoute:"เดโม: ปุ่มนี้เปิดเส้นทางทั้งวันบนแผนที่", tCal:"เดโม: เพิ่มลงปฏิทินแล้ว",
+    sizeQ:(n)=>`ร้าน ${n} ไปกันกี่ท่านคะ`, people:(n)=>`${n} ท่าน`, dateQ:(n)=>`ร้าน ${n} สะดวกวันไหนคะ 📅`, today:"วันนี้", closed:"ร้านปิด",
+    timeQ:(n)=>`เลือกเวลาที่ร้าน ${n} ได้เลยค่ะ`, day:"🌤 กลางวัน", night:"🌙 กลางคืน", tz:"Bangkok time · UTC+7 · ขีดฆ่า = เต็ม", full:"เต็ม",
+    formIntro:(n,d,t,p)=>`${n} · ${d} เวลา ${t} สำหรับ ${p} ท่าน ว่างค่ะ ✨ กรอกชื่อและเบอร์ด้านล่างได้เลยค่ะ`,
+    first:"ชื่อผู้จอง *", last:"นามสกุล", phone:"เบอร์โทรศัพท์ *", email:"อีเมล",
+    fine:"ร้านจะใช้เบอร์นี้ติดต่อเรื่องการจอง ข้อมูลส่งให้ร้านเพื่อทำการจองนี้เท่านั้น (เดโม: ข้อมูลสมมติ ไม่ได้ส่งจริง)", err:"กรอกชื่อและเบอร์โทรก่อนนะคะ",
+    next:"ต่อไป →", cancelFlow:"✕ ยกเลิกการจอง", flowCancelled:"ยกเลิกให้แล้วค่ะ ถ้าเปลี่ยนใจกดจองใหม่ได้ตลอดเลยนะคะ 😊",
+    review:"ตรวจสอบรายละเอียดก่อนยืนยันนะคะ", sDate:"วัน", sTime:"เวลา", sSize:"จำนวน", sBooker:"ผู้จอง", sDeal:"ดีล", sDep:"มัดจำ",
+    depQr:(n)=>`฿${n} (ชำระผ่าน QR หลังยืนยัน)`, none:"ไม่มี", confirm:"ยืนยันการจอง", cancel:"ยกเลิก", cancelledShort:"ยกเลิกให้แล้วค่ะ 🙏",
+    confirming:"กำลังยืนยันกับร้านให้นะคะ… ⏳", booked:"✓ จองสำเร็จแล้วค่ะ 🎉", bookingNo:"เลขที่การจอง", willSms:(p)=>`ร้านจะส่งข้อความยืนยันไปที่ ${p}`,
+    addCal:"📅 เพิ่มลงปฏิทิน", viewMine:"📋 ดูการจองของฉัน",
+    fallback:"เดโมนี้ตอบได้เฉพาะคำถามที่เตรียมไว้ค่ะ 🙏 ลองกดปุ่มด้านล่าง หรือพิมพ์เช่น “เที่ยวกรุงเทพ”, “ซีฟู้ดเชียงใหม่”, “ดีล”",
+    chToast:(c)=>c==="Web"?"Web chat":`หน้าตาเดียวกันเมื่อคุยผ่าน ${c}`, langToast:"ตอบเป็นภาษาไทย",
+    person:{first:"สมชาย",last:"ใจดี",email:"somchai@example.com"},
+  },
+  en:{
+    channel:"Channel", mockflag:"Mock demo · all data is fictional · not connected to the real agent", online:"Online · AI Concierge", deals:"Deals", mine:"My bookings", reset:"New chat",
+    placeholder:"Ask in any language, e.g. “Bangkok trip”, “ซีฟู้ดเชียงใหม่”, “普吉岛餐厅”", send:"Send →",
+    chips:{trip:"🗺️ Plan a 2-day Bangkok trip with lunch and dinner",thai:"🍲 Thai restaurants in Bangkok",seafood:"🦐 Seafood in Chiang Mai",phuket:"🏝️ Where to eat in Phuket?",qr:"💳 Which places accept QR payment?",deals:"Show me deals",mine:"My bookings"},
+    greet:"Hi 👋 Tell me where you want to go and what you feel like eating — I'll plan it and book the table right here in the chat ✨ Any language is fine.",
+    replied:(n)=>`replied in ${n}s`,
+    tripIntro:"Here's a 2-day Bangkok trip with sights, shopping and great food ✨ Which restaurant in the plan should I book first? 😊",
+    tripTitle:"Bangkok in 2 days, 1 night", tripSub:"Temples, shopping and hand-picked restaurants", mapRoute:"🗺 See today's route on the map ›",
+    distNote:"ⓘ Distances are straight-line estimates. Please check the route before you go.", fromPrev:(d)=>`≈ ${d} km from the previous stop`,
+    thaiIntro:"Thai restaurants in Bangkok that take bookings in chat 🍲", seafoodIntro:"Popular seafood places in Chiang Mai 🦐",
+    phuketIntro:"Phuket has a bit of everything — beachside, old town and rooftop 🏝️", qrIntro:"These places accept QR payment 💳",
+    approx:(p)=>`approx. ${p}`, more:"More", dealsIntro:"Deals you can use right now 🏷️", useDeal:"Use deal",
+    mineEmpty:"No bookings yet. Try “Plan a 2-day Bangkok trip” and pick a restaurant from the plan 😊", mineIntro:"Your bookings 📋",
+    tagOk:"Confirmed", tagX:"Cancelled", cancelBooking:"Cancel booking", cancelDone:(n)=>`Your booking at ${n} is cancelled and the restaurant has been told 🙏`, cancelMsg:(id)=>`Cancel booking #TPB-${id}`,
+    restIntro:(n)=>`Here are the details for ${n} 😊`, askDetail:(n)=>`Show me ${n}`, bookMsg:(n)=>`Book ${n}`,
+    deposit:(n)=>`฿${n} deposit per booking`, noDeposit:"No deposit", bookThis:"📅 Book this place", onMap:"📍 View on map →", navi:"🧭 Directions →",
+    tMap:"Demo: this opens the restaurant on a map", tNav:"Demo: this opens a navigation app", tRoute:"Demo: this opens the full day's route", tCal:"Demo: added to calendar",
+    sizeQ:(n)=>`How many people for ${n}?`, people:(n)=>`${n} ${n>1?"people":"person"}`, dateQ:(n)=>`Which day works for ${n}? 📅`, today:"Today", closed:"Closed",
+    timeQ:(n)=>`Pick a time at ${n}`, day:"🌤 Daytime", night:"🌙 Evening", tz:"Bangkok time · UTC+7 · struck out = full", full:"Full",
+    formIntro:(n,d,t,p)=>`${n} · ${d} at ${t} for ${p} is available ✨ Just add your name and phone below.`,
+    first:"First name *", last:"Last name", phone:"Phone *", email:"Email",
+    fine:"The restaurant uses this number only for this booking. (Demo: fictional details, nothing is sent.)", err:"Please add your name and phone first.",
+    next:"Next →", cancelFlow:"✕ Cancel booking", flowCancelled:"Cancelled. You can book again any time 😊",
+    review:"Please check the details before confirming", sDate:"Date", sTime:"Time", sSize:"Guests", sBooker:"Name", sDeal:"Deal", sDep:"Deposit",
+    depQr:(n)=>`฿${n} (pay by QR after confirming)`, none:"None", confirm:"Confirm booking", cancel:"Cancel", cancelledShort:"Cancelled 🙏",
+    confirming:"Confirming with the restaurant… ⏳", booked:"✓ You're booked! 🎉", bookingNo:"Booking no.", willSms:(p)=>`The restaurant will text a confirmation to ${p}`,
+    addCal:"📅 Add to calendar", viewMine:"📋 My bookings",
+    fallback:"This demo only answers the prepared questions 🙏 Tap a suggestion below, or type e.g. “Bangkok trip”, “seafood Chiang Mai”, “deals”.",
+    chToast:(c)=>c==="Web"?"Web chat":`Same experience on ${c}`, langToast:"Replying in English",
+    person:{first:"Alex",last:"Morgan",email:"alex@example.com"},
+  },
+  zh:{
+    channel:"渠道", mockflag:"模拟演示 · 所有数据均为虚构 · 未连接真实 agent", online:"在线 · AI 礼宾", deals:"优惠", mine:"我的预订", reset:"新对话",
+    placeholder:"可以用任何语言提问，例如“曼谷行程”、“Phuket seafood”、“เที่ยวกรุงเทพ”", send:"发送 →",
+    chips:{trip:"🗺️ 规划曼谷两日游，含午餐和晚餐",thai:"🍲 曼谷的泰国餐厅",seafood:"🦐 清迈海鲜餐厅",phuket:"🏝️ 普吉岛有什么好吃的？",qr:"💳 哪些餐厅可以扫码付款？",deals:"看看优惠",mine:"我的预订"},
+    greet:"您好 👋 告诉我想去哪里、想吃什么，我来帮您规划行程，并在这里直接订位 ✨ 用任何语言都可以。",
+    replied:(n)=>`${n} 秒内回复`,
+    tripIntro:"为您安排了曼谷两日游，景点、购物和美食都有 ✨ 想先预订行程里的哪家餐厅呢？😊",
+    tripTitle:"曼谷两天一夜", tripSub:"寺庙、购物和精选餐厅", mapRoute:"🗺 在地图上查看当天路线 ›",
+    distNote:"ⓘ 距离为直线估算，出发前请再确认路线。", fromPrev:(d)=>`距上一家约 ${d} 公里`,
+    thaiIntro:"曼谷可在聊天中订位的泰国餐厅 🍲", seafoodIntro:"清迈人气海鲜餐厅 🦐",
+    phuketIntro:"普吉岛选择很多：海滩、老城区和屋顶餐厅 🏝️", qrIntro:"这些餐厅支持扫码付款 💳",
+    approx:(p)=>`约 ${p}`, more:"查看", dealsIntro:"现在可用的优惠 🏷️", useDeal:"使用优惠",
+    mineEmpty:"还没有预订。试试“规划曼谷两日游”，再从行程中选一家餐厅 😊", mineIntro:"您的预订 📋",
+    tagOk:"已确认", tagX:"已取消", cancelBooking:"取消预订", cancelDone:(n)=>`已为您取消 ${n} 的预订，并已通知餐厅 🙏`, cancelMsg:(id)=>`取消预订 #TPB-${id}`,
+    restIntro:(n)=>`这是 ${n} 的详细信息 😊`, askDetail:(n)=>`看看 ${n}`, bookMsg:(n)=>`预订 ${n}`,
+    deposit:(n)=>`每次预订需定金 ฿${n}`, noDeposit:"无需定金", bookThis:"📅 预订这家", onMap:"📍 查看地图 →", navi:"🧭 导航 →",
+    tMap:"演示：此按钮会在地图上打开餐厅位置", tNav:"演示：此按钮会打开导航应用", tRoute:"演示：此按钮会打开当天完整路线", tCal:"演示：已加入日历",
+    sizeQ:(n)=>`${n}，请问几位用餐？`, people:(n)=>`${n} 位`, dateQ:(n)=>`${n}，哪天方便呢？📅`, today:"今天", closed:"休息",
+    timeQ:(n)=>`请选择 ${n} 的用餐时间`, day:"🌤 白天", night:"🌙 晚上", tz:"曼谷时间 · UTC+7 · 划线 = 已满", full:"已满",
+    formIntro:(n,d,t,p)=>`${n} · ${d} ${t}，${p} 位，有空位 ✨ 请在下方填写姓名和电话。`,
+    first:"名 *", last:"姓", phone:"电话 *", email:"邮箱",
+    fine:"餐厅只会用这个号码联系本次预订。（演示：虚构信息，不会真的发送）", err:"请先填写姓名和电话。",
+    next:"下一步 →", cancelFlow:"✕ 取消预订", flowCancelled:"已取消，随时可以重新预订 😊",
+    review:"确认前请核对信息", sDate:"日期", sTime:"时间", sSize:"人数", sBooker:"预订人", sDeal:"优惠", sDep:"定金",
+    depQr:(n)=>`฿${n}（确认后扫码支付）`, none:"无", confirm:"确认预订", cancel:"取消", cancelledShort:"已取消 🙏",
+    confirming:"正在与餐厅确认… ⏳", booked:"✓ 预订成功 🎉", bookingNo:"预订编号", willSms:(p)=>`餐厅会发送确认短信到 ${p}`,
+    addCal:"📅 加入日历", viewMine:"📋 我的预订",
+    fallback:"本演示只能回答预设的问题 🙏 请点下方的建议，或输入“曼谷行程”、“清迈海鲜”、“优惠”等。",
+    chToast:(c)=>c==="Web"?"Web chat":`在 ${c} 中体验相同`, langToast:"使用中文回复",
+    person:{first:"小明",last:"王",email:"xiaoming@example.com"},
+  },
+};
+const t = (k, ...a) => { const v = I18N[lang][k]; return typeof v === "function" ? v(...a) : v; };
+
+// ---------- venues (fictional) ----------
+const R = {
+  krua:{emoji:"🍲",price:"฿400–800",rating:4.6,deposit:0,qr:true,
+    th:{name:"ครัวริมน้ำ ท่าเตียน",area:"ท่าเตียน · กรุงเทพฯ",cuisine:"อาหารไทยริมแม่น้ำ",bullets:["🍤 อาหารไทยภาคกลางและซีฟู้ดสดทุกวัน","📍 ริมแม่น้ำเจ้าพระยา เดินจากท่าเรือ 3 นาที","✨ โต๊ะริมน้ำมองเห็นวัดอรุณตอนพระอาทิตย์ตก"]},
+    en:{name:"Krua Rim Nam Tha Tien",area:"Tha Tien · Bangkok",cuisine:"Riverside Thai",bullets:["🍤 Central Thai dishes and fresh seafood daily","📍 On the Chao Phraya, 3 min walk from the pier","✨ Riverside tables facing Wat Arun at sunset"]},
+    zh:{name:"塔田河畔厨房",area:"塔田 · 曼谷",cuisine:"河畔泰餐",bullets:["🍤 每日供应泰国中部菜和新鲜海鲜","📍 湄南河畔，距码头步行 3 分钟","✨ 河边座位，日落时可看郑王庙"]}},
+  baan:{emoji:"🍛",price:"฿1,800–3,500",rating:4.8,deposit:500,qr:true,
+    th:{name:"บ้านสวน สำรับไทย",area:"ทองหล่อ · กรุงเทพฯ",cuisine:"สำรับไทยโบราณ",bullets:["🌿 เมนูสำรับตามฤดูกาล วัตถุดิบจากเกษตรกรท้องถิ่น","🚆 BTS ทองหล่อ เดิน 8 นาที","🍷 มีคู่จับเครื่องดื่มแนะนำ"]},
+    en:{name:"Baan Suan Samrab",area:"Thong Lo · Bangkok",cuisine:"Traditional Thai set menu",bullets:["🌿 Seasonal set menu from local farmers","🚆 8 min walk from BTS Thong Lo","🍷 Drink pairings available"]},
+    zh:{name:"花园泰式套餐",area:"通罗 · 曼谷",cuisine:"传统泰式套餐",bullets:["🌿 时令套餐，食材来自本地农户","🚆 BTS 通罗站步行 8 分钟","🍷 提供配酒推荐"]}},
+  longmen:{emoji:"🫕",price:"฿500–900",rating:4.5,deposit:0,qr:false,
+    th:{name:"หม้อไฟหลงเหมิน",area:"สยาม · กรุงเทพฯ",cuisine:"หม้อไฟหม่าล่าเสฉวน",bullets:["🌶️ น้ำซุปหม่าล่าเลือกระดับเผ็ดได้","🛍️ อยู่ในย่านช้อปปิ้งสยาม","👨‍👩‍👧 มีห้องส่วนตัวสำหรับกลุ่ม 6–10 คน"]},
+    en:{name:"Long Men Hot Pot",area:"Siam · Bangkok",cuisine:"Sichuan mala hot pot",bullets:["🌶️ Mala broth, choose your spice level","🛍️ In the Siam shopping area","👨‍👩‍👧 Private rooms for 6–10"]},
+    zh:{name:"龙门火锅",area:"暹罗 · 曼谷",cuisine:"四川麻辣火锅",bullets:["🌶️ 麻辣锅底，辣度可选","🛍️ 位于暹罗购物区","👨‍👩‍👧 设 6–10 人包间"]}},
+  lomtalay:{emoji:"🦞",price:"฿600–1,200",rating:4.7,deposit:0,qr:true,
+    th:{name:"ลมทะเล ซีฟู้ด",area:"ราชประสงค์ · กรุงเทพฯ",cuisine:"ซีฟู้ดไทย",bullets:["🦀 ปูผัดผงกะหรี่และกุ้งแม่น้ำเผา","🚆 BTS ชิดลม เดิน 5 นาที","🕗 เปิดถึง 23:00"]},
+    en:{name:"Lom Talay Seafood",area:"Ratchaprasong · Bangkok",cuisine:"Thai seafood",bullets:["🦀 Curry crab and grilled river prawns","🚆 5 min walk from BTS Chit Lom","🕗 Open until 23:00"]},
+    zh:{name:"海风海鲜",area:"拉差帕颂 · 曼谷",cuisine:"泰式海鲜",bullets:["🦀 咖喱炒蟹和烤河虾","🚆 BTS 奇隆站步行 5 分钟","🕗 营业至 23:00"]}},
+  jaiyen:{emoji:"🥘",price:"฿200–400",rating:4.4,deposit:0,qr:true,
+    th:{name:"ใจเย็น ครัวบ้าน",area:"อารีย์ · กรุงเทพฯ",cuisine:"อาหารไทยบ้าน ๆ",bullets:["🍳 กับข้าวบ้าน ๆ รสมือแม่","🚆 BTS อารีย์ เดิน 4 นาที","🌱 มีเมนูมังสวิรัติ"]},
+    en:{name:"Jai Yen Home Kitchen",area:"Ari · Bangkok",cuisine:"Thai home cooking",bullets:["🍳 Home-style Thai dishes","🚆 4 min walk from BTS Ari","🌱 Vegetarian options"]},
+    zh:{name:"慢慢家常菜",area:"阿黎 · 曼谷",cuisine:"泰式家常菜",bullets:["🍳 妈妈味道的家常菜","🚆 BTS 阿黎站步行 4 分钟","🌱 提供素食"]}},
+  doi:{emoji:"🦐",price:"฿400–900",rating:4.5,deposit:0,qr:true,
+    th:{name:"ทะเลดอย ซีฟู้ด",area:"นิมมาน · เชียงใหม่",cuisine:"ซีฟู้ดสไตล์เหนือ",bullets:["🦐 กุ้งเผาและปลาหมึกย่างส่งตรงทุกเช้า","📍 ซอยนิมมานเหมินท์ 9","🎶 มีดนตรีสดคืนศุกร์–เสาร์"]},
+    en:{name:"Talay Doi Seafood",area:"Nimman · Chiang Mai",cuisine:"Northern-style seafood",bullets:["🦐 Grilled prawns and squid, delivered every morning","📍 Nimmanhaemin Soi 9","🎶 Live music Fri–Sat"]},
+    zh:{name:"山海海鲜",area:"宁曼 · 清迈",cuisine:"泰北风味海鲜",bullets:["🦐 每天早上到货的烤虾和烤鱿鱼","📍 宁曼路 9 巷","🎶 周五、周六有现场音乐"]}},
+  ping:{emoji:"🦀",price:"฿500–1,000",rating:4.6,deposit:300,qr:false,
+    th:{name:"ปิงริเวอร์ ปูไข่",area:"ริมปิง · เชียงใหม่",cuisine:"ซีฟู้ดริมแม่น้ำปิง",bullets:["🦀 ปูไข่นึ่งและต้มยำทะเล","🌉 โต๊ะริมแม่น้ำปิง","🅿️ มีที่จอดรถ"]},
+    en:{name:"Ping River Crab House",area:"Riverside · Chiang Mai",cuisine:"Riverside seafood",bullets:["🦀 Steamed roe crab and seafood tom yum","🌉 Tables by the Ping River","🅿️ Parking available"]},
+    zh:{name:"滨河蟹屋",area:"滨河 · 清迈",cuisine:"河畔海鲜",bullets:["🦀 清蒸膏蟹和海鲜冬阴功","🌉 滨河边的座位","🅿️ 有停车位"]}},
+  andaman:{emoji:"🐟",price:"฿700–1,500",rating:4.7,deposit:300,qr:true,
+    th:{name:"อันดามัน ไลต์",area:"หาดกะตะ · ภูเก็ต",cuisine:"ซีฟู้ดริมหาด",bullets:["🌅 โต๊ะบนหาดช่วงพระอาทิตย์ตก","🐟 ปลาเก๋านึ่งมะนาว","🍹 ม็อกเทลผลไม้ท้องถิ่น"]},
+    en:{name:"Andaman Light",area:"Kata Beach · Phuket",cuisine:"Beachside seafood",bullets:["🌅 Tables on the sand at sunset","🐟 Steamed grouper with lime","🍹 Local fruit mocktails"]},
+    zh:{name:"安达曼之光",area:"卡塔海滩 · 普吉",cuisine:"海滩海鲜",bullets:["🌅 日落时的沙滩座位","🐟 青柠蒸石斑鱼","🍹 本地水果无酒精饮品"]}},
+  oldtown:{emoji:"🍜",price:"฿200–450",rating:4.5,deposit:0,qr:true,
+    th:{name:"เมืองเก่า โภชนา",area:"ภูเก็ตทาวน์ · ภูเก็ต",cuisine:"อาหารพื้นเมืองภูเก็ต",bullets:["🍜 หมี่ฮกเกี้ยนและโอ้วต้าว","🏛️ ในตึกชิโนโปรตุกีส","☕ ขนมพื้นเมืองยามบ่าย"]},
+    en:{name:"Old Town Kitchen",area:"Phuket Town · Phuket",cuisine:"Local Phuket food",bullets:["🍜 Hokkien noodles and oyster omelette","🏛️ In a Sino-Portuguese shophouse","☕ Local sweets in the afternoon"]},
+    zh:{name:"老城食堂",area:"普吉镇 · 普吉",cuisine:"普吉本地菜",bullets:["🍜 福建面和蚝煎","🏛️ 位于中葡风格老楼","☕ 下午供应本地甜点"]}},
+  sunset:{emoji:"🌇",price:"฿900–2,000",rating:4.6,deposit:500,qr:false,
+    th:{name:"ซันเซ็ต ร็อก",area:"กะรน · ภูเก็ต",cuisine:"รูฟท็อปอาหารนานาชาติ",bullets:["🌇 รูฟท็อปวิวอ่าวกะรน","🥩 สเต๊กและซีฟู้ดย่าง","👔 แต่งกายสุภาพ"]},
+    en:{name:"Sunset Rock",area:"Karon · Phuket",cuisine:"Rooftop international",bullets:["🌇 Rooftop over Karon Bay","🥩 Steaks and grilled seafood","👔 Smart casual"]},
+    zh:{name:"日落岩",area:"卡伦 · 普吉",cuisine:"屋顶国际料理",bullets:["🌇 俯瞰卡伦湾的屋顶餐厅","🥩 牛排和烤海鲜","👔 请着休闲正装"]}},
+};
+const rn = (id) => R[id][lang];
+
+const DEALS = [
+  {id:"krua",icon:"🏷️",tag:"−15%",th:["ลด 15% มื้อเย็นวันธรรมดา","จ.–พฤ. 17:00–20:30"],en:["15% off weekday dinners","Mon–Thu 17:00–20:30"],zh:["工作日晚餐 85 折","周一至周四 17:00–20:30"]},
+  {id:"lomtalay",icon:"🦞",tag:"FREE",th:["กุ้งแม่น้ำเผาฟรี 1 ที่ เมื่อมา 4 ท่าน","ทุกวัน"],en:["Free grilled prawns for a table of 4","Every day"],zh:["4 人用餐送烤河虾一份","每天"]},
+  {id:"oldtown",icon:"🍜",tag:"฿399",th:["ชุดชิมอาหารภูเก็ต 2 ท่าน ฿399","มื้อกลางวัน"],en:["Phuket tasting set for 2, ฿399","Lunch"],zh:["普吉品尝套餐 2 人 ฿399","午餐"]},
+];
+
+const TRIP = [
+  {th:"วันที่ 1: เสน่ห์เมืองเก่าและริมแม่น้ำเจ้าพระยา",en:"Day 1: Old town and the Chao Phraya",zh:"第一天：老城与湄南河",items:[
+    ["09:30",{th:"ชมพระบรมมหาราชวังและวัดพระศรีรัตนศาสดาราม (วัดพระแก้ว)",en:"Grand Palace and Wat Phra Kaew (Temple of the Emerald Buddha)",zh:"参观大皇宫和玉佛寺"},"walk"],
+    ["12:00",{th:"มื้อกลางวันริมแม่น้ำเจ้าพระยา",en:"Riverside lunch",zh:"湄南河畔午餐"},"pier","krua"],
+    ["14:00",{th:"นั่งเรือข้ามฟากไปไหว้พระและถ่ายรูปที่วัดอรุณฯ",en:"Ferry across to Wat Arun",zh:"乘渡船去郑王庙拍照"},"pier"],
+    ["18:30",{th:"มื้อเย็นสำรับไทยโบราณ",en:"Traditional Thai dinner",zh:"传统泰式晚餐"},"thonglo","baan","10"],
+    ["20:30",{th:"เดินเล่นสัมผัสบรรยากาศยามค่ำคืนย่านทองหล่อ",en:"Evening stroll around Thong Lo",zh:"通罗夜间散步"},"walk"]]},
+  {th:"วันที่ 2: ช้อปปิ้งและไลฟ์สไตล์ใจกลางเมือง",en:"Day 2: Shopping and city life",zh:"第二天：市中心购物与生活",items:[
+    ["10:00",{th:"ชมงานศิลปะที่หอศิลปวัฒนธรรมแห่งกรุงเทพฯ (BACC)",en:"Art at the Bangkok Art and Culture Centre (BACC)",zh:"参观曼谷艺术文化中心 (BACC)"},"stadium"],
+    ["12:30",{th:"มื้อกลางวันหม้อไฟหม่าล่าเสฉวน",en:"Sichuan hot pot lunch",zh:"四川火锅午餐"},"walk","longmen"],
+    ["14:30",{th:"ช้อปปิ้งและเดินเล่นย่านสยาม",en:"Shopping around Siam",zh:"暹罗商圈购物"},"walk"],
+    ["18:30",{th:"มื้อเย็นซีฟู้ดไทย",en:"Thai seafood dinner",zh:"泰式海鲜晚餐"},"chitlom","lomtalay","1.1"],
+    ["20:30",{th:"ชมแสงสียามค่ำคืนย่านราชประสงค์",en:"Ratchaprasong by night",zh:"拉差帕颂夜景"},"walk"]]},
+];
+const HOW = {walk:{th:"🚶 เดิน",en:"🚶 walk",zh:"🚶 步行"},pier:{th:"⛴ ท่าเตียน",en:"⛴ Tha Tien pier",zh:"⛴ 塔田码头"},thonglo:{th:"🚆 BTS ทองหล่อ",en:"🚆 BTS Thong Lo",zh:"🚆 BTS 通罗站"},
+  stadium:{th:"🚆 BTS สนามกีฬาแห่งชาติ",en:"🚆 BTS National Stadium",zh:"🚆 BTS 国家体育场站"},chitlom:{th:"🚆 BTS ชิดลม",en:"🚆 BTS Chit Lom",zh:"🚆 BTS 奇隆站"}};
+const PHONE = "081-555-0123"; // fictional
+
+// ---------- helpers ----------
+const log = document.getElementById("log");
+const $ = (h) => { const tp = document.createElement("template"); tp.innerHTML = h.trim(); return tp.content.firstElementChild; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const now = () => new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit",hour12:false});
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const LOGO = document.querySelector(".av svg").outerHTML.replace('id="lg"','id="lgm"').replace("url(#lg)","url(#lgm)");
+let busy = false, bookings = [], seq = 48213;
+function scroll(){ log.scrollTop = log.scrollHeight; }
+function toast(s){ const el = document.getElementById("toast"); el.textContent = s; el.classList.add("show"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2200); }
+
+function me(text){
+  log.append($(`<div class="row me"><div class="col"><div class="bub">${esc(text)}</div><div class="meta">${now()}</div></div></div>`));
+  scroll();
+}
+async function bot(...blocks){
+  const row = $(`<div class="row bot"><div class="mini">${LOGO}</div><div class="col"><div class="bub typing"><i></i><i></i><i></i></div></div></div>`);
+  log.append(row); scroll();
+  await wait(document.body.dataset.fast ? 0 : 650 + Math.random() * 450);
+  const col = row.querySelector(".col"); col.innerHTML = "";
+  for (const b of blocks) col.append(typeof b === "string" ? $(`<div class="bub">${b}</div>`) : b);
+  col.append($(`<div class="meta">${now()} · ${t("replied", 3 + Math.floor(Math.random() * 20))}</div>`));
+  scroll();
+  return col;
+}
+function lock(el){ el.querySelectorAll("button,input").forEach((b) => (b.disabled = true)); }
+function pick(col, sel, map){
+  return new Promise((res) => {
+    col.addEventListener("click", function h(e){
+      const b = e.target.closest(sel); if (!b || b.disabled) return;
+      col.removeEventListener("click", h); b.classList.add("on"); lock(col); res(map(b));
+    });
+  });
+}
+
+// ---------- intents ----------
+const restRow = (id) => { const r = R[id], x = rn(id);
+  return `<div class="rest"><div class="ph">${r.emoji}</div><div><b>${x.name}</b><small>${x.area} · ${x.cuisine} · ${t("approx", r.price)} · ⭐ ${r.rating}</small></div><button class="more" data-rest="${id}">${t("more")}</button></div>`; };
+const list = (ids) => $(`<div class="list">${ids.map(restRow).join("")}</div>`);
+
+const INTENTS = {
+  async trip(){
+    const days = TRIP.map((d) => `<div class="day">${d[lang]}</div><ul class="tl">${d.items.map(([tm, txt, how, rid, dist]) =>
+      `<li class="${rid ? "meal" : ""}"><span class="t">${tm}</span><div>${txt[lang]} <span class="how">${HOW[how][lang]}</span>${rid ? `<button class="pill" data-rest="${rid}">🍽 ${rn(rid).name} <em>›</em></button>` : ""}${dist ? `<div class="dist">↔ ${t("fromPrev", dist)}</div>` : ""}</div></li>`).join("")}</ul><button class="maplink" data-toast="tRoute">${t("mapRoute")}</button>`).join("");
+    await bot(t("tripIntro"), $(`<div class="card"><h3>${t("tripTitle")}</h3><div class="sub">${t("tripSub")}</div>${days}<div class="note">${t("distNote")}</div></div>`));
+  },
+  async thai(){ await bot(t("thaiIntro"), list(["krua","baan","jaiyen"])); },
+  async seafood(){ await bot(t("seafoodIntro"), list(["doi","ping"])); },
+  async phuket(){ await bot(t("phuketIntro"), list(["andaman","oldtown","sunset"])); },
+  async qr(){ await bot(t("qrIntro"), list(Object.keys(R).filter((k) => R[k].qr).slice(0, 4))); },
+  async deals(){
+    await bot(t("dealsIntro"), $(`<div class="list">${DEALS.map((d) => `<div class="deal"><div class="ic">${d.icon}</div><div><b>${d[lang][0]}</b> <span class="tag d">${d.tag}</span><br><small>${rn(d.id).name} · ${d[lang][1]}</small></div><button class="act pri" data-book="${d.id}" data-deal="${esc(d[lang][0])}">${t("useDeal")}</button></div>`).join("")}</div>`));
+  },
+  async mine(){
+    if (!bookings.length) return bot(t("mineEmpty"));
+    await bot(t("mineIntro"), $(`<div class="list">${bookings.map((b) => `<div class="card"><b>${rn(b.rid).name}</b>${b.cancelled ? `<span class="tag x">${t("tagX")}</span>` : `<span class="tag c">${t("tagOk")}</span>`}<div class="sub" style="margin:4px 0 8px">${fmtDate(b.date)} · ${b.time} · ${t("people", b.size)} · <span class="bid">#TPB-${b.id}</span></div>${b.cancelled ? "" : `<button class="act" data-cancel="${b.id}">${t("cancelBooking")}</button>`}</div>`).join("")}</div>`));
+  },
+};
+
+async function showRest(id){
+  const r = R[id], x = rn(id);
+  await bot(t("restIntro", x.name),
+    $(`<div class="card det"><b class="nm">${x.name}</b> <span class="area">· ${x.area}</span><div class="sub" style="margin:2px 0 0">${x.cuisine} · ${r.price} · ⭐ ${r.rating}</div><ul>${x.bullets.map((b) => `<li>${b}</li>`).join("")}<li>💳 ${r.deposit ? t("deposit", r.deposit) : t("noDeposit")}</li></ul></div>`),
+    $(`<div class="acts"><button class="act" data-book="${id}">${t("bookThis")}</button><button class="act" data-toast="tMap">${t("onMap")}</button><button class="act" data-toast="tNav">${t("navi")}</button></div>`));
+}
+
+const fmtDate = (d) => d.toLocaleDateString(LOCALE[lang], {weekday:"short", day:"numeric", month:"short"});
+
+// ---------- booking flow: size, date, time, contact, confirm ----------
+async function book(rid, deal){
+  const r = R[rid], name = () => rn(rid).name, st = {rid, deal};
+  const sizeCol = await bot(t("sizeQ", name()), $(`<div class="grid">${[1,2,3,4,5,6,7,8,9,10].map((n) => `<button class="chip" data-n="${n}">${n}</button>`).join("")}</div>`));
+  st.size = await pick(sizeCol, ".chip", (b) => +b.dataset.n);
+  me(t("people", st.size));
+
+  const days = []; const d0 = new Date();
+  for (let i = 0; i < 7; i++){ const d = new Date(d0); d.setDate(d0.getDate() + i); days.push(d); }
+  const closed = [1,2,3,4,5,6].find((i) => days[i].getDay() === 1); // the coming Monday is closed in this mock
+  const wd = (d) => d.toLocaleDateString(LOCALE[lang], {weekday:"short"});
+  const calCol = await bot(t("dateQ", name()), $(`<div class="card" style="padding:10px"><div class="cal">${days.map((d) => `<span>${wd(d)}</span>`).join("")}${days.map((d, i) => `<button ${i === closed ? `disabled title="${t("closed")}"` : ""} data-i="${i}">${d.getDate()}${i === 0 ? `<small>${t("today")}</small>` : ""}</button>`).join("")}</div></div>`));
+  st.date = days[await pick(calCol, ".cal button", (b) => +b.dataset.i)];
+  me(fmtDate(st.date));
+
+  const slots = (a, b) => { const out = []; for (let m = a; m <= b; m += 30) out.push(`${String(Math.floor(m / 60)).padStart(2,"0")}:${m % 60 ? "30" : "00"}`); return out; };
+  const full = new Set(["12:00","12:30","19:00"]);
+  const btns = (arr) => arr.map((tm) => `<button class="chip" ${full.has(tm) ? `disabled title="${t("full")}"` : ""} data-t="${tm}">${tm}</button>`).join("");
+  const timeCol = await bot(t("timeQ", name()), $(`<div><div class="lbl">${t("day")}</div><div class="grid">${btns(slots(600, 930))}</div><div class="lbl">${t("night")}</div><div class="grid">${btns(slots(960, 1230))}</div><div class="lbl">${t("tz")}</div></div>`));
+  st.time = await pick(timeCol, ".chip", (b) => b.dataset.t);
+  me(st.time);
+
+  const P = t("person");
+  const formCol = await bot(t("formIntro", name(), fmtDate(st.date), st.time, st.size),
+    $(`<form class="card bk" novalidate>
+      <label>${t("first")}<input name="first" value="${P.first}" required></label>
+      <label>${t("last")}<input name="last" value="${P.last}"></label>
+      <label>${t("phone")}<input name="phone" value="${PHONE}" inputmode="tel" required></label>
+      <label>${t("email")}<input name="email" value="${P.email}" inputmode="email"></label>
+      <p class="fine">${t("fine")}</p>
+      <p class="err" aria-live="polite"></p>
+      <div class="acts full"><button class="act pri" type="submit">${t("next")}</button><button class="act" type="button" data-cancelflow>${t("cancelFlow")}</button></div>
+    </form>`));
+  const form = formCol.querySelector("form");
+  const contact = await new Promise((res) => {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const f = Object.fromEntries(new FormData(form));
+      if (!f.first.trim() || !f.phone.trim()) { form.querySelector(".err").textContent = t("err"); return; }
+      lock(form); res(f);
+    });
+    form.querySelector("[data-cancelflow]").addEventListener("click", () => { lock(form); res(null); });
+  });
+  if (!contact) { me(t("cancelFlow").replace("✕ ", "")); return bot(t("flowCancelled")); }
+  const fullName = lang === "zh" ? `${contact.last}${contact.first}` : `${contact.first} ${contact.last}`;
+  me(`${fullName} · ${contact.phone}`);
+
+  const confCol = await bot(t("review"),
+    $(`<div class="card"><b>${name()}</b><dl class="sum"><dt>${t("sDate")}</dt><dd>${fmtDate(st.date)}</dd><dt>${t("sTime")}</dt><dd>${st.time}</dd><dt>${t("sSize")}</dt><dd>${t("people", st.size)}</dd><dt>${t("sBooker")}</dt><dd>${esc(fullName)}</dd>${deal ? `<dt>${t("sDeal")}</dt><dd>${deal}</dd>` : ""}<dt>${t("sDep")}</dt><dd>${r.deposit ? t("depQr", r.deposit) : t("none")}</dd></dl><div class="acts"><button class="act pri" data-ok>${t("confirm")}</button><button class="act" data-no>${t("cancel")}</button></div></div>`));
+  const okd = await pick(confCol, "[data-ok],[data-no]", (b) => b.hasAttribute("data-ok"));
+  if (!okd) { me(t("cancel")); return bot(t("cancelledShort")); }
+  me(t("confirm"));
+  await bot(t("confirming"));
+  const b = {id: seq++, rid, size: st.size, date: st.date, time: st.time};
+  bookings.unshift(b);
+  await bot($(`<div class="card"><div class="ok">${t("booked")}</div><div class="sub" style="margin:6px 0 10px">${name()} · ${fmtDate(st.date)} · ${st.time} · ${t("people", st.size)}<br>${t("bookingNo")} <span class="bid">#TPB-${b.id}</span> · ${t("willSms", esc(contact.phone))}</div><div class="acts"><button class="act" data-toast="tCal">${t("addCal")}</button><button class="act" data-go="mine">${t("viewMine")}</button></div></div>`));
+}
+
+// ---------- language ----------
+function detectLang(s){
+  if (/[฀-๿]/.test(s)) return "th";
+  if (/[㐀-鿿]/.test(s)) return "zh";
+  if (/[a-z]/i.test(s)) return "en";
+  return lang;
+}
+function setLang(l, opts = {}){
+  lang = l;
+  document.documentElement.lang = l === "zh" ? "zh-CN" : l;
+  document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = t(el.dataset.t)));
+  document.querySelectorAll("[data-t-ph]").forEach((el) => (el.placeholder = t(el.dataset.tPh)));
+  document.querySelectorAll("[data-t-aria]").forEach((el) => el.setAttribute("aria-label", t(el.dataset.tAria)));
+  document.querySelectorAll("#langs button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === l));
+  const C = t("chips");
+  document.getElementById("sugg").innerHTML = ["trip","thai","seafood","phuket","qr"].map((k) => `<button data-go="${k}">${C[k]}</button>`).join("");
+  if (opts.toast) toast(t("langToast"));
+}
+
+// ---------- routing ----------
+async function run(fn){ if (busy) return; busy = true; try { await fn(); } finally { busy = false; } }
+const userLabel = (k) => t("chips")[k].replace(/^\S+\s/, "");
+function go(key){
+  if (key === "reset") return reset();
+  run(async () => { me(key === "deals" || key === "mine" ? t("chips")[key] : userLabel(key)); await INTENTS[key](); });
+}
+const KEYS = [
+  ["trip", /ทริป|เที่ยว|แผน|trip|plan|travel|itinerary|行程|旅游|旅行|规划|两日|兩日/i],
+  ["phuket", /ภูเก็ต|phuket|普吉/i],
+  ["seafood", /ทะเล|ซีฟู้ด|seafood|เชียงใหม่|chiang ?mai|海鲜|海鮮|清迈|清邁/i],
+  ["thai", /อาหารไทย|ร้านไทย|thai food|thai restaurant|泰国菜|泰國菜|泰餐|泰国餐厅/i],
+  ["qr", /qr|จ่าย|pay|扫码|掃碼|付款|二维码/i],
+  ["deals", /ดีล|โปร|deal|promo|discount|优惠|優惠|折扣/i],
+  ["mine", /การจองของฉัน|my booking|bookings|我的预订|我的預訂/i],
+];
+function route(text){
+  const l = detectLang(text);
+  if (l !== lang) setLang(l, {toast: true}); // the agent answers in the language the user wrote in
+  const key = KEYS.find(([, re]) => re.test(text))?.[0];
+  run(async () => {
+    me(text);
+    if (key) return INTENTS[key]();
+    const hit = Object.keys(R).find((k) => ["th","en","zh"].some((x) => text.toLowerCase().includes(R[k][x].name.split(" ")[0].toLowerCase())));
+    if (hit) return showRest(hit);
+    await bot(t("fallback"));
+  });
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b || b.disabled) return;
+  if (b.dataset.lang) { if (b.dataset.lang !== lang && !busy) { setLang(b.dataset.lang, {toast: true}); reset(); } }
+  else if (b.dataset.go) go(b.dataset.go);
+  else if (b.dataset.rest) run(async () => { me(t("askDetail", rn(b.dataset.rest).name)); await showRest(b.dataset.rest); });
+  else if (b.dataset.book) run(async () => { me(t("bookMsg", rn(b.dataset.book).name) + (b.dataset.deal ? ` (${b.dataset.deal})` : "")); await book(b.dataset.book, b.dataset.deal); });
+  else if (b.dataset.cancel) run(async () => { const bk = bookings.find((x) => x.id == b.dataset.cancel); bk.cancelled = true; lock(b.parentElement); me(t("cancelMsg", bk.id)); await bot(t("cancelDone", rn(bk.rid).name)); });
+  else if (b.dataset.toast) toast(t(b.dataset.toast));
+});
+document.getElementById("composer").addEventListener("submit", (e) => {
+  e.preventDefault(); const i = document.getElementById("msg"); const v = i.value.trim(); if (!v || busy) return; i.value = ""; route(v);
+});
+document.querySelectorAll("#chs button").forEach((b) => b.addEventListener("click", () => {
+  document.body.dataset.ch = b.dataset.ch;
+  document.querySelectorAll("#chs button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  toast(t("chToast", b.textContent));
+}));
+function reset(){ if (busy) return; log.innerHTML = ""; greet(); }
+function greet(){
+  log.append($(`<div class="row bot"><div class="mini">${LOGO}</div><div class="col"><div class="bub">${t("greet")}</div><div class="meta">${now()}</div></div></div>`));
+}
+
+// ---------- start ----------
+// ?lang=en|zh  ?ch=line|telegram|whatsapp  ?demo=trip (plays an answer)  ?fast=1&top=1 (used for the preview image)
+const q = new URLSearchParams(location.search);
+setLang(I18N[q.get("lang")] ? q.get("lang") : "th");
+greet();
+if (q.get("fast")) { document.body.dataset.fast = "1"; log.style.scrollBehavior = "auto"; }
+if (q.get("ch")) document.querySelector(`#chs button[data-ch="${q.get("ch")}"]`)?.click();
+if (q.get("demo") && INTENTS[q.get("demo")]) {
+  go(q.get("demo"));
+  if (q.get("top")) setTimeout(() => { const m = log.querySelector(".row.me"); if (m) log.scrollTop = m.offsetTop - log.offsetTop - 12; }, q.get("fast") ? 400 : 2000);
+}
+</script>
+</body>
+</html>

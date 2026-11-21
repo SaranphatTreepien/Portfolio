@@ -18,8 +18,9 @@ module.exports = {
   		xl: '1200px'
   	},
   	fontFamily: {
-  		primary: 'var(--font-bebas)',
-  		secondary: 'var(--font-inter)'
+  		// Thai text falls back to IBM Plex Sans Thai (Bebas Neue and Inter have no Thai glyphs)
+  		primary: ['var(--font-bebas)', 'var(--font-thai)', 'sans-serif'],
+  		secondary: ['var(--font-inter)', 'var(--font-thai)', 'sans-serif']
   	},
   	extend: {
   		colors: {
