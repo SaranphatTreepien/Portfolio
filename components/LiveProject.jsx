@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FiExternalLink, FiLock, FiPlay, FiMaximize2, FiArrowRight, FiLayers } from "react-icons/fi";
+import { FiExternalLink, FiLock, FiPlay, FiMaximize2, FiArrowRight, FiLayers, FiGithub } from "react-icons/fi";
 import AnimatedText from "./AnimatedText";
 import HeroLogo from "./AiGovernance/HeroLogo";
 import { liveProjects } from "@/data/liveProjects";
@@ -160,14 +160,26 @@ function ProjectCard({ project }) {
                             >
                                 {tx(project.detailLabel)} <FiArrowRight />
                             </Link>
-                            <a
-                                href={project.demoUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                            >
-                                <FiExternalLink /> {t("live.tryFull")}
-                            </a>
+                            {project.demoUrl && (
+                                <a
+                                    href={project.demoUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                                >
+                                    <FiExternalLink /> {t("live.tryFull")}
+                                </a>
+                            )}
+                            {project.repoUrl && (
+                                <a
+                                    href={project.repoUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                                >
+                                    <FiGithub /> GitHub
+                                </a>
+                            )}
                         </>
                     ) : (
                         <a

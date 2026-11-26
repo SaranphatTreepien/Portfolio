@@ -36,6 +36,71 @@ export const liveProjects = [
         tech: ["FastAPI", "Next.js", "Presidio", "PyThaiNLP", "Redis", "PostgreSQL", "LiteLLM", "Docker"],
     },
     {
+        // Course team project: no public site, the card opens a detail page with GIFs and the GitHub repo
+        kind: "demo",
+        slug: "fruit-defect",
+        name: "CIRA CORE Fruit Defect Sorter",
+        badge: { th: "โปรเจกต์ทีม CPE447 · Platform & Dashboard", en: "CPE447 Team Project · Platform & Dashboard" },
+        detailHref: "/projects/fruit-defect",
+        repoUrl: "https://github.com/SaranphatTreepien/cira-fruit-defect-dashboard",
+        displayUrl: "fruit-defect · dashboard (Next.js)",
+        poster: "/assets/projects/fruit-defect/system-diagram.jpg",
+        previewLabel: { th: "ดูเดโม + สถาปัตยกรรม →", en: "Demo + architecture →" },
+        detailLabel: { th: "ดูเดโมและรายละเอียด", en: "See the demo and details" },
+        tagline: {
+            th: "Edge AI คัดผลไม้ดี/เสียบนสายพาน แล้วส่งผลขึ้น Dashboard แบบ real-time",
+            en: "Edge AI sorts good / defective fruit on a conveyor and streams results to a real-time dashboard",
+        },
+        description: {
+            th: "โปรเจกต์ทีม 4 คน ผมรับส่วน Platform & Dashboard: โมเดลใน CiRA CORE ตรวจส้ม/แอปเปิลบนสายพาน แล้วส่ง 1 event ต่อผลไม้ผ่าน MQTT ฝั่งผมทำ adapter ที่ตรวจและกันข้อมูลซ้ำก่อนลง PostgreSQL, เว็บ Next.js ที่แสดงผล real-time (มีฉาก 3D), log, รอบการทำงาน, alert และ Telegram bot ที่ใช้ Gemini สรุปสถานการณ์ ทั้งหมดรันใน Docker",
+            en: "A 4-person team project where I owned Platform & Dashboard. A model in CiRA CORE inspects oranges / apples on a conveyor and sends one event per fruit over MQTT. I built the adapter that validates and de-duplicates events into PostgreSQL, the Next.js dashboard with a real-time (and 3D) view, logs, runs, alerts, and a Telegram bot that uses Gemini to summarise what's happening. Everything runs in Docker.",
+        },
+        stats: [
+            { value: "1–3 s", label: { th: "จาก CiRA CORE ถึงหน้าจอ", en: "from CiRA CORE to screen" } },
+            { value: "7", label: { th: "หน้าหลักใน Dashboard", en: "dashboard pages" } },
+            { value: "7", label: { th: "service ใน Docker Compose", en: "services in Docker Compose" } },
+        ],
+        features: [
+            { icon: "📡", text: { th: "รับ event + heartbeat จาก CiRA CORE ผ่าน MQTT", en: "Takes events + heartbeats from CiRA CORE over MQTT" } },
+            { icon: "🧹", text: { th: "Adapter ตรวจ payload กันนับซ้ำ batch insert ทนล่ม", en: "Adapter validates payloads, de-duplicates, batch-inserts, survives outages" } },
+            { icon: "🍊", text: { th: "Live: ผลไม้วิ่งบนสายพาน 2D / 3D ตามเวลาจริง", en: "Live: fruit moves along a 2D / 3D belt in real time" } },
+            { icon: "🔔", text: { th: "Alert + รายงานรายวัน + Telegram bot สรุปด้วย Gemini", en: "Alerts, daily reports and a Telegram bot with Gemini summaries" } },
+        ],
+        tech: ["CiRA CORE", "MQTT", "Python", "PostgreSQL", "Next.js", "Three.js", "Docker", "Telegram", "Gemini"],
+    },
+    {
+        // Group HMI project (18 people, 4 screens); I built page 2, lighting control, on my own. No public repo.
+        kind: "demo",
+        slug: "smart-classroom",
+        name: "Smart Classroom · Lighting Control",
+        badge: { th: "งานกลุ่ม HMI · หน้า 2 ระบบไฟ (ทำคนเดียว)", en: "Group HMI Project · Page 2 Lighting (solo)" },
+        detailHref: "/projects/smart-classroom",
+        displayUrl: "Wecon PI Studio · HMI 1920×1080",
+        poster: "/assets/projects/smart-classroom/poster.jpg",
+        previewLabel: { th: "ดูหน้าจอและผลทดสอบ →", en: "Screens + test results →" },
+        detailLabel: { th: "ดูหน้าจอและตรรกะ", en: "See the screens and logic" },
+        tagline: {
+            th: "หน้าจอ HMI ที่เปิด-ปิดไฟห้องเรียนเองตามแสงและจำนวนคน และเตือนเมื่อลืมปิดไฟ",
+            en: "An HMI screen that switches classroom lights by daylight and head count, and warns when someone forgets them",
+        },
+        description: {
+            th: "ห้องเรียนอัจฉริยะจำลองบน Wecon PI Studio งานกลุ่ม 18 คนแบ่ง 4 หน้า ผมทำหน้า 2 \"ระบบควบคุมไฟ\" คนเดียวทั้งหน้า: เลย์เอาต์และภาพ ตรรกะ AUTO/MANUAL แยก 2 โซน สคริปต์จำลองค่า Lux และจำนวนคน แอนิเมชัน ป้ายสถานะ แผงตั้งค่า และส่งข้อมูลห้องเป็น JSON ผ่าน MQTT เขียนด้วย Lua พร้อมชุดทดสอบอัตโนมัติ",
+            en: "A simulated smart classroom in Wecon PI Studio, built by a group of 18 across 4 screens. I built page 2, lighting control, on my own: layout and artwork, two-zone AUTO / MANUAL logic, Lux and head-count simulation, animation, status banners, a settings panel, and room data published as JSON over MQTT. Written in Lua with an automated test suite.",
+        },
+        stats: [
+            { value: "345", label: { th: "เช็กในชุดทดสอบ Lua ผ่านหมด", en: "Lua test checks, all passing" } },
+            { value: "18", label: { th: "เคสทดสอบบนจอจำลอง", en: "test cases on the simulator" } },
+            { value: "2 s", label: { th: "ส่ง JSON ผ่าน MQTT", en: "JSON over MQTT" } },
+        ],
+        features: [
+            { icon: "💡", text: { th: "AUTO: มืดและมีคนจึงเปิด คนน้อยเปิดแค่โซนหน้า", en: "AUTO: lights on when dark and occupied, front zone only for a small group" } },
+            { icon: "☀️", text: { th: "แดดพอหรือห้องว่างเกิน 5 วิ ไฟปิดเอง", en: "Enough daylight or an empty room for 5 s turns lights off" } },
+            { icon: "🚨", text: { th: "MANUAL ลืมปิดไฟ 60 วิ: บังคับปิด + ป้ายแดง", en: "MANUAL, lights left on for 60 s: forced off + red banner" } },
+            { icon: "📡", text: { th: "ส่งสถานะห้องเป็น JSON ผ่าน MQTT ทุก 2 วิ", en: "Publishes room state as JSON over MQTT every 2 s" } },
+        ],
+        tech: ["Wecon PI Studio", "HMI", "Lua", "MQTT", "Python (asset generator)"],
+    },
+    {
         // Freelance work shown as a clickable mock: renamed brand, fictional venues and people
         kind: "demo",
         slug: "travel-plan-booking",
