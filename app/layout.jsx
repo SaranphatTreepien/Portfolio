@@ -1,13 +1,21 @@
-import { Inter, Bebas_Neue, IBM_Plex_Sans_Thai } from 'next/font/google'
+import { Geist, Bebas_Neue, IBM_Plex_Sans_Thai, Instrument_Serif } from 'next/font/google'
 import './globals.css'
 import { LanguageProvider } from '@/components/LanguageProvider'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next' // ✅ เพิ่มตรงนี้
 
-const inter = Inter({
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+// UI and headings
+const geist = Geist({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-geist',
+});
+
+// One italic accent word per heading (Latin only; Thai falls back to IBM Plex Sans Thai)
+const serif = Instrument_Serif({
+  weight: '400',
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-serif',
 });
 
 const bebasNeue = Bebas_Neue({
@@ -16,7 +24,7 @@ const bebasNeue = Bebas_Neue({
   variable: '--font-bebas',
 });
 
-// Thai glyphs for the language switch; Inter and Bebas Neue have none
+// Thai glyphs for the language switch; Geist and Bebas Neue have none
 const thai = IBM_Plex_Sans_Thai({
   weight: ['400', '500', '600', '700'],
   subsets: ['thai'],
@@ -60,7 +68,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`antialiased ${inter.variable} ${bebasNeue.variable} ${thai.variable}`}
+        className={`antialiased ${geist.variable} ${serif.variable} ${bebasNeue.variable} ${thai.variable}`}
         suppressHydrationWarning={true}
       >
         <LanguageProvider>{children}</LanguageProvider>

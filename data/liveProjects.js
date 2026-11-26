@@ -4,6 +4,9 @@ export const liveProjects = [
         // Demo project: no public site, the card opens a detail page instead of /live/[slug]
         kind: "demo",
         slug: "ai-governance",
+        category: "internship", // internship | freelance | side | coursework (lib/projectMeta.js)
+        role: { th: "สหกิจศึกษา · เดโม", en: "Co-op · Demo" },
+        featured: true, // shown on the home page
         name: "AI Governance Gateway",
         badge: { th: "โปรเจกต์สหกิจ · Demo", en: "Coop Project · Demo" },
         detailHref: "/projects/ai-governance",
@@ -39,6 +42,8 @@ export const liveProjects = [
         // Course team project: no public site, the card opens a detail page with GIFs and the GitHub repo
         kind: "demo",
         slug: "fruit-defect",
+        category: "coursework", // internship | freelance | side | coursework (lib/projectMeta.js)
+        role: { th: "ทีม 4 คน · ผมดูแล Platform & Dashboard", en: "Team of 4 · I owned Platform & Dashboard" },
         name: "CIRA CORE Fruit Defect Sorter",
         badge: { th: "โปรเจกต์ทีม CPE447 · Platform & Dashboard", en: "CPE447 Team Project · Platform & Dashboard" },
         detailHref: "/projects/fruit-defect",
@@ -72,6 +77,8 @@ export const liveProjects = [
         // Group HMI project (18 people, 4 screens); I built page 2, lighting control, on my own. No public repo.
         kind: "demo",
         slug: "smart-classroom",
+        category: "coursework", // internship | freelance | side | coursework (lib/projectMeta.js)
+        role: { th: "งานกลุ่ม 18 คน · ผมทำหน้าระบบไฟคนเดียว", en: "Group of 18 · I built the lighting page solo" },
         name: "Smart Classroom · Lighting Control",
         badge: { th: "งานกลุ่ม HMI · หน้า 2 ระบบไฟ (ทำคนเดียว)", en: "Group HMI Project · Page 2 Lighting (solo)" },
         detailHref: "/projects/smart-classroom",
@@ -104,6 +111,9 @@ export const liveProjects = [
         // Freelance work shown as a clickable mock: renamed brand, fictional venues and people
         kind: "demo",
         slug: "travel-plan-booking",
+        category: "freelance", // internship | freelance | side | coursework (lib/projectMeta.js)
+        role: { th: "เดโมจำลองที่กดได้ · ข้อมูลสมมติ", en: "Clickable mock · fictional data" },
+        featured: true, // shown on the home page
         name: "Travel Plan Booking",
         badge: { th: "ฟรีแลนซ์ · Mock", en: "Freelance · Mock" },
         detailHref: "/projects/travel-plan-booking",
@@ -135,6 +145,9 @@ export const liveProjects = [
     },
     {
         slug: "foodroll",
+        category: "side", // internship | freelance | side | coursework (lib/projectMeta.js)
+        role: { th: "ทำเอง · เว็บที่ใช้งานจริง", en: "Solo · Live site" },
+        featured: true, // shown on the home page
         name: "FoodRoll BKK",
         url: "https://foodroll-bkk.vercel.app/",
         displayUrl: "foodroll-bkk.vercel.app",

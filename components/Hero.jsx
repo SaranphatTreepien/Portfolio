@@ -1,384 +1,172 @@
 "use client";
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-// Icons ปุ่ม Resume
-import { FiFileText, FiArrowRight, FiX } from "react-icons/fi";
+import { motion } from "framer-motion";
+import { Link as ScrollLink } from "react-scroll";
+import { FiArrowRight, FiFileText, FiMapPin } from "react-icons/fi";
+import { SiCredly } from "react-icons/si";
 
-// components
 import Header from "./Header";
-import Credentials from "./Credentials";
+import { IconGitHub, IconGoogle, IconLinkedIn } from "./icons";
 import { useLang } from "./LanguageProvider";
+import { googleSkillsProfile, credlyProfileUrl } from "@/data/credentials";
 
-const LUMA_PROFILE_URL = "https://luma.com/user/max289";
+// Small profile links in each brand's own color
+const PROFILES = [
+  { label: "GitHub", href: "https://github.com/SaranphatTreepien", Icon: IconGitHub, color: "text-[#181717]" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/saranphat-treepien-4284402b2", Icon: IconLinkedIn, color: "text-[#0a66c2]" },
+  { label: "Credly", href: credlyProfileUrl, Icon: SiCredly, color: "text-[#ff6b00]", size: "h-5 w-5" },
+  { label: "Google Skills", href: googleSkillsProfile.url, Icon: IconGoogle },
+];
+
+// Text column enters line by line
+const stagger = { animate: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } };
+const rise = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const LEAD = {
+  en: { before: "Computer engineer building ", accent: "secure, cloud-ready", after: " systems, from network labs to an AI gateway for my co-op." },
+  th: { before: "วิศวกรคอมพิวเตอร์ที่สร้างระบบ", accent: "ปลอดภัยและพร้อมขึ้นคลาวด์", after: " ตั้งแต่แล็บเน็ตเวิร์กไปจนถึง AI gateway ในงานสหกิจ" },
+};
 
 const Hero = () => {
-  const [isLumaModalOpen, setIsLumaModalOpen] = useState(false);
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const lead = LEAD[lang] ?? LEAD.en;
 
-  useEffect(() => {
-    if (!isLumaModalOpen) return;
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") setIsLumaModalOpen(false);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isLumaModalOpen]);
 
   return (
-    <section
-      className="relative w-full min-h-screen lg:min-h-0 overflow-hidden flex flex-col font-sans"
-      id="Home"
-    >
-      {/* --- Background Layers --- */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent to-[#005f5f] lg:from-white lg:to-gray-50 -z-20">
-        {/* Static gradient orbs */}
-        <div
-          className="absolute w-[600px] h-[600px] rounded-full opacity-30"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(126,218,210,0.4) 0%, transparent 70%)",
-            top: "20%",
-            right: "10%",
-          }}
-        ></div>
-        <div
-          className="absolute w-[500px] h-[500px] rounded-full opacity-20"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(0,168,168,0.3) 0%, transparent 70%)",
-            bottom: "10%",
-            left: "5%",
-          }}
-        ></div>
-        <div
-          className="absolute inset-0 bg-[radial-gradient(rgba(148,163,184,0.5)_1.5px,transparent_1.5px)] [background-size:24px_24px]"
-          style={{
-            maskImage:
-              "radial-gradient(ellipse 90% 80% at 50% 30%, black 40%, transparent 90%)",
-            WebkitMaskImage:
-              "radial-gradient(ellipse 90% 80% at 50% 30%, black 40%, transparent 90%)",
-          }}
-        ></div>
-      </div>
+    <section id="Home" className="relative overflow-hidden">
+      {/* Background: faint dot grid on the left, teal panel behind the photo on the right */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-20 bg-[radial-gradient(rgba(148,163,184,0.35)_1px,transparent_1px)] [background-size:22px_22px]"
+        style={{
+          maskImage: "radial-gradient(ellipse 70% 70% at 25% 40%, black 30%, transparent 80%)",
+          WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 25% 40%, black 30%, transparent 80%)",
+        }}
+      />
+      <motion.div
+        aria-hidden="true"
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="hero-panel absolute right-0 top-0 -z-10 hidden h-full w-[44%] lg:block"
+      />
 
-      <div className="hidden lg:block absolute top-0 right-0 w-[50%] h-full bg-gradient-to-bl from-accent to-[#00a8a8] -z-10 rounded-bl-[250px] shadow-[-20px_0_100px_rgba(0,0,0,0.08)]"></div>
+      <Header />
 
-      {/* --- Tech Elements (Binary / Code Symbols) --- */}
-      <div className="hidden lg:block absolute top-20 left-10 font-mono text-accent/5 text-8xl font-bold select-none z-0 rotate-12 pointer-events-none">
-        {"< />"}
-      </div>
-      <div className="hidden lg:block absolute bottom-1/3 right-10 font-mono text-accent/5 text-6xl font-bold select-none z-0 -rotate-12 pointer-events-none">
-        010011
-      </div>
+      <div className="container mx-auto grid items-end gap-6 px-6 pt-28 sm:px-8 lg:min-h-[700px] lg:grid-cols-[1.1fr_0.9fr] lg:gap-10 lg:pt-32 xl:min-h-[740px]">
+        {/* --- Text --- */}
+        <motion.div variants={stagger} initial="initial" animate="animate" className="relative z-10 self-center pb-4 lg:pb-16">
+          <motion.p variants={rise}>
+            <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 py-1 pl-2.5 pr-3 text-[13px] font-medium text-brand-700 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-60 motion-reduce:hidden" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
+              </span>
+              {t("hero.status")}
+            </span>
+          </motion.p>
 
-      {/* Header */}
-      <div className="absolute top-0 left-0 w-full z-50">
-        <Header />
-      </div>
-
-      <div className="container mx-auto h-full px-6 sm:px-8 flex-grow flex flex-col pt-28 lg:pt-28 relative">
-        <div className="flex w-full flex-col lg:flex-row items-center lg:items-end justify-between gap-8 lg:gap-12 pb-10 lg:pb-0 z-10">
-          {/* --- Resume, profiles & Badges carousel --- */}
-          <div className="relative z-30 w-full lg:w-[50%] order-2 lg:order-1">
-            <div className="mb-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-3 justify-center lg:justify-start">
-              <Link href="/cv" passHref className="w-full max-w-[280px] sm:w-auto">
-                <button className="flex w-full sm:w-auto items-center justify-center gap-2 sm:gap-3 h-[50px] sm:h-[56px] px-6 rounded-full border-2 border-white/30 lg:border-gray-300 text-white lg:text-gray-600 font-bold bg-white/5 lg:bg-white">
-                  <FiFileText className="text-lg sm:text-xl" />
-                  <span className="font-bold tracking-wide text-xs sm:text-sm uppercase whitespace-nowrap">
-                    {t("hero.resume")}
-                  </span>
-                  <FiArrowRight className="text-lg" />
-                </button>
-              </Link>
-              <div className="flex items-center gap-3">
-                {CREDENTIAL_BADGES.map((badge) => (
-                  <CoinBadge
-                    key={badge.label}
-                    {...badge}
-                    onClick={
-                      badge.label === "Luma"
-                        ? () => setIsLumaModalOpen(true)
-                        : undefined
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-            <Credentials />
-          </div>
-
-          {/* --- Profile Image --- */}
-          <div className="w-full lg:w-[45%] order-1 lg:order-2 relative h-[400px] sm:h-[500px] lg:h-[580px] flex justify-center lg:justify-end items-center lg:items-end">
-            <div className="relative w-[300px] h-[340px] sm:w-[400px] sm:h-[460px] lg:w-[550px] lg:h-[580px]">
-              {/* Glow effect */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-white/15 blur-[40px] rounded-full -z-10"></div>
-
-              {/* Decorative Geometric Shapes */}
-              <div className="absolute inset-0 z-0 pointer-events-none">
-                {/* Curved line shape */}
-                <div className="absolute top-[-15%] -left-[10%] opacity-80">
-                  <svg
-                    width="80"
-                    height="80"
-                    viewBox="0 0 100 100"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M10 80 C 10 80, 20 20, 50 20 C 80 20, 80 50, 50 50 C 20 50, 20 80, 90 90"
-                      stroke="white"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeDasharray="6 6"
-                    />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Profile Image */}
-              <div className="relative w-full h-full drop-shadow-2xl z-10">
-                <Image
-                  src="/assets/hero/dev3.png"
-                  fill
-                  priority
-                  quality={85}
-                  className="object-contain lg:object-bottom"
-                  alt="Saranphat Profile"
-                  sizes="(max-width: 640px) 300px, (max-width: 1024px) 400px, 550px"
-                  placeholder="empty"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {isLumaModalOpen && (
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsLumaModalOpen(false)}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="luma-modal-title"
+          <motion.p variants={rise} className="mt-7 text-[15px] font-medium text-gray-500">
+            {t("hero.hi")}
+          </motion.p>
+          <motion.h1
+            variants={rise}
+            className="mt-2 text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-primary sm:text-[60px] xl:text-[76px]"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className="relative w-full max-w-md rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,168,168,0.15)] border border-accent/25 overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => setIsLumaModalOpen(false)}
-                className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-accent/10 hover:text-accent transition-colors"
-                aria-label={t("hero.close")}
-              >
-                <FiX className="h-5 w-5" />
-              </button>
+            Saranphat
+            <br />
+            Treepian
+          </motion.h1>
 
-              <div className="p-5 sm:p-6 pt-6">
-                <div className="rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shadow-inner">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/assets/icon/luma-events.gif"
-                    alt="Luma event attendance proof"
-                    className="w-full h-auto object-contain"
-                  />
-                </div>
+          <motion.p variants={rise} className="mt-6 max-w-[34rem] text-[17px] leading-[1.65] text-gray-600 sm:text-lg">
+            {lead.before}
+            <span className={`text-brand-700 ${lang === "en" ? "font-serif text-[1.2em] italic leading-none" : "font-medium"}`}>{lead.accent}</span>
+            {lead.after}
+          </motion.p>
 
-                <div className="mt-4 text-center space-y-1">
-                  <p
-                    id="luma-modal-title"
-                    className="text-base sm:text-lg font-bold text-gray-800"
-                  >
-                    {t("hero.lumaPreview")}
-                  </p>
-                  <p className="text-sm text-gray-500">{t("hero.lumaProof")}</p>
-                </div>
-
+          {/* Profiles */}
+          <motion.ul variants={rise} className="mt-7 flex flex-wrap items-center gap-2">
+            {PROFILES.map(({ label, href, Icon, color = "", size = "h-[15px] w-[15px]" }) => (
+              <li key={label}>
                 <a
-                  href={LUMA_PROFILE_URL}
+                  href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 flex items-center justify-center gap-2 w-full py-3 px-4 rounded-full bg-accent text-white font-bold text-sm sm:text-base shadow-lg shadow-accent/25 hover:bg-[#00a8a8] transition-colors"
+                  className="group inline-flex h-8 items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 pl-2.5 pr-3 text-[13px] font-medium text-gray-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:text-primary hover:shadow-[0_6px_16px_-8px_rgba(16,21,31,0.35)]"
                 >
-                  {t("hero.lumaView")}
-                  <FiArrowRight className="h-4 w-4" />
+                  <Icon className={`${size} ${color} shrink-0`} />
+                  {label}
                 </a>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </li>
+            ))}
+          </motion.ul>
+
+          {/* Actions */}
+          <motion.div variants={rise} className="mt-9 flex flex-wrap items-center gap-3">
+            <ScrollLink
+              to="Live"
+              href="#Live"
+              smooth
+              duration={600}
+              offset={-40}
+              className="group inline-flex h-12 cursor-pointer items-center gap-2 rounded-full bg-brand-600 px-6 text-[15px] font-semibold text-white transition-colors hover:bg-brand-700"
+            >
+              {t("hero.viewWork")}
+              <FiArrowRight className="transition-transform duration-200 group-hover:translate-x-0.5" />
+            </ScrollLink>
+            <Link
+              href="/cv"
+              className="inline-flex h-12 items-center gap-2 rounded-full border border-gray-300 bg-white px-5 text-[15px] font-medium text-primary transition-colors hover:border-primary"
+            >
+              <FiFileText className="text-gray-500" /> CV
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* --- Photo --- */}
+        <div className="relative mx-auto h-[400px] w-full max-w-[420px] sm:h-[480px] lg:mx-0 lg:h-[600px] lg:max-w-none xl:h-[640px]">
+          {/* Mobile: teal arch behind the photo (desktop uses the full-height panel) */}
+          <div aria-hidden="true" className="hero-panel absolute inset-x-6 bottom-0 top-16 rounded-t-[200px] lg:hidden" style={{ borderBottomLeftRadius: 0 }} />
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0"
+          >
+            <Image
+              src="/assets/hero/dev3.png"
+              fill
+              priority
+              quality={85}
+              className="object-contain object-bottom drop-shadow-[0_20px_40px_rgba(16,21,31,0.18)]"
+              alt="Saranphat Treepian"
+              sizes="(max-width: 1024px) 420px, 600px"
+            />
+          </motion.div>
+
+          {/* Small floating detail card */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
+            className="absolute bottom-10 left-0 hidden items-center gap-3 rounded-2xl border border-white/70 bg-white/90 px-4 py-3 shadow-[0_12px_32px_-12px_rgba(16,21,31,0.25)] backdrop-blur sm:flex lg:-left-6 lg:bottom-20"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+              <FiMapPin />
+            </span>
+            <span className="text-[13px] leading-tight">
+              <span className="block font-semibold text-primary">{t("menu.locationValue")}</span>
+              <span className="text-gray-500">{t("hero.location").split(" · ")[1]}</span>
+            </span>
+          </motion.div>
+        </div>
+      </div>
     </section>
   );
 };
-
-const CREDENTIAL_BADGES = [
-  {
-    label: "GitHub",
-    href: "https://github.com/SaranphatTreepien",
-    icon: IconGitHub,
-  },
-  {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com/in/saranphat-treepien-4284402b2",
-    icon: IconLinkedIn,
-  },
-  {
-    label: "Credly",
-    href: "https://www.credly.com/users/saranphat-treepian/edit/badges/credly",
-    imageSrc: "/assets/icon/credlyicon.svg",
-    imageClassName: "object-cover",
-  },
-  {
-    label: "Google Skills",
-    href: "https://www.skills.google/public_profiles/a5a766a1-9ea1-43fd-94af-736cee17ba2c",
-    icon: IconGoogleSkills,
-    tag: "#ChaiyoGCP66",
-  },
-  {
-    label: "Luma",
-    imageSrc: "/assets/icon/lumaIcon.png",
-    imageClassName: "object-contain scale-[1.4] origin-center",
-  },
-];
-
-const CoinBadge = ({
-  href,
-  label,
-  icon: Icon,
-  imageSrc,
-  imageClassName = "object-contain",
-  tag,
-  counter,
-  counterLabel,
-  onClick,
-}) => {
-  const ariaLabel =
-    counterLabel
-      ? `${label} — ${counterLabel}`
-      : tag
-        ? `${label} — ${tag}`
-        : label;
-
-  const badgeShell = (
-    <>
-      <span
-        className="relative flex h-11 w-11 min-h-[44px] min-w-[44px] sm:h-14 sm:w-14 lg:h-16 lg:w-16 items-center justify-center rounded-full p-[3px] shadow-[0_4px_16px_rgba(0,168,168,0.28)] transition-shadow duration-300 group-hover:shadow-[0_0_0_4px_rgba(126,218,210,0.35),0_10px_28px_rgba(126,218,210,0.45)]"
-        style={{
-          background:
-            "linear-gradient(145deg, #7edad2 0%, #00a8a8 55%, #005f5f 100%)",
-        }}
-      >
-        <span
-          className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-white via-gray-50 to-gray-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),inset_0_-2px_4px_rgba(0,0,0,0.06)] lg:from-[#f8fffe] lg:via-white lg:to-[#e8f7f5]"
-        >
-          {imageSrc ? (
-            imageSrc.endsWith(".svg") ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={imageSrc}
-                alt=""
-                className={`h-full w-full ${imageClassName}`}
-              />
-            ) : (
-              <Image
-                src={imageSrc}
-                alt=""
-                width={64}
-                height={64}
-                className={`h-full w-full ${imageClassName}`}
-                sizes="(max-width: 640px) 44px, (max-width: 1024px) 56px, 64px"
-              />
-            )
-          ) : (
-            <span className="text-gray-700 lg:text-gray-600 transition-colors duration-300 group-hover:text-accent">
-              <Icon />
-            </span>
-          )}
-        </span>
-      </span>
-      {tag && (
-        <span
-          className="absolute -top-0.5 -right-1 sm:-top-1 sm:-right-1.5 flex max-w-[calc(100%+4px)] items-center justify-center rounded-full bg-gradient-to-br from-accent to-[#00a8a8] px-1 sm:px-1.5 py-0.5 text-[6px] sm:text-[7px] lg:text-[8px] font-bold leading-none text-white shadow-[0_2px_8px_rgba(0,168,168,0.55)] ring-2 ring-white lg:ring-gray-50 whitespace-nowrap"
-          aria-hidden="true"
-        >
-          {tag}
-        </span>
-      )}
-      {counter != null && (
-        <span
-          className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 flex h-5 min-w-5 sm:h-[22px] sm:min-w-[22px] items-center justify-center rounded-full bg-gradient-to-br from-accent to-[#00a8a8] px-1 text-[10px] sm:text-[11px] font-bold leading-none text-white shadow-[0_2px_8px_rgba(0,168,168,0.55)] ring-2 ring-white lg:ring-gray-50"
-          aria-hidden="true"
-        >
-          {counter}
-        </span>
-      )}
-    </>
-  );
-
-  const sharedClassName =
-    "group relative shrink-0 rounded-full transition-all duration-300 ease-out hover:scale-[1.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2";
-
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        aria-label={ariaLabel}
-        title={ariaLabel}
-        className={sharedClassName}
-      >
-        {badgeShell}
-      </button>
-    );
-  }
-
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={ariaLabel}
-      title={ariaLabel}
-      className={sharedClassName}
-    >
-      {badgeShell}
-    </a>
-  );
-};
-
-function IconGitHub() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9" fill="currentColor" aria-hidden="true">
-      <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
-  );
-}
-
-function IconLinkedIn() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9" fill="currentColor" aria-hidden="true">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.537H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 114.126 0 2.063 2.063 0 01-2.063 2.065zm1.782 13.019H3.555V9h3.536v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-    </svg>
-  );
-}
-
-function IconGoogleSkills() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9" aria-hidden="true">
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.06z" />
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-    </svg>
-  );
-}
 
 export default Hero;

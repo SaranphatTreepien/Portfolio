@@ -1,59 +1,59 @@
 "use client";
 import { Link as ScrollLink } from "react-scroll";
 import { useLang } from "./LanguageProvider";
+import { openAbout } from "./AboutModal";
 
-const links = [
-  { name: "Home" },
-  { name: "Live" },
-  { name: "Experience" },
-  { name: "Journey" },
-  { name: "About" },
-  { name: "Contact" },
-];
+// Section ids stay the same; only the labels change with the language
+const links = ["Home", "Live", "Experience", "Journey", "About", "Contact"];
 
-const Nav = ({ containerStyles, listStyles, linkStyles, spy, onLinkClick }) => {
-  const { t, lang } = useLang();
+const VARIANTS = {
+  // Top bar: quiet text links in a frosted pill, the active one gets a soft fill
+  bar: {
+    list: "flex items-center gap-0.5 rounded-full border border-black/[0.06] bg-white/75 p-1 shadow-[0_1px_2px_rgba(16,21,31,0.04)] backdrop-blur-md",
+    link: "inline-flex h-9 items-center rounded-full px-4 text-[14px] font-medium text-gray-500 transition-colors duration-200 hover:text-primary [&.active-nav-link]:bg-brand-50 [&.active-nav-link]:text-brand-700",
+  },
+  // Pop-up menu: large stacked links
+  menu: {
+    list: "flex flex-col gap-3",
+    link: "text-[28px] font-semibold tracking-tight text-primary transition-colors hover:text-brand-600 [&.active-nav-link]:text-brand-600",
+  },
+};
+
+const Nav = ({ containerStyles = "", variant = "bar", onLinkClick }) => {
+  const { t } = useLang();
+  const styles = VARIANTS[variant];
   return (
     <nav className={containerStyles}>
-      <ul
-        className={`
-          ${listStyles}
-          p-2 rounded-full
-          border border-[#7edad2]/45
-          bg-white/10 backdrop-blur-sm
-        `}
-      >
-        {links.map((link, index) => (
-          <ScrollLink
-            spy={spy}
-            key={index}
-            activeClass="active-nav-link"
-            to={link.name}
-            smooth={true}
-            duration={500}
-            offset={-70}
-            onClick={onLinkClick}
-            className={`
-              ${linkStyles}
-              relative cursor-pointer
-              inline-flex items-center justify-center
-              h-[40px] rounded-full whitespace-nowrap
-              ${lang === "th" ? "px-3 !tracking-normal" : "px-4"}
-              border border-transparent
-              text-gray-400
-              transition-all duration-300
-
-              hover:text-[#7edad2] hover:bg-[#7edad2]/10 hover:border-[#7edad2]/45
-
-              /* Active State */
-              [&.active-nav-link]:text-[#7edad2]
-              [&.active-nav-link]:font-semibold
-              [&.active-nav-link]:bg-[#7edad2]/10
-              [&.active-nav-link]:border-[#7edad2]/45
-            `}
-          >
-            {t(`nav.${link.name}`)}
-          </ScrollLink>
+      <ul className={styles.list}>
+        {links.map((name) => (
+          <li key={name}>
+            {name === "About" ? (
+              // About opens a window instead of scrolling to a section
+              <button
+                type="button"
+                onClick={() => {
+                  onLinkClick?.();
+                  openAbout();
+                }}
+                className={`cursor-pointer whitespace-nowrap ${styles.link}`}
+              >
+                {t(`nav.${name}`)}
+              </button>
+            ) : (
+            <ScrollLink
+              spy
+              to={name}
+              smooth
+              duration={500}
+              offset={-70}
+              activeClass="active-nav-link"
+              onClick={onLinkClick}
+              className={`cursor-pointer whitespace-nowrap ${styles.link}`}
+            >
+              {t(`nav.${name}`)}
+            </ScrollLink>
+            )}
+          </li>
         ))}
       </ul>
     </nav>

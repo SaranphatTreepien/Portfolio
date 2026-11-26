@@ -61,10 +61,8 @@ const FixedMenu = () => {
               
               {/* Navigation */}
               <Nav
+                variant="menu"
                 containerStyles="w-full md:w-auto text-center md:text-left md:border-r border-gray-200 md:pr-12"
-                listStyles="flex flex-col justify-center gap-4"
-                linkStyles="font-primary text-3xl text-primary cursor-pointer hover:text-accent transition-colors"
-                spy={true}
                 onLinkClick={() => setShowMenu(false)}
               />
 
@@ -112,7 +110,7 @@ const FixedMenu = () => {
             className={`
               pointer-events-auto
               w-[56px] h-[56px] rounded-full shadow-lg flex items-center justify-center transition-colors duration-300 z-50
-              ${showMenu ? "bg-red-500 hover:bg-red-600" : "bg-accent hover:bg-accent/90"}
+              ${showMenu ? "bg-brand-800 hover:bg-brand-900" : "bg-brand-600 hover:bg-brand-700"}
             `}
           >
             {showMenu ? (

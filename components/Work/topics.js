@@ -22,3 +22,14 @@ export const matchesTab = (item, tabValue) => {
   if (COUNTED_TOPICS.includes(tabValue)) return hasSpecialTopic(item, tabValue);
   return item.category === tabValue;
 };
+
+// Topic colors and plain labels shared by the timeline, filter chips and the map
+export const TOPIC_STYLE = {
+  Cloud: { color: "#0ea5e9", label: "Cloud" },
+  Network: { color: "#6366f1", label: "Network" },
+  DevSecOps: { color: "#f43f5e", label: "DevSecOps" },
+  Certificate: { color: "#f59e0b", label: "Certificate" },
+  Event: { color: "#ec4899", label: "Event" },
+};
+
+export const topicsOf = (item) => COUNTED_TOPICS.filter((topic) => hasSpecialTopic(item, topic));

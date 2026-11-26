@@ -208,3 +208,38 @@ html {
 @keyframes agw-sheen { 0%, 20% { background-position: 110% 0; } 75%, 100% { background-position: -10% 0; } }
 @keyframes agw-breathe { 0%, 100% { filter: brightness(1) saturate(1); } 50% { filter: brightness(1.1) saturate(1.12); } }
 @media (prefers-reduced-motion: reduce) { .agw-art, .agw-base, .agw-sheen, .agw-halo { animation: none; } }
+
+/* --- Redesign: shared pieces --- */
+.eyebrow {
+  @apply inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-brand-600;
+}
+.section-title {
+  @apply text-[30px] font-semibold leading-[1.1] tracking-[-0.025em] text-primary sm:text-[36px] lg:text-[40px];
+}
+
+/* Teal panel behind the hero photo: its curve drifts slowly */
+.hero-panel {
+  background: linear-gradient(165deg, #9be3dc 0%, #5ccabf 50%, #26a99e 100%);
+  border-bottom-left-radius: 240px 240px;
+  animation: hero-panel-morph 18s ease-in-out infinite alternate;
+}
+@keyframes hero-panel-morph {
+  0% { border-bottom-left-radius: 240px 240px; }
+  100% { border-bottom-left-radius: 340px 200px; }
+}
+
+/* Badge marquee: fades at both edges, pauses on hover */
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.marquee-track:hover,
+.marquee-track:focus-within { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-panel { animation: none; }
+  .marquee-track { animation: none !important; }
+  .marquee-dup { display: none; }
+  .marquee-scroller { overflow-x: auto; }
+}

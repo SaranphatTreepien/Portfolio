@@ -91,7 +91,7 @@ function GitHubButton() {
             href={project.repoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-opacity sm:text-sm"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 transition-opacity sm:text-sm"
         >
             <FiGithub className="h-4 w-4" /> GitHub
         </a>

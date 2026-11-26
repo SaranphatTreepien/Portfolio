@@ -55,7 +55,7 @@ const T = {
   shareFailed: { th: "❌ แชร์ไม่สำเร็จ", en: "❌ Couldn't share" },
   shareMessage: {
     th: "สวัสดีครับ ผมศรัณย์ภัทร ตรีเพียร\nขออนุญาตส่ง CV เพื่อพิจารณาครับผม 🙇‍♂️📄",
-    en: "Hello, I'm Saranphat Treepien.\nPlease find my CV attached for your consideration. 📄",
+    en: "Hello, I'm Saranphat Treepian.\nPlease find my CV attached for your consideration. 📄",
   },
   nameTitle: { th: "ตั้งชื่อไฟล์", en: "Name the file" },
   nameLead: {

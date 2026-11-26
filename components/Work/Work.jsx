@@ -4,11 +4,13 @@ import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createPortal } from "react-dom";
-import AnimatedText from "../AnimatedText";
+import { FiList, FiShare2, FiStar, FiX } from "react-icons/fi";
+import Reveal from "../ui/Reveal";
 import WorkItem from "./WorkItem";
 import ExperienceGraph from "./ExperienceGraph";
+import ExperienceTimeline from "./ExperienceTimeline";
 import { useLang } from "../LanguageProvider";
-import { COUNTED_TOPICS, hasSpecialTopic, isYearCategory, matchesTab } from "./topics";
+import { COUNTED_TOPICS, TOPIC_STYLE, hasSpecialTopic, isYearCategory, matchesTab } from "./topics";
 
 // --- Icons ---
 const TrashIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>);
@@ -121,7 +123,7 @@ const WorkCard = memo(function WorkCard({
 });
 
 export default function Work() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
@@ -136,7 +138,8 @@ export default function Work() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
-  const [isYearsCollapsed, setIsYearsCollapsed] = useState(true);
+  // Public view: "timeline" (default) or "map" (the graph); admins always get the editable grid
+  const [view, setView] = useState("timeline");
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -347,34 +350,23 @@ export default function Work() {
   // --- Tabs data (memoized — คำนวณใหม่เมื่อ projects หรือสถานะปีเปลี่ยน) ---
   const topicCounts = useMemo(() => buildTopicCounts(projects), [projects]);
 
-  const yearCategories = useMemo(() => {
-    const uniqueYearCategories = Array.from(
-      new Set(
-        projects
-          .map((item) => String(item.category || "").trim())
-          .filter(isYearCategory)
-      )
-    ).sort((a, b) => Number(b) - Number(a));
-
-    return uniqueYearCategories.map((c) => ({ category: c, label: c }));
-  }, [projects]);
-
-  const canCollapseYears = yearCategories.length > 0;
-
+  // Filter chips: plain labels with a colored dot. A year picked in the map shows up as one more chip.
   const tabData = useMemo(() => {
-    const specialCategories = [
-      { category: "all", label: t("work.all", projects.length) },
-      { category: "Best", label: `⭐ Best (${topicCounts.Best})` },
-      { category: "Cloud", label: `☁️ Cloud (${topicCounts.Cloud})` },
-      { category: "Network", label: `🌐 Network (${topicCounts.Network})` },
-      { category: "DevSecOps", label: `🛡️ DevSecOps (${topicCounts.DevSecOps})` },
-      { category: "Certificate", label: `📜 Certificate (${topicCounts.Certificate})` },
-      { category: "Event", label: `🎪 Event (${topicCounts.Event})` },
+    const chips = [
+      { category: "all", label: t("projects.all"), count: projects.length },
+      { category: "Best", label: "Best", count: topicCounts.Best, star: true },
+      ...COUNTED_TOPICS.map((topic) => ({
+        category: topic,
+        label: TOPIC_STYLE[topic].label,
+        count: topicCounts[topic],
+        color: TOPIC_STYLE[topic].color,
+      })),
     ];
-
-    const displayedYears = !canCollapseYears || !isYearsCollapsed ? yearCategories : [];
-    return [...specialCategories, ...displayedYears];
-  }, [topicCounts, yearCategories, canCollapseYears, isYearsCollapsed, projects.length, t]);
+    if (isYearCategory(tabValue)) {
+      chips.push({ category: tabValue, label: lang === "en" ? String(Number(tabValue) - 543) : tabValue, year: true });
+    }
+    return chips;
+  }, [topicCounts, projects.length, tabValue, lang, t]);
 
   const filterWork = useMemo(
     () => projects.filter((item) => matchesTab(item, tabValue)),
@@ -386,24 +378,9 @@ export default function Work() {
     [filterWork, visibleItems]
   );
 
-  const handleToggleYears = () => {
-    setIsYearsCollapsed((prev) => {
-      const next = !prev;
-
-      // เมื่อซ่อนปีทั้งหมด ถ้ากำลังอยู่แท็บปีให้กลับไป All
-      if (next && isYearCategory(tabValue)) {
-        setTabValue("all");
-      }
-
-      return next;
-    });
-  };
-
   // Clicking a topic/year hub in the graph filters the cards; clicking the active hub again clears it.
   const handleGraphFilter = (value) => {
-    const nextTab = tabValue === value ? "all" : value;
-    if (isYearCategory(nextTab)) setIsYearsCollapsed(false);
-    setTabValue(nextTab);
+    setTabValue(tabValue === value ? "all" : value);
   };
 
   // --- Auth & CRUD handlers ---
@@ -593,16 +570,32 @@ export default function Work() {
   );
 
   return (
-    <section className="pt-24 min-h-[1000px]" id="work">
+    <section className="py-24 lg:py-32" id="work">
       <div className="container mx-auto">
 
-        {/* --- Header & ปุ่ม Admin --- */}
-        <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 gap-4">
-          <AnimatedText text={t("work.title")} textStyles="h2" />
+        {/* --- Header, view switch & admin tools --- */}
+        <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <Reveal>
+            <p className="eyebrow">{t("work.eyebrow")}</p>
+            <h2 className="section-title mt-3">{t("work.title")}</h2>
+            <p className="mt-3 max-w-xl text-[16px] text-gray-500">{t("work.subtitle")}</p>
+          </Reveal>
           {!isAdmin ? (
-            <button onClick={() => setIsAuthModalOpen(true)} className="text-xs text-gray-400 hover:text-[#00ff99] transition-colors">
-              Admin Access
-            </button>
+            <div className="inline-flex w-fit rounded-full border border-gray-200 bg-white p-1" role="group" aria-label={t("work.title")}>
+              {[["timeline", FiList], ["map", FiShare2]].map(([value, Icon]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setView(value)}
+                  aria-pressed={view === value}
+                  className={`relative inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium transition-colors ${view === value ? "text-brand-700" : "text-gray-500 hover:text-primary"}`}
+                >
+                  {view === value && <motion.span layoutId="work-view" className="absolute inset-0 rounded-full bg-brand-50" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
+                  <Icon className="relative h-3.5 w-3.5" />
+                  <span className="relative">{t(`work.${value}`)}</span>
+                </button>
+              ))}
+            </div>
           ) : (
             <div className="flex flex-wrap gap-3 items-center justify-center">
               <motion.span initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-xs text-[#00ff99] bg-[#00ff99]/10 px-2 py-1 rounded border border-[#00ff99]/20">
@@ -641,46 +634,35 @@ export default function Work() {
           )}
         </div>
 
-        {/* --- Tabs --- */}
+        {/* --- Filters --- */}
         <Tabs value={tabValue} onValueChange={setTabValue} className="w-full flex flex-col">
-          <div className="mb-6">
-            <ExperienceGraph projects={projects} focusTab={tabValue} onSelectFilter={handleGraphFilter} />
-          </div>
+          <TabsList className="flex h-auto w-full flex-wrap items-center gap-2 rounded-none border-0 p-0 md:border-0">
+            {tabData.map((item) => (
+              <TabsTrigger
+                key={item.category}
+                value={item.category}
+                className="h-9 gap-2 rounded-full border border-gray-200 bg-white px-3.5 text-[13.5px] font-medium text-gray-600 hover:border-gray-300 hover:text-primary data-[state=active]:border-brand-600 data-[state=active]:bg-brand-600 data-[state=active]:text-white"
+              >
+                {item.color && <span className="h-1.5 w-1.5 rounded-full" style={{ background: item.color }} />}
+                {item.star && <FiStar className="h-3.5 w-3.5 text-amber-500" />}
+                {item.label}
+                {item.count != null && <span className="tabular-nums opacity-50">{item.count}</span>}
+                {item.year && <FiX className="h-3.5 w-3.5 opacity-70" aria-label={t("work.clear")} onClick={(e) => { e.preventDefault(); setTabValue("all"); }} />}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-          <div className="flex items-center mb-[30px]">
-            <TabsList className="w-full md:w-auto max-w-full h-auto flex flex-row flex-wrap items-center justify-center md:justify-start gap-1 p-2 rounded-[28px] border-[#7edad2]/80 shadow-[0_0_0_1px_rgba(126,218,210,0.35),0_0_18px_rgba(126,218,210,0.22)] mx-auto md:mx-0">
-              {tabData.map((item, index) => (
-                <TabsTrigger key={index} value={item.category} className="capitalize w-auto min-w-[96px] px-4 border border-[#7edad2]/45 data-[state=active]:border-[#7edad2]">
-                  {item.label}
-                </TabsTrigger>
-              ))}
+          {view === "map" && !isAdmin && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="mt-6">
+              <ExperienceGraph projects={projects} focusTab={tabValue} onSelectFilter={handleGraphFilter} />
+            </motion.div>
+          )}
 
-              {/* ปุ่มหุบ/ขยายปีให้อยู่ใน bar เดียวกับ Tabs */}
-              {canCollapseYears && (
-                <button
-                  type="button"
-                  onClick={handleToggleYears}
-                  className="inline-flex items-center justify-center gap-1 whitespace-nowrap h-[40px] rounded-full px-4 text-sm font-medium transition-all text-gray-500 hover:text-[#00ff99] hover:bg-[#00ff99]/10 border border-[#7edad2]/45"
-                >
-                  <span>{isYearsCollapsed ? t("work.years", yearCategories.length) : t("work.hide")}</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    className={`w-4 h-4 transition-transform ${isYearsCollapsed ? '' : 'rotate-180'}`}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                  </svg>
-                </button>
-              )}
-            </TabsList>
-          </div>
-
-          <TabsContent value={tabValue} className="w-full">
+          <TabsContent value={tabValue} className="mt-10 w-full">
             {filterWork.length === 0 ? (
               <div className="text-center text-gray-500 py-10">{t("work.empty")}</div>
+            ) : !isAdmin ? (
+              <ExperienceTimeline items={filterWork} showAll={tabValue !== "all"} />
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-[30px]">
                 {visibleWork.map((item) => (
@@ -702,7 +684,7 @@ export default function Work() {
                 ))}
               </div>
             )}
-            {visibleItems < filterWork.length && (
+            {isAdmin && visibleItems < filterWork.length && (
               <div className="flex justify-center mt-12">
                 <button
                   onClick={() => setVisibleItems(prev => prev + 6)} 
@@ -714,6 +696,14 @@ export default function Work() {
             )}
           </TabsContent>
         </Tabs>
+
+        {!isAdmin && (
+          <div className="mt-6 flex justify-end">
+            <button onClick={() => setIsAuthModalOpen(true)} className="text-[11px] text-gray-300 transition-colors hover:text-gray-500">
+              {t("work.adminAccess")}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* --- Portals (Toast + Modals) — render เฉพาะเมื่อมี overlay เปิดอยู่ --- */}

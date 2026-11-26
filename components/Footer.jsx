@@ -1,80 +1,69 @@
-import Logo from "./Logo";
-// สมมติว่ามี component Socials และ Array สำหรับ Links
-import Socials from "./Socials"; 
-import Link from "next/link"; 
+"use client";
 
+import { Link as ScrollLink } from "react-scroll";
+import { FiArrowUp } from "react-icons/fi";
+import Logo from "./Logo";
+import { openAbout } from "./AboutModal";
 import { useLang } from "./LanguageProvider";
 
-// Footer links: labels are keys in lib/i18n.js, hrefs match the section ids
-const footerLinks = [
-  {
-    title: "footer.quickLinks",
-    items: [
-      { name: "footer.home", href: "#Home" },
-      { name: "footer.about", href: "#About" },
-      { name: "footer.experience", href: "#work" },
-    ]
-  }
+// Same section ids as the top menu; About opens its window
+const LINKS = ["Home", "Live", "Experience", "Journey", "About", "Contact"];
+
+const SOCIAL = [
+  { label: "GitHub", href: "https://github.com/SaranphatTreepien" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/saranphat-treepien-4284402b2" },
+  { label: "Instagram", href: "https://www.instagram.com/maxtree289_/" },
+  { label: "Facebook", href: "https://web.facebook.com/Saranphat7S/" },
+  { label: "X", href: "https://x.com/maxtree289_" },
 ];
+
+const linkClass = "cursor-pointer text-[14px] text-white/65 transition-colors hover:text-white";
 
 const Footer = () => {
   const { t } = useLang();
   return (
-    <footer className="py-16 xl:py-24 bg-[#1a1a2e] border-t border-white/5"> {/* ใช้สีเข้มโทนน้ำเงิน/ม่วงเข้มแทน primary เพื่อความหรูหรา */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* --- ส่วนหลัก: แบ่ง 3 คอลัมน์บน Desktop --- */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-10 xl:gap-20 pb-12 xl:pb-16">
-          
-          {/* คอลัมน์ 1: Logo และคำอธิบายย่อ */}
-          <div className="col-span-2 lg:col-span-1 flex flex-col items-start gap-4">
-            <Logo light={true} /> {/* แสดงโลโก้สีสว่าง */}
-            <p className="text-white/60 text-sm mt-2 leading-relaxed">
-              {t("footer.tagline")}
-            </p>
-            {/* Socials (อยู่ด้านล่าง Logo) */}
-            <Socials 
-              containerStyles="flex items-center gap-4 mt-4" 
-              iconStyles="text-lg w-10 h-10 border border-white/20 text-white/70 flex items-center justify-center rounded-full hover:bg-accent hover:text-white transition-all duration-300"
-            />
+    <footer className="bg-brand-900 text-white">
+      <div className="container mx-auto py-14 lg:py-16">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-sm">
+            <Logo light subtitle={t("header.subtitle")} />
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+              {SOCIAL.map((item) => (
+                <li key={item.label}>
+                  <a href={item.href} target="_blank" rel="noopener noreferrer" className={`${linkClass} underline decoration-white/25 underline-offset-4 hover:decoration-white`}>
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* คอลัมน์ 2 & 3: Navigation Links */}
-          {footerLinks.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="col-span-1">
-              <h4 className="text-white text-lg font-bold mb-4 border-b border-accent w-fit pb-1">
-                {t(section.title)}
-              </h4>
-              <ul className="space-y-3">
-                {section.items.map((item, itemIndex) => (
-                  <li key={itemIndex}>
-                    <Link 
-                      href={item.href}
-                      className="text-white/60 hover:text-accent transition-colors text-sm font-medium"
-                    >
-                      {t(item.name)}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          
-        </div>
-        
-        {/* --- ส่วนเส้นแบ่ง --- */}
-        <div className="border-t border-white/10 pt-8 mt-4">
-           {/* --- ส่วนล่างสุด: Copyright --- */}
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <p className="text-white/50 text-sm font-light order-2 md:order-1 mt-4 md:mt-0">
-              {t("footer.copyright", new Date().getFullYear())}
-            </p>
-            <p className="text-white/50 text-sm font-light order-1 md:order-2">
-              <Link href="#Home" className="hover:text-accent transition-colors">{t("footer.top")}</Link>
-            </p>
-          </div>
+          <nav aria-label="Footer">
+            <ul className="grid grid-cols-2 gap-x-12 gap-y-3 sm:grid-cols-3">
+              {LINKS.map((name) => (
+                <li key={name}>
+                  {name === "About" ? (
+                    <button type="button" onClick={openAbout} className={linkClass}>
+                      {t(`nav.${name}`)}
+                    </button>
+                  ) : (
+                    <ScrollLink to={name} href={`#${name}`} smooth duration={600} offset={-40} className={linkClass}>
+                      {t(`nav.${name}`)}
+                    </ScrollLink>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
 
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-[13px] text-white/50 sm:flex-row sm:items-center sm:justify-between">
+          <p>{t("footer.copyright", new Date().getFullYear())}</p>
+          <ScrollLink to="Home" href="#Home" smooth duration={700} className="group inline-flex w-fit cursor-pointer items-center gap-1.5 transition-colors hover:text-white">
+            {t("footer.top")}
+            <FiArrowUp className="transition-transform duration-200 group-hover:-translate-y-0.5" />
+          </ScrollLink>
+        </div>
       </div>
     </footer>
   );

@@ -4,19 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY } from "d3-force";
 import { FiMaximize, FiMinus, FiPlus, FiRotateCcw } from "react-icons/fi";
-import { COUNTED_TOPICS, hasSpecialTopic, isYearCategory, matchesTab } from "./topics";
+import { COUNTED_TOPICS, TOPIC_STYLE, hasSpecialTopic, isYearCategory, matchesTab } from "./topics";
 import { useLang } from "../LanguageProvider";
 
-const TOPIC_STYLE = {
-    Cloud: { color: "#38bdf8", label: "☁️ Cloud" },
-    Network: { color: "#818cf8", label: "🌐 Network" },
-    DevSecOps: { color: "#f87171", label: "🛡️ DevSecOps" },
-    Certificate: { color: "#fbbf24", label: "📜 Certificate" },
-    Event: { color: "#f472b6", label: "🎪 Event" },
-};
-const YEAR_COLOR = "#7edad2";
-const PLAIN_PROJECT_COLOR = "#a1a1aa";
-const BEST_RING = "#facc15";
+// Light theme to match the page; topic colors come from topics.js
+const YEAR_COLOR = "#26a99e";
+const PLAIN_PROJECT_COLOR = "#cbd5e1";
+const BEST_RING = "#f59e0b";
+const INK = "#10151f";
 const YEAR_SPACING = 260;
 const TOPIC_SPACING = 200;
 const MIN_ZOOM = 0.3;
@@ -123,7 +118,7 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
             const touchesHover = hovered && (source === hovered || target === hovered);
             const focused = isFocused(source) && isFocused(target);
             ctx.globalAlpha = touchesHover ? 0.85 : hovered ? 0.04 : focused ? (link.kind === "timeline" ? 0.5 : 0.16) : 0.05;
-            ctx.strokeStyle = touchesHover ? hovered.color : link.kind === "timeline" ? YEAR_COLOR : "#e4e4e7";
+            ctx.strokeStyle = touchesHover ? hovered.color : link.kind === "timeline" ? YEAR_COLOR : "#64748b";
             ctx.lineWidth = (touchesHover ? 1.6 : link.kind === "timeline" ? 2 : 0.8) / k;
             ctx.setLineDash(link.kind === "timeline" ? [6 / k, 6 / k] : []);
             ctx.beginPath();
@@ -140,7 +135,7 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
             ctx.globalAlpha = !lit ? 0.12 : focused ? 1 : 0.18;
 
             ctx.shadowColor = node.color;
-            ctx.shadowBlur = isHub || node === hovered ? 18 : 6;
+            ctx.shadowBlur = isHub || node === hovered ? 10 : 0;
             ctx.fillStyle = node.color;
             ctx.beginPath();
             ctx.arc(node.x, node.y, node === hovered ? node.r + 2 : node.r, 0, Math.PI * 2);
@@ -148,7 +143,7 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
             ctx.shadowBlur = 0;
 
             if (isHub && node.value === focusTab) {
-                ctx.strokeStyle = "#ffffff";
+                ctx.strokeStyle = INK;
                 ctx.lineWidth = 2 / k;
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, node.r + 5, 0, Math.PI * 2);
@@ -166,10 +161,10 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
             const showLabel = isHub || node === hovered || (hovered && hoveredNeighbors.has(node.id)) || k >= LABEL_ZOOM;
             if (showLabel && (lit || isHub)) {
                 const fontSize = (isHub ? 13 : 11) / Math.max(k, 0.8);
-                ctx.font = `${isHub ? 700 : 500} ${fontSize}px Inter, system-ui, sans-serif`;
+                ctx.font = `${isHub ? 600 : 500} ${fontSize}px Geist, "IBM Plex Sans Thai", system-ui, sans-serif`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "top";
-                ctx.fillStyle = isHub ? "#ffffff" : "rgba(244,244,245,0.85)";
+                ctx.fillStyle = isHub ? INK : "rgba(51,65,85,0.9)";
                 ctx.fillText(isHub ? node.label : truncate(node.label, 30), node.x, node.y + node.r + 4);
             }
         }
@@ -367,7 +362,7 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
     return (
         <div
             ref={containerRef}
-            className="relative h-[520px] w-full overflow-hidden rounded-3xl border border-white/10 bg-[#0f1115] bg-[radial-gradient(circle_at_50%_35%,rgba(126,218,210,0.10),transparent_60%)] shadow-[0_24px_60px_-24px_rgba(15,17,21,0.6)] lg:h-[560px]"
+            className="relative h-[480px] w-full overflow-hidden rounded-3xl border border-gray-200/80 bg-white bg-[radial-gradient(rgba(148,163,184,0.25)_1px,transparent_1px)] [background-size:20px_20px] lg:h-[520px]"
         >
             <canvas
                 ref={canvasRef}
@@ -379,41 +374,41 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
                 onPointerLeave={() => !pointerRef.current && setHover(null)}
             />
 
-            <div className="pointer-events-none absolute left-4 top-4 flex flex-wrap gap-x-3 gap-y-1.5 rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-[11px] text-white/80 max-w-[calc(100%-7rem)]">
+            <div className="pointer-events-none absolute left-4 top-4 flex flex-wrap gap-x-3 gap-y-1.5 rounded-2xl border border-gray-200 bg-white/90 px-3 py-2 text-[11px] text-gray-600 backdrop-blur max-w-[calc(100%-7rem)]">
                 {legend.map((item) => (
                     <span key={item.label} className="inline-flex items-center gap-1.5">
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color, boxShadow: `0 0 8px ${item.color}` }} />
+                        <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
                         {item.label}
                     </span>
                 ))}
                 <span className="inline-flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full border-2" style={{ borderColor: BEST_RING }} /> ⭐ Best
+                    <span className="h-2.5 w-2.5 rounded-full border-2" style={{ borderColor: BEST_RING }} /> Best
                 </span>
             </div>
 
-            <div className="absolute right-4 top-4 flex flex-col overflow-hidden rounded-xl border border-white/10 bg-black/40 text-white/80">
-                <button type="button" onClick={() => zoomBy(1.3)} className="p-2 hover:bg-white/10" aria-label={t("graph.zoomIn")}><FiPlus /></button>
-                <button type="button" onClick={() => zoomBy(1 / 1.3)} className="p-2 hover:bg-white/10" aria-label={t("graph.zoomOut")}><FiMinus /></button>
-                <button type="button" onClick={fitToView} className="p-2 hover:bg-white/10" aria-label={t("graph.fit")} title={t("graph.fit")}><FiMaximize /></button>
-                <button type="button" onClick={resetLayout} className="border-t border-white/10 p-2 hover:bg-white/10" aria-label={t("graph.reset")} title={t("graph.reset")}><FiRotateCcw /></button>
+            <div className="absolute right-4 top-4 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-gray-500">
+                <button type="button" onClick={() => zoomBy(1.3)} className="p-2 hover:bg-gray-50 hover:text-primary" aria-label={t("graph.zoomIn")}><FiPlus /></button>
+                <button type="button" onClick={() => zoomBy(1 / 1.3)} className="p-2 hover:bg-gray-50 hover:text-primary" aria-label={t("graph.zoomOut")}><FiMinus /></button>
+                <button type="button" onClick={fitToView} className="p-2 hover:bg-gray-50 hover:text-primary" aria-label={t("graph.fit")} title={t("graph.fit")}><FiMaximize /></button>
+                <button type="button" onClick={resetLayout} className="border-t border-gray-200 p-2 hover:bg-gray-50 hover:text-primary" aria-label={t("graph.reset")} title={t("graph.reset")}><FiRotateCcw /></button>
             </div>
 
-            <p className="pointer-events-none absolute bottom-3 left-4 text-[11px] text-white/40">
+            <p className="pointer-events-none absolute bottom-3 left-4 text-[11px] text-gray-400">
                 {t("graph.help")}
             </p>
 
             {tooltip && (
                 <div
-                    className="pointer-events-none absolute z-10 w-64 rounded-xl border border-white/10 bg-[#1a1d24]/95 p-3 text-white shadow-xl"
+                    className="pointer-events-none absolute z-10 w-64 rounded-xl border border-gray-200 bg-white/95 p-3 text-primary shadow-xl backdrop-blur"
                     style={{
                         left: Math.min(tooltip.x + 14, sizeRef.current.width - 272),
                         top: Math.min(tooltip.y + 14, sizeRef.current.height - 120),
                     }}
                 >
                     <p className="text-sm font-bold leading-snug">{tooltip.node.project.title}</p>
-                    <p className="mt-1 text-xs text-white/50">{formatDate(tooltip.node.project.createdAt)}</p>
+                    <p className="mt-1 text-xs text-gray-500">{formatDate(tooltip.node.project.createdAt)}</p>
                     <div className="mt-2 flex flex-wrap gap-1">
-                        {tooltip.node.project.isBest && <span className="rounded bg-yellow-400/20 px-1.5 py-0.5 text-[10px] text-yellow-300">⭐ Best</span>}
+                        {tooltip.node.project.isBest && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">Best</span>}
                         {COUNTED_TOPICS.filter((topic) => hasSpecialTopic(tooltip.node.project, topic)).map((topic) => (
                             <span key={topic} className="rounded px-1.5 py-0.5 text-[10px]" style={{ background: `${TOPIC_STYLE[topic].color}26`, color: TOPIC_STYLE[topic].color }}>
                                 {TOPIC_STYLE[topic].label}

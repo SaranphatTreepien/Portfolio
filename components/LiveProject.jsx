@@ -1,198 +1,83 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { FiExternalLink, FiLock, FiPlay, FiMaximize2, FiArrowRight, FiLayers, FiGithub } from "react-icons/fi";
-import AnimatedText from "./AnimatedText";
-import HeroLogo from "./AiGovernance/HeroLogo";
+import { FiArrowRight } from "react-icons/fi";
+import ProjectCard, { CategoryChip } from "./projects/ProjectCard";
+import Reveal from "./ui/Reveal";
 import { liveProjects } from "@/data/liveProjects";
+import { projectHref, sortByCategory } from "@/lib/projectMeta";
 import { useLang } from "./LanguageProvider";
 
+// Home page "Work" section: one big featured project, two beside each other, then a short list of the rest
 export default function LiveProject() {
-    const { t } = useLang();
+    const { t, tx } = useLang();
+    const featured = sortByCategory(liveProjects.filter((project) => project.featured));
+    const others = sortByCategory(liveProjects.filter((project) => !project.featured));
+    const [lead, ...rest] = featured;
+
     return (
-        <section id="Live" className="pt-24">
+        <section id="Live" className="py-24 lg:py-32">
             <div className="container mx-auto">
-                <div className="mb-10 flex flex-col items-center gap-2 text-center lg:items-start lg:text-left">
-                    <AnimatedText text={t("live.title")} textStyles="h2" />
-                    <p className="text-gray-500">{t("live.subtitle")}</p>
+                <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                    <Reveal>
+                        <p className="eyebrow">{t("live.eyebrow")}</p>
+                        <h2 className="section-title mt-3">{t("live.title")}</h2>
+                        <p className="mt-3 max-w-xl text-[16px] text-gray-500">{t("live.subtitle")}</p>
+                    </Reveal>
+                    <Reveal delay={0.08}>
+                        <AllProjectsLink label={t("live.all", liveProjects.length)} />
+                    </Reveal>
                 </div>
 
-                <div className="flex flex-col gap-20">
-                    {liveProjects.map((project) => (
-                        <ProjectCard key={project.slug} project={project} />
-                    ))}
+                <div className="flex flex-col gap-6">
+                    {lead && (
+                        <Reveal>
+                            <ProjectCard project={lead} size="lg" />
+                        </Reveal>
+                    )}
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {rest.map((project, i) => (
+                            <Reveal key={project.slug} delay={i * 0.08} className="h-full">
+                                <ProjectCard project={project} />
+                            </Reveal>
+                        ))}
+                    </div>
                 </div>
+
+                {others.length > 0 && (
+                    <Reveal className="mt-6">
+                        <ul className="divide-y divide-gray-100 overflow-hidden rounded-3xl border border-gray-200/80 bg-white">
+                            {others.map((project) => (
+                                <li key={project.slug}>
+                                    <Link
+                                        href={projectHref(project)}
+                                        className="group flex flex-col gap-2 px-6 py-5 transition-colors hover:bg-gray-50/80 sm:flex-row sm:items-center sm:gap-6"
+                                    >
+                                        <CategoryChip category={project.category} className="w-fit shrink-0" />
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block font-semibold text-primary">{project.name}</span>
+                                            <span className="block truncate text-[14px] text-gray-500">{tx(project.tagline)}</span>
+                                        </span>
+                                        <FiArrowRight className="hidden shrink-0 text-gray-300 transition-all duration-200 group-hover:translate-x-1 group-hover:text-primary sm:block" />
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </Reveal>
+                )}
             </div>
         </section>
     );
 }
 
-function ProjectCard({ project }) {
-    const { t, tx } = useLang();
-    const isDemo = project.kind === "demo";
-    // Live site → full-screen /live page in a new tab. Demo → detail page in the same tab.
-    const previewHref = isDemo ? project.detailHref : `/live/${project.slug}`;
-    const PreviewLink = isDemo ? Link : "a";
-    const previewProps = isDemo ? {} : { target: "_blank", rel: "noopener noreferrer" };
-
+function AllProjectsLink({ label }) {
     return (
-        <div className="grid items-stretch gap-10 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:gap-14">
-            {/* Browser mockup */}
-            <PreviewLink
-                href={previewHref}
-                {...previewProps}
-                aria-label={isDemo ? `${tx(project.detailLabel)}: ${project.name}` : t("live.playAria", project.name)}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-gray-800 bg-[#0b0a12] shadow-[0_24px_60px_-20px_rgba(76,29,149,0.45)] transition-shadow hover:shadow-[0_28px_70px_-18px_rgba(168,85,247,0.6)]"
-            >
-                <div className="flex h-11 shrink-0 items-center gap-3 border-b border-white/10 bg-[#15131f] px-4">
-                    <div className="flex gap-1.5">
-                        <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-                        <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-                        <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-                    </div>
-                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs text-gray-400">
-                        {isDemo ? (
-                            <FiLayers className="h-3 w-3 shrink-0 text-[#2dd4bf]" />
-                        ) : (
-                            <FiLock className="h-3 w-3 shrink-0 text-[#28c840]" />
-                        )}
-                        <span className="truncate">{project.displayUrl}</span>
-                    </div>
-                    <FiMaximize2 className="h-4 w-4 text-gray-500 group-hover:text-white transition-colors" />
-                </div>
-
-                {project.previewStyle === "agw" ? (
-                    // Fixed-ratio box so the logo lands in the chat's empty area at every width.
-                    // Background continues the sidebar/chat split if the column is taller than the screenshot.
-                    <div className="relative overflow-hidden bg-[linear-gradient(90deg,#f9f9f9_23.6%,#e7e7e7_23.6%,#e7e7e7_23.7%,#fff_23.7%)] lg:min-h-0 lg:flex-1">
-                        <div className="relative aspect-[1388/1148] w-full">
-                            <Image
-                                src={project.poster}
-                                alt={`${project.name}: ${tx({ th: "หน้าแชตที่ถอดค่าจริงคืนให้ผู้ส่ง และโชว์ข้อความที่ปกปิดแล้ว", en: "chat screen with real values restored for the sender and the masked text shown" })}`}
-                                fill
-                                sizes="(max-width: 1024px) 100vw, 60vw"
-                                className="object-cover"
-                            />
-                            <span className="absolute left-[61.8%] top-[71.2%] flex w-[40%] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 sm:gap-2">
-                                <HeroLogo className="aspect-square w-[38%] transition-transform duration-300 group-hover:scale-110" />
-                                <span className="whitespace-nowrap rounded-full bg-primary/85 px-3 py-1 text-xs font-semibold text-white shadow-md sm:px-4 sm:py-1.5 sm:text-sm">
-                                    {tx(project.previewLabel)}
-                                </span>
-                            </span>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-0 lg:flex-1">
-                        <Image
-                            src={project.poster}
-                            alt={`${project.name} preview`}
-                            fill
-                            sizes="(max-width: 1024px) 100vw, 60vw"
-                            className="object-cover object-top"
-                        />
-                        <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                        <span className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-3 pb-8 md:pb-10">
-                            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#a855f7] to-[#ec4899] text-white shadow-[0_0_40px_rgba(217,70,239,0.55)] transition-transform duration-200 group-hover:scale-110">
-                                <FiPlay className="ml-1 h-7 w-7 fill-white" />
-                            </span>
-                            <span className="rounded-full bg-black/70 px-4 py-1.5 text-sm font-semibold text-white">
-                                {isDemo ? tx(project.previewLabel) : t("live.play")}
-                            </span>
-                        </span>
-                    </div>
-                )}
-            </PreviewLink>
-
-            {/* Info */}
-            <div className="flex flex-col gap-4">
-                {isDemo ? (
-                    <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#7edad2]/50 bg-[#7edad2]/10 px-3 py-1 text-xs font-bold tracking-wide text-[#1f7f77]">
-                        <span className="h-2 w-2 rounded-full bg-[#14b8a6]" /> {tx(project.badge)}
-                    </span>
-                ) : (
-                    <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#d946ef]/30 bg-[#d946ef]/10 px-3 py-1 text-xs font-bold tracking-wide text-[#a21caf]">
-                        <span className="h-2 w-2 rounded-full bg-[#22c55e]" /> {t("live.badgeLive")}
-                    </span>
-                )}
-                <div>
-                    <h3 className="text-2xl font-bold text-primary xl:text-3xl">{project.name}</h3>
-                    <p className="mt-1 text-sm font-medium text-[#a21caf]">{tx(project.tagline)}</p>
-                </div>
-                <p className="text-sm leading-6 text-gray-600">{tx(project.description)}</p>
-
-                {project.stats && (
-                    <div className="grid grid-cols-3 divide-x divide-gray-200 rounded-2xl border border-gray-200 bg-white py-3 shadow-sm">
-                        {project.stats.map((stat) => (
-                            <div key={stat.label.en} className="px-2 text-center">
-                                <div className="bg-gradient-to-r from-[#a855f7] to-[#ec4899] bg-clip-text text-lg font-extrabold text-transparent xl:text-xl">
-                                    {tx(stat.value)}
-                                </div>
-                                <div className="text-[11px] leading-4 text-gray-500">{tx(stat.label)}</div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                <ul className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
-                    {project.features.map((feature) => (
-                        <li key={feature.text.en} className="flex gap-2 text-sm leading-6 text-gray-600">
-                            <span>{feature.icon}</span>
-                            <span>{tx(feature.text)}</span>
-                        </li>
-                    ))}
-                </ul>
-
-                <div className="flex flex-wrap gap-2">
-                    {project.tech.map((tech) => (
-                        <span key={tech} className="rounded-full border border-[#7edad2]/40 bg-[#7edad2]/10 px-3 py-1 text-xs font-semibold text-[#1f7f77]">
-                            {tech}
-                        </span>
-                    ))}
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                    {isDemo ? (
-                        <>
-                            <Link
-                                href={project.detailHref}
-                                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-90 transition-opacity"
-                            >
-                                {tx(project.detailLabel)} <FiArrowRight />
-                            </Link>
-                            {project.demoUrl && (
-                                <a
-                                    href={project.demoUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                                >
-                                    <FiExternalLink /> {t("live.tryFull")}
-                                </a>
-                            )}
-                            {project.repoUrl && (
-                                <a
-                                    href={project.repoUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                                >
-                                    <FiGithub /> GitHub
-                                </a>
-                            )}
-                        </>
-                    ) : (
-                        <a
-                            href={project.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                        >
-                            <FiExternalLink /> {t("live.visit")}
-                        </a>
-                    )}
-                </div>
-            </div>
-        </div>
+        <Link
+            href="/projects"
+            className="group inline-flex h-11 items-center gap-2 rounded-full border border-gray-300 bg-white px-5 text-[14px] font-medium text-primary transition-colors hover:border-primary"
+        >
+            {label}
+            <FiArrowRight className="transition-transform duration-200 group-hover:translate-x-0.5" />
+        </Link>
     );
 }

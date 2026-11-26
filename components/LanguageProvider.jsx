@@ -67,7 +67,7 @@ export function LanguageToggle({ className = "", dark = false }) {
                     onClick={() => setLang(code)}
                     aria-pressed={lang === code}
                     className={`rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
-                        lang === code ? "bg-primary text-white" : dark ? "text-white/80 hover:text-white" : "text-gray-500 hover:text-primary"
+                        lang === code ? "bg-brand-600 text-white" : dark ? "text-white/80 hover:text-white" : "text-gray-500 hover:text-primary"
                     }`}
                 >
                     {code.toUpperCase()}

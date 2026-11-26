@@ -9,7 +9,7 @@ module.exports = {
   theme: {
   	container: {
   		center: true,
-  		padding: '15px'
+  		padding: { DEFAULT: '20px', sm: '32px' }
   	},
   	screens: {
   		sm: '640px',
@@ -18,9 +18,11 @@ module.exports = {
   		xl: '1200px'
   	},
   	fontFamily: {
-  		// Thai text falls back to IBM Plex Sans Thai (Bebas Neue and Inter have no Thai glyphs)
+  		// Thai text falls back to IBM Plex Sans Thai (Bebas Neue, Geist and Instrument Serif have no Thai glyphs)
   		primary: ['var(--font-bebas)', 'var(--font-thai)', 'sans-serif'],
-  		secondary: ['var(--font-inter)', 'var(--font-thai)', 'sans-serif']
+  		secondary: ['var(--font-geist)', 'var(--font-thai)', 'system-ui', 'sans-serif'],
+  		sans: ['var(--font-geist)', 'var(--font-thai)', 'system-ui', 'sans-serif'],
+  		serif: ['var(--font-serif)', 'var(--font-thai)', 'Georgia', 'serif']
   	},
   	extend: {
   		colors: {
@@ -29,6 +31,19 @@ module.exports = {
   			accent: {
   				DEFAULT: "#7edad2",
   				hover: "#79d3cc",
+  			},
+  			// Teal scale around the original accent; 600/700 are dark enough for text on white
+  			brand: {
+  				50: "#effbf9",
+  				100: "#d5f4ef",
+  				200: "#ade8e0",
+  				300: "#7edad2",
+  				400: "#4cc3b8",
+  				500: "#26a99e",
+  				600: "#1a8a81",
+  				700: "#186f69",
+  				800: "#185955",
+  				900: "#174a47",
   			},	
 			   border: "hsl(var(--border))",   // ✅ เพิ่มบรรทัดนี้	
   		},
