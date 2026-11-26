@@ -6,12 +6,12 @@ import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY
 import { FiMaximize, FiMinus, FiPlus, FiRotateCcw } from "react-icons/fi";
 import { COUNTED_TOPICS, TOPIC_STYLE, hasSpecialTopic, isYearCategory, matchesTab } from "./topics";
 import { useLang } from "../LanguageProvider";
+import { THEME_EVENT } from "../site/ThemeToggle";
 
 // Light theme to match the page; topic colors come from topics.js
 const YEAR_COLOR = "#26a99e";
 const PLAIN_PROJECT_COLOR = "#cbd5e1";
 const BEST_RING = "#f59e0b";
-const INK = "#10151f";
 const YEAR_SPACING = 260;
 const TOPIC_SPACING = 200;
 const MIN_ZOOM = 0.3;
@@ -63,7 +63,7 @@ const formatDate = (date) =>
 
 const truncate = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
-export default function ExperienceGraph({ projects, focusTab = "all", onSelectFilter }) {
+export default function ExperienceGraph({ projects, focusTab = "all", onSelectFilter, peekYear = null, className = "h-[480px] lg:h-[520px]" }) {
     const { t } = useLang();
     const router = useRouter();
     const containerRef = useRef(null);
@@ -107,6 +107,10 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
         const hovered = hoverRef.current;
         const hoveredNeighbors = hovered ? neighbors.get(hovered.id) : null;
         const isLit = (node) => !hovered || node === hovered || hoveredNeighbors.has(node.id);
+        // Text and line colours follow the site theme (tokens in app/globals.css)
+        const css = getComputedStyle(document.documentElement);
+        const token = (name, alpha = 1) => `rgb(${css.getPropertyValue(name).trim() || "16 21 31"} / ${alpha})`;
+        const ink = token("--ink");
 
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, width, height);
@@ -118,7 +122,7 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
             const touchesHover = hovered && (source === hovered || target === hovered);
             const focused = isFocused(source) && isFocused(target);
             ctx.globalAlpha = touchesHover ? 0.85 : hovered ? 0.04 : focused ? (link.kind === "timeline" ? 0.5 : 0.16) : 0.05;
-            ctx.strokeStyle = touchesHover ? hovered.color : link.kind === "timeline" ? YEAR_COLOR : "#64748b";
+            ctx.strokeStyle = touchesHover ? hovered.color : link.kind === "timeline" ? YEAR_COLOR : token("--g500");
             ctx.lineWidth = (touchesHover ? 1.6 : link.kind === "timeline" ? 2 : 0.8) / k;
             ctx.setLineDash(link.kind === "timeline" ? [6 / k, 6 / k] : []);
             ctx.beginPath();
@@ -142,8 +146,23 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
             ctx.fill();
             ctx.shadowBlur = 0;
 
+            // The year being read in the list beside the graph gets a soft ring
+            if (node.kind === "year" && node.value === peekYear && focusTab === "all") {
+                ctx.globalAlpha = 0.35;
+                ctx.fillStyle = YEAR_COLOR;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.r + 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle = YEAR_COLOR;
+                ctx.lineWidth = 2 / k;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.r + 8, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
             if (isHub && node.value === focusTab) {
-                ctx.strokeStyle = INK;
+                ctx.strokeStyle = ink;
                 ctx.lineWidth = 2 / k;
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, node.r + 5, 0, Math.PI * 2);
@@ -164,17 +183,23 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
                 ctx.font = `${isHub ? 600 : 500} ${fontSize}px Geist, "IBM Plex Sans Thai", system-ui, sans-serif`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "top";
-                ctx.fillStyle = isHub ? INK : "rgba(51,65,85,0.9)";
+                ctx.fillStyle = isHub ? ink : token("--g700", 0.9);
                 ctx.fillText(isHub ? node.label : truncate(node.label, 30), node.x, node.y + node.r + 4);
             }
         }
         ctx.globalAlpha = 1;
-    }, [graph, neighbors, isFocused, focusTab]);
+    }, [graph, neighbors, isFocused, focusTab, peekYear]);
 
     const requestDraw = useCallback(() => {
         cancelAnimationFrame(frameRef.current);
         frameRef.current = requestAnimationFrame(draw);
     }, [draw]);
+
+    // Repaint when the visitor switches light / dark
+    useEffect(() => {
+        window.addEventListener(THEME_EVENT, requestDraw);
+        return () => window.removeEventListener(THEME_EVENT, requestDraw);
+    }, [requestDraw]);
 
     const fitToView = useCallback(() => {
         const { width, height } = sizeRef.current;
@@ -362,7 +387,7 @@ export default function ExperienceGraph({ projects, focusTab = "all", onSelectFi
     return (
         <div
             ref={containerRef}
-            className="relative h-[480px] w-full overflow-hidden rounded-3xl border border-gray-200/80 bg-white bg-[radial-gradient(rgba(148,163,184,0.25)_1px,transparent_1px)] [background-size:20px_20px] lg:h-[520px]"
+            className={`relative w-full overflow-hidden rounded-3xl border border-white/80 bg-white/75 bg-[radial-gradient(rgba(148,163,184,0.25)_1px,transparent_1px)] [background-size:20px_20px] shadow-[0_10px_40px_-24px_rgba(16,60,70,0.35)] ${className}`}
         >
             <canvas
                 ref={canvasRef}

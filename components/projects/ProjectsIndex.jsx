@@ -5,8 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, LayoutGroup, MotionConfig, motion } from "framer-motion";
 import { FiArrowLeft } from "react-icons/fi";
 import ProjectCard from "./ProjectCard";
-import Logo from "../Logo";
-import { LanguageToggle, useLang } from "../LanguageProvider";
+import { useLang } from "../LanguageProvider";
 import { liveProjects } from "@/data/liveProjects";
 import { CATEGORY_ORDER, PROJECT_CATEGORIES, sortByCategory } from "@/lib/projectMeta";
 
@@ -29,14 +28,7 @@ export default function ProjectsIndex() {
 
     return (
         <MotionConfig reducedMotion="user">
-            <header className="py-6 lg:py-8">
-                <div className="container mx-auto flex items-center justify-between gap-6">
-                    <Logo subtitle={t("header.subtitle")} />
-                    <LanguageToggle />
-                </div>
-            </header>
-
-            <main className="container mx-auto pb-28 pt-8 lg:pt-14">
+            <main className="container mx-auto pb-28 pt-10 lg:pt-14">
                 <Link href="/#Live" className="group inline-flex items-center gap-2 text-[14px] font-medium text-gray-500 transition-colors hover:text-primary">
                     <FiArrowLeft className="transition-transform duration-200 group-hover:-translate-x-0.5" /> Portfolio
                 </Link>

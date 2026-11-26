@@ -157,7 +157,7 @@ export default function Contact() {
     };
 
     return (
-        <section id="Contact" className="border-t border-gray-200/70 py-24 lg:py-32">
+        <section id="Contact" className="border-t border-gray-900/[0.07] py-20 lg:py-24">
             <div className="container mx-auto grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:gap-24">
                 {/* Left: say hello directly */}
                 <Reveal>

@@ -1,6 +1,8 @@
-import { Geist, Bebas_Neue, IBM_Plex_Sans_Thai, Instrument_Serif } from 'next/font/google'
+import { Geist, Geist_Mono, Bebas_Neue, IBM_Plex_Sans_Thai, Instrument_Serif } from 'next/font/google'
 import './globals.css'
 import { LanguageProvider } from '@/components/LanguageProvider'
+import { ACCENT_SCRIPT } from '@/components/site/accent'
+import { THEME_SCRIPT } from '@/components/site/theme'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next' // ✅ เพิ่มตรงนี้
 
@@ -8,6 +10,12 @@ import { SpeedInsights } from '@vercel/speed-insights/next' // ✅ เพิ่�
 const geist = Geist({
   subsets: ['latin'],
   variable: '--font-geist',
+});
+
+// Dates, years and the name in the sidebar
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
 });
 
 // One italic accent word per heading (Latin only; Thai falls back to IBM Plex Sans Thai)
@@ -64,11 +72,18 @@ export const metadata = {
   },
 }
 
+const HEAD_SCRIPT = THEME_SCRIPT + ACCENT_SCRIPT
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    // Dark is the server default. Before the first paint the head script picks day or night from the time in Thailand
+    // (or today's manual choice) and today's accent colour, so the page never flashes
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: HEAD_SCRIPT }} />
+      </head>
       <body
-        className={`antialiased ${geist.variable} ${serif.variable} ${bebasNeue.variable} ${thai.variable}`}
+        className={`antialiased ${geist.variable} ${geistMono.variable} ${serif.variable} ${bebasNeue.variable} ${thai.variable}`}
         suppressHydrationWarning={true}
       >
         <LanguageProvider>{children}</LanguageProvider>

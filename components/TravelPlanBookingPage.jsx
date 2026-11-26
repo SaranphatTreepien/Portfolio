@@ -82,7 +82,7 @@ function Tries({ demo }) {
 export default function TravelPlanBookingPage() {
     const { tx } = useLang();
     return (
-        <main className="min-h-screen bg-[#f7f8fa] pb-24">
+        <main className="min-h-screen pb-24">
             <ProjectTopBar nav={sectionNav} />
             <ProjectIntro
                 project={project}

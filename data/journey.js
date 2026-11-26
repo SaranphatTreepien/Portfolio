@@ -6,8 +6,7 @@ export const work = [
     {
         company: "AAppoint",
         role: { th: "AI Agent / Backend Engineer · ฟรีแลนซ์", en: "AI Agent / Backend Engineer · Freelance" },
-        period: { th: "พ.ค. 2569 – ปัจจุบัน", en: "May 2026 – Present" },
-        current: true,
+        period: { th: "พ.ค. – พ.ย. 2569", en: "May – Nov 2026" },
         summary: {
             th: "พัฒนา AI agent สองฝั่งสำหรับการจองร้านอาหารและการจัดการร้าน ด้วย LangChain และ Gemini",
             en: "Dual-facing AI agents for restaurant booking and shop management, built with LangChain and Gemini.",

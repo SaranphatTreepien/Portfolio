@@ -132,19 +132,8 @@ html {
  @layer base {
    body {
      @apply font-secondary text-base text-secondary;
-     background-color: #f8fafc;
-   }
-   /* background-attachment: fixed repaints the whole viewport on every scroll; a fixed layer is composited once instead */
-   body::before {
-     content: "";
-     position: fixed;
-     inset: 0;
-     z-index: -100;
-     pointer-events: none;
-     background-image:
-       radial-gradient(circle at 15% 0%, rgba(126, 218, 210, 0.18) 0%, transparent 45%),
-       radial-gradient(circle at 100% 20%, rgba(0, 168, 168, 0.10) 0%, transparent 40%),
-       radial-gradient(circle at 0% 100%, rgba(126, 218, 210, 0.12) 0%, transparent 40%);
+     /* The sea itself is a fixed layer (components/site/OceanBackground); this is only what shows before it paints */
+     background-color: rgb(var(--page));
    }
    .h1, 
    .h2, 
@@ -242,4 +231,914 @@ html {
   .marquee-track { animation: none !important; }
   .marquee-dup { display: none; }
   .marquee-scroller { overflow-x: auto; }
+}
+
+/* --- Theme tokens ---
+   Tailwind's gray, slate, white (as a background), primary and brand text colours read these,
+   so one class on <html> (.dark, the default) re-colours every page. Values are "r g b" triplets. */
+:root {
+  /* Page and sea (light: the same sea by day) */
+  --page: 244 248 249;
+  --wave-1: 214 234 237;
+  --wave-2: 188 220 225;
+  --wave-3: 163 205 212;
+  --land: 160 192 196;
+  --leaf: 138 178 180;
+  --boat: 120 150 158;
+  --sail: 232 241 243;
+  --cargo-hull: 72 98 112;
+  --cargo-stripe: 226 232 236;
+  --cargo-box-alpha: 0.85;
+  --ship-window: 196 222 230;
+  --yacht: 255 255 255;
+  --yacht-window: 47 72 88;
+  --wake-alpha: 0.75;
+  --mascot-alpha: 1;
+  --night: 0;
+  --sun-y: 0%;
+  --moon-y: 24px;
+  --haze: 255 214 168;
+  --haze-alpha: 0.32;
+  --shimmer: 255 206 140;
+  --shimmer-alpha: 0.6;
+  --tint-mix: 100%;
+  --ink: 16 21 31;
+  --ink-2: 71 84 103;
+  --surface: 255 255 255;
+  --line: 255 255 255;
+  --btn: 16 21 31;
+  --ink-black: 0 0 0;
+  --g50: 249 250 251;
+  --g100: 243 244 246;
+  --g200: 229 231 235;
+  --g300: 209 213 219;
+  --g400: 156 163 175;
+  --g500: 107 114 128;
+  --g600: 75 85 99;
+  --g700: 55 65 81;
+  --g800: 31 41 55;
+  --g900: 17 24 39;
+  --g950: 3 7 18;
+  --s50: 248 250 252;
+  --s100: 241 245 249;
+  --s200: 226 232 240;
+  --s300: 203 213 225;
+  --s400: 148 163 184;
+  --s500: 100 116 139;
+  --s600: 71 85 105;
+  --s700: 51 65 85;
+  --s800: 30 41 59;
+  --s900: 15 23 42;
+  --bt500: 38 169 158;
+  --bt600: 26 138 129;
+  --bt700: 24 111 105;
+  --bt800: 24 89 85;
+  --bt900: 23 74 71;
+  --bb50: 239 251 249;
+  --bb100: 213 244 239;
+  --bl100: 213 244 239;
+  --bl200: 173 232 224;
+  --bl300: 126 218 210;
+  --at600: 217 119 6;
+  --at700: 180 83 9;
+  --ab50: 255 251 235;
+}
+.dark {
+  color-scheme: dark;
+  /* Page and sea (dark): a night sea under a soft moon */
+  --page: 21 23 29;
+  --wave-1: 29 41 54;
+  --wave-2: 23 33 45;
+  --wave-3: 18 27 37;
+  --land: 13 18 24;
+  --leaf: 13 18 24;
+  --boat: 11 15 20;
+  --sail: 44 54 66;
+  --cargo-hull: 14 19 26;
+  --cargo-stripe: 36 44 54;
+  --cargo-box-alpha: 0.32;
+  --ship-window: 243 199 125;
+  --yacht: 52 61 73;
+  --yacht-window: 246 210 143;
+  --wake-alpha: 0.22;
+  --mascot-alpha: 0.85;
+  --night: 1;
+  --sun-y: 130%;
+  --moon-y: 0px;
+  --haze: 58 74 96;
+  --haze-alpha: 0.38;
+  --shimmer: 232 230 214;
+  --shimmer-alpha: 0.32;
+  --tint-mix: 16%;
+  --ink: 236 236 239;
+  --ink-2: 161 161 170;
+  --surface: 38 38 43;
+  --line: 56 56 63;
+  --btn: 43 138 116;
+  --ink-black: 236 236 239;
+  --g50: 35 35 39;
+  --g100: 42 42 47;
+  --g200: 52 52 59;
+  --g300: 69 69 77;
+  --g400: 133 133 142;
+  --g500: 157 157 166;
+  --g600: 182 182 190;
+  --g700: 203 203 209;
+  --g800: 223 223 227;
+  --g900: 239 239 241;
+  --g950: 250 250 250;
+  --s50: 35 35 39;
+  --s100: 42 42 47;
+  --s200: 52 52 59;
+  --s300: 69 69 77;
+  --s400: 133 133 142;
+  --s500: 157 157 166;
+  --s600: 182 182 190;
+  --s700: 203 203 209;
+  --s800: 223 223 227;
+  --s900: 239 239 241;
+  --bt500: 90 209 174;
+  --bt600: 90 209 174;
+  --bt700: 111 220 185;
+  --bt800: 143 230 202;
+  --bt900: 178 239 218;
+  --bb50: 31 51 48;
+  --bb100: 36 64 59;
+  --bl100: 44 74 68;
+  --bl200: 47 90 82;
+  --bl300: 60 122 108;
+  --at600: 245 181 68;
+  --at700: 242 192 98;
+  --ab50: 58 49 34;
+}
+
+/* --- Accent colour: one per day, Thai day colours (components/site/AccentPicker) ---
+   Sun red, Mon yellow, Tue pink, Wed green, Thu orange, Fri sky blue, Sat purple. Today's is picked automatically.
+   --b* is the whole brand scale; --bt* / --bb* / --bl* are the text, tint and border steps the dark theme lightens.
+   Green (the default) needs no attribute; the rest set data-accent on <html>. Each dark block outranks its light block and .dark. */
+:root {
+  --b50: 239 251 249;
+  --b100: 213 244 239;
+  --b200: 173 232 224;
+  --b300: 126 218 210;
+  --b400: 76 195 184;
+  --b500: 38 169 158;
+  --b600: 26 138 129;
+  --b700: 24 111 105;
+  --b800: 24 89 85;
+  --b900: 23 74 71;
+}
+[data-accent="red"] {
+  --b50: 254 242 242;
+  --b100: 254 226 226;
+  --b200: 254 202 202;
+  --b300: 252 165 165;
+  --b400: 248 113 113;
+  --b500: 239 68 68;
+  --b600: 220 38 38;
+  --b700: 185 28 28;
+  --b800: 153 27 27;
+  --b900: 127 29 29;
+  --bt500: 239 68 68;
+  --bt600: 220 38 38;
+  --bt700: 185 28 28;
+  --bt800: 153 27 27;
+  --bt900: 127 29 29;
+  --bb50: 254 242 242;
+  --bb100: 254 226 226;
+  --bl100: 254 226 226;
+  --bl200: 254 202 202;
+  --bl300: 252 165 165;
+}
+.dark[data-accent="red"] {
+  --bt500: 248 113 113;
+  --bt600: 248 113 113;
+  --bt700: 252 165 165;
+  --bt800: 254 202 202;
+  --bt900: 254 226 226;
+  --bb50: 66 42 46;
+  --bb100: 78 44 48;
+  --bl100: 86 45 49;
+  --bl200: 102 48 51;
+  --bl300: 128 52 54;
+}
+[data-accent="yellow"] {
+  --b50: 254 252 232;
+  --b100: 254 249 195;
+  --b200: 254 240 138;
+  --b300: 253 224 71;
+  --b400: 250 204 21;
+  --b500: 234 179 8;
+  --b600: 202 138 4;
+  --b700: 161 98 7;
+  --b800: 133 77 14;
+  --b900: 113 63 18;
+  --bt500: 234 179 8;
+  --bt600: 202 138 4;
+  --bt700: 161 98 7;
+  --bt800: 133 77 14;
+  --bt900: 113 63 18;
+  --bb50: 254 252 232;
+  --bb100: 254 249 195;
+  --bl100: 254 249 195;
+  --bl200: 254 240 138;
+  --bl300: 253 224 71;
+}
+.dark[data-accent="yellow"] {
+  --bt500: 250 204 21;
+  --bt600: 250 204 21;
+  --bt700: 253 224 71;
+  --bt800: 254 240 138;
+  --bt900: 254 249 195;
+  --bb50: 65 58 38;
+  --bb100: 77 66 36;
+  --bl100: 85 72 35;
+  --bl200: 101 83 32;
+  --bl300: 126 101 27;
+}
+[data-accent="pink"] {
+  --b50: 253 242 248;
+  --b100: 252 231 243;
+  --b200: 251 207 232;
+  --b300: 249 168 212;
+  --b400: 244 114 182;
+  --b500: 236 72 153;
+  --b600: 219 39 119;
+  --b700: 190 24 93;
+  --b800: 157 23 77;
+  --b900: 131 24 67;
+  --bt500: 236 72 153;
+  --bt600: 219 39 119;
+  --bt700: 190 24 93;
+  --bt800: 157 23 77;
+  --bt900: 131 24 67;
+  --bb50: 253 242 248;
+  --bb100: 252 231 243;
+  --bl100: 252 231 243;
+  --bl200: 251 207 232;
+  --bl300: 249 168 212;
+}
+.dark[data-accent="pink"] {
+  --bt500: 244 114 182;
+  --bt600: 244 114 182;
+  --bt700: 249 168 212;
+  --bt800: 251 207 232;
+  --bt900: 252 231 243;
+  --bb50: 66 43 58;
+  --bb100: 78 45 65;
+  --bl100: 86 46 69;
+  --bl200: 101 49 78;
+  --bl300: 127 53 93;
+}
+[data-accent="orange"] {
+  --b50: 255 247 237;
+  --b100: 255 237 213;
+  --b200: 254 215 170;
+  --b300: 253 186 116;
+  --b400: 251 146 60;
+  --b500: 249 115 22;
+  --b600: 234 88 12;
+  --b700: 194 65 12;
+  --b800: 154 52 18;
+  --b900: 124 45 18;
+  --bt500: 249 115 22;
+  --bt600: 234 88 12;
+  --bt700: 194 65 12;
+  --bt800: 154 52 18;
+  --bt900: 124 45 18;
+  --bb50: 255 247 237;
+  --bb100: 255 237 213;
+  --bl100: 255 237 213;
+  --bl200: 254 215 170;
+  --bl300: 253 186 116;
+}
+.dark[data-accent="orange"] {
+  --bt500: 251 146 60;
+  --bt600: 251 146 60;
+  --bt700: 253 186 116;
+  --bt800: 254 215 170;
+  --bt900: 255 237 213;
+  --bb50: 68 49 40;
+  --bb100: 80 53 39;
+  --bl100: 89 56 38;
+  --bl200: 106 63 36;
+  --bl300: 133 73 34;
+}
+[data-accent="sky"] {
+  --b50: 240 249 255;
+  --b100: 224 242 254;
+  --b200: 186 230 253;
+  --b300: 125 211 252;
+  --b400: 56 189 248;
+  --b500: 14 165 233;
+  --b600: 2 132 199;
+  --b700: 3 105 161;
+  --b800: 7 89 133;
+  --b900: 12 74 110;
+  --bt500: 14 165 233;
+  --bt600: 2 132 199;
+  --bt700: 3 105 161;
+  --bt800: 7 89 133;
+  --bt900: 12 74 110;
+  --bb50: 240 249 255;
+  --bb100: 224 242 254;
+  --bl100: 224 242 254;
+  --bl200: 186 230 253;
+  --bl300: 125 211 252;
+}
+.dark[data-accent="sky"] {
+  --bt500: 56 189 248;
+  --bt600: 56 189 248;
+  --bt700: 125 211 252;
+  --bt800: 186 230 253;
+  --bt900: 224 242 254;
+  --bb50: 35 56 70;
+  --bb100: 33 63 81;
+  --bl100: 32 68 89;
+  --bl200: 30 79 104;
+  --bl300: 27 95 128;
+}
+[data-accent="purple"] {
+  --b50: 245 243 255;
+  --b100: 237 233 254;
+  --b200: 221 214 254;
+  --b300: 196 181 253;
+  --b400: 167 139 250;
+  --b500: 139 92 246;
+  --b600: 124 58 237;
+  --b700: 109 40 217;
+  --b800: 91 33 182;
+  --b900: 76 29 149;
+  --bt500: 139 92 246;
+  --bt600: 124 58 237;
+  --bt700: 109 40 217;
+  --bt800: 91 33 182;
+  --bt900: 76 29 149;
+  --bb50: 245 243 255;
+  --bb100: 237 233 254;
+  --bl100: 237 233 254;
+  --bl200: 221 214 254;
+  --bl300: 196 181 253;
+}
+.dark[data-accent="purple"] {
+  --bt500: 167 139 250;
+  --bt600: 167 139 250;
+  --bt700: 196 181 253;
+  --bt800: 221 214 254;
+  --bt900: 237 233 254;
+  --bb50: 52 46 71;
+  --bb100: 58 49 84;
+  --bl100: 62 51 92;
+  --bl200: 70 55 108;
+  --bl300: 83 62 134;
+}
+
+/* --- Night sea (components/site/OceanBackground) ---
+   Fixed behind everything. Every moving part animates only transform or opacity on its own layer,
+   and nothing above uses backdrop blur, so scrolling and the animation never repaint the page. */
+.ocean {
+  --sea-h: max(30vh, 210px);
+  --sea-speed: 1;
+  --moon-size: 54px;
+  --sun-size: 76px;
+  --moon-right: 30%;
+  --moon-glow: 1;
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: rgb(var(--page));
+}
+/* Reading pages: a lower, slower sea */
+.ocean--calm { --sea-h: max(18vh, 130px); --sea-speed: 1.5; }
+
+/* Phones: text runs edge to edge, so the moon shrinks into the corner and dims, the island moves aside */
+@media (max-width: 640px) {
+  .ocean { --moon-size: 30px; --sun-size: 44px; --moon-right: 62%; --moon-glow: 0.6; }
+  .ocean .island { left: 4%; width: 110px; }
+}
+
+/* Sky */
+.sky-stars { position: absolute; inset: 0 0 auto 0; height: 62vh; opacity: var(--night); }
+.star { position: absolute; border-radius: 9999px; background: #fff; opacity: 0.5; }
+.star--twinkle { animation: star-twinkle 4.5s ease-in-out infinite alternate; }
+.moon {
+  position: absolute;
+  right: var(--moon-right);
+  bottom: calc(var(--sea-h) * 0.69 + 7vh);
+  width: var(--moon-size);
+  height: var(--moon-size);
+  border-radius: 9999px;
+  opacity: calc(var(--night) * var(--moon-glow));
+  transform: translateY(var(--moon-y));
+  transition: opacity 1s ease, transform 1.6s ease;
+  background:
+    radial-gradient(circle at 62% 60%, rgba(60, 58, 50, 0.09) 0 6px, transparent 7px),
+    radial-gradient(circle at 38% 68%, rgba(60, 58, 50, 0.07) 0 4px, transparent 5px),
+    radial-gradient(circle at 55% 30%, rgba(60, 58, 50, 0.06) 0 3px, transparent 4px),
+    radial-gradient(circle at 36% 34%, #f6f3e8 0%, #e7e4d7 60%, #d6d4c8 100%);
+  /* Soft halo, kept low so it never glares */
+  box-shadow: 0 0 22px 4px rgba(236, 232, 214, 0.10), 0 0 90px 36px rgba(236, 232, 214, 0.04);
+}
+
+/* Faint moonlit haze just above the horizon, so the island and boat read as silhouettes */
+.sky-haze {
+  position: absolute;
+  inset: auto 0 calc(var(--sea-h) * 0.69 - 4px) 0;
+  height: 24vh;
+  background: linear-gradient(to top, rgb(var(--haze) / var(--haze-alpha)), rgb(var(--haze) / 0));
+  transition: background 1.2s ease;
+}
+
+/* Sun (light theme): sits on the horizon behind the far swell and rises when the page turns light */
+.sun {
+  position: absolute;
+  right: calc(var(--moon-right) + var(--moon-size) / 2);
+  bottom: calc(69% - var(--sun-size) * 0.22);
+  width: var(--sun-size);
+  height: var(--sun-size);
+  margin-right: calc(var(--sun-size) / -2);
+  border-radius: 9999px;
+  opacity: calc(1 - var(--night));
+  transform: translateY(var(--sun-y));
+  background: radial-gradient(circle at 45% 40%, #fff4d6 0%, #ffe0a3 55%, #ffcb7d 100%);
+  /* Warm but soft: the halo stays faint so the page never glares */
+  box-shadow: 0 0 34px 8px rgba(255, 205, 130, 0.28), 0 0 120px 46px rgba(255, 214, 160, 0.16);
+  transition: transform 2.4s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 1.2s ease;
+}
+/* Arriving on a light page: rise once from below the horizon */
+@starting-style {
+  .sun { transform: translateY(130%); }
+}
+
+/* Sea */
+.ocean-sea {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: var(--sea-h);
+  transition: height 0.8s ease;
+}
+.wave {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  /* Never narrower than the drawing itself, or phones squeeze the swell into spikes */
+  width: max(200%, 2880px);
+  height: 100%;
+  will-change: transform;
+  animation: sea-drift calc(var(--d) * var(--sea-speed)) linear infinite var(--dir, normal);
+}
+.wave-1 { --d: 140s; fill: rgb(var(--wave-1)); }
+.wave-2 { --d: 95s; --dir: reverse; fill: rgb(var(--wave-2)); }
+.wave-3 { --d: 70s; fill: rgb(var(--wave-3)); }
+
+/* Moonlight on the water: short streaks under the moon that widen toward you and shimmer */
+.moon-path {
+  position: absolute;
+  right: calc(var(--moon-right) + var(--moon-size) / 2);
+  top: 33%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transform: translateX(50%);
+}
+.moon-path span {
+  display: block;
+  height: 2px;
+  width: calc(14px + var(--i) * 12px);
+  margin-left: calc(var(--x) * 1px);
+  border-radius: 9999px;
+  background: rgb(var(--shimmer) / var(--shimmer-alpha));
+  animation: moon-shimmer calc(3.2s + var(--i) * 0.45s) ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * -0.7s);
+}
+
+/* Island with two palms, its foot hidden behind the middle swell */
+.island {
+  position: absolute;
+  /* Kept clear of the sidebar column on wide screens */
+  left: 36%;
+  bottom: 49%;
+  width: clamp(140px, 14vw, 230px);
+  height: auto;
+}
+.ocean--calm .island { width: clamp(90px, 9vw, 150px); }
+.island-land { fill: rgb(var(--land)); }
+.island-leaf { fill: rgb(var(--leaf)); }
+.island-trunk { fill: none; stroke: rgb(var(--land)); stroke-linecap: round; }
+
+/* Sailboat: crosses the whole view in a few minutes and rocks on the swell */
+.boat-track {
+  position: absolute;
+  left: 0;
+  bottom: 31%;
+  width: 68px;
+  will-change: transform;
+  animation: boat-sail calc(210s * var(--sea-speed)) linear infinite;
+  animation-delay: -70s;
+}
+.ocean--calm .boat-track { width: 44px; }
+.boat-bob { animation: boat-rock 5.5s ease-in-out infinite alternate; transform-origin: 50% 90%; }
+.boat { display: block; width: 100%; height: auto; }
+.boat-hull { fill: rgb(var(--boat)); stroke: rgb(var(--boat)); }
+.boat-sail { fill: rgb(var(--sail)); }
+.boat-lamp { fill: #f3c77d; opacity: var(--night); }
+
+/* Container ship: tiny on the horizon, crosses right to left over ~8 minutes */
+.cargo-track {
+  position: absolute;
+  left: 0;
+  bottom: 53%;
+  width: clamp(120px, 12vw, 190px);
+  will-change: transform;
+  animation: cargo-sail calc(480s * var(--sea-speed)) linear infinite;
+  animation-delay: -150s;
+}
+.ocean--calm .cargo-track { width: clamp(90px, 8vw, 130px); }
+.cargo { display: block; width: 100%; height: auto; }
+.ship-dark { fill: rgb(var(--cargo-hull)); stroke: rgb(var(--cargo-hull)); }
+.ship-stripe { fill: rgb(var(--cargo-stripe)); }
+.ship-window { fill: rgb(var(--ship-window)); }
+.ship-lamp { fill: #f3c77d; opacity: var(--night); }
+.cargo-boxes { opacity: var(--cargo-box-alpha); }
+
+/* Yacht: nearest to you, a little quicker, left to right */
+.yacht-track {
+  position: absolute;
+  left: 0;
+  bottom: 7%;
+  width: clamp(96px, 9vw, 140px);
+  will-change: transform;
+  animation: yacht-sail calc(150s * var(--sea-speed)) linear infinite;
+  animation-delay: -95s;
+}
+.ocean--calm .yacht-track { width: clamp(72px, 6vw, 100px); }
+.yacht-bob { animation-duration: 4.2s; }
+.yacht { display: block; width: 100%; height: auto; color: rgb(var(--yacht)); }
+.yacht-body { fill: rgb(var(--yacht)); }
+.yacht-window { fill: rgb(var(--yacht-window)); }
+.yacht-wake path { fill: none; stroke: #fff; stroke-width: 1.4; stroke-linecap: round; opacity: var(--wake-alpha); }
+.yacht-wake { animation: wake-shimmer 1.8s ease-in-out infinite alternate; }
+
+@keyframes cargo-sail { from { transform: translate3d(100vw, 0, 0); } to { transform: translate3d(-220px, 0, 0); } }
+@keyframes yacht-sail { from { transform: translate3d(-160px, 0, 0); } to { transform: translate3d(100vw, 0, 0); } }
+@keyframes wake-shimmer { from { opacity: 0.5; } to { opacity: 1; } }
+
+@keyframes sea-drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
+@keyframes boat-sail { from { transform: translate3d(-80px, 0, 0); } to { transform: translate3d(100vw, 0, 0); } }
+@keyframes boat-rock { from { transform: translateY(0) rotate(-2.5deg); } to { transform: translateY(3px) rotate(2.5deg); } }
+@keyframes moon-shimmer { from { opacity: 0.35; transform: scaleX(0.8); } to { opacity: 1; transform: scaleX(1.12); } }
+@keyframes star-twinkle { from { opacity: 0.15; } to { opacity: 0.7; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wave, .boat-track, .boat-bob, .moon-path span, .star--twinkle, .cargo-track, .yacht-track, .yacht-wake { animation: none; }
+  .cargo-track { transform: translate3d(62vw, 0, 0); }
+  .yacht-track { transform: translate3d(22vw, 0, 0); }
+  .sun, .moon { transition: none; }
+  .boat-track { transform: translate3d(58vw, 0, 0); }
+}
+
+/* Solid bars (sidebar, phone bar, sticky section nav). No backdrop blur: blur over a moving sea repaints every frame. */
+.bar {
+  background-color: rgb(var(--page) / 0.94);
+}
+
+/* Underlined inline link, like a hand-written note */
+.ink-link {
+  @apply font-medium text-brand-700 underline decoration-brand-300 decoration-2 underline-offset-[3px] transition-colors hover:text-brand-800 hover:decoration-brand-600;
+}
+
+/* --- Rocket around the hero photo (components/site/RocketOrbit) --- */
+.rocket-orbit {
+  position: absolute;
+  inset: -22px;
+  border-radius: 9999px;
+  border: 1px dashed rgb(var(--b400) / 0.35);
+  pointer-events: none;
+  animation: rocket-orbit 18s linear infinite;
+}
+.rocket-spin {
+  position: absolute;
+  inset: 0;
+  transition: transform 1.2s cubic-bezier(0.45, 0, 0.2, 1);
+}
+.rocket {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 30px;
+  /* Nose points along the clockwise path */
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.rocket-flame, .rocket-core {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: rocket-flicker 0.14s ease-in-out infinite alternate;
+}
+.rocket-core { animation-duration: 0.09s; }
+.is-boosting .rocket-flame, .is-boosting .rocket-core { scale: 1 1.7; }
+.rocket-puff {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgb(var(--g400));
+  transform: translate(-50%, -50%);
+  animation: rocket-puff 1.6s ease-in-out infinite alternate;
+}
+@keyframes rocket-orbit { to { transform: rotate(360deg); } }
+@keyframes rocket-flicker { from { transform: scaleY(0.82) scaleX(0.94); } to { transform: scaleY(1.12) scaleX(1.04); } }
+@keyframes rocket-puff { from { scale: 0.7; } to { scale: 1.25; } }
+@media (prefers-reduced-motion: reduce) {
+  .rocket-orbit { animation: none; transform: rotate(-38deg); }
+  .rocket-flame, .rocket-core, .rocket-puff { animation: none; }
+  .rocket-spin { transition: none; }
+}
+
+/* --- Sea battle: cute kaiju vs giant cat (components/site/SeaBattle) ---
+   Home page only. One 4.8 s loop shared by every part so the beam, the swipe and the "pow" stay in step. */
+.battle {
+  --fight: 4.8s;
+  position: absolute;
+  /* Far right, lined up with the edge of the centred 1340px layout on wide screens */
+  right: max(1%, calc((100vw - 1340px) / 2 - 8px));
+  /* Waterline (the middle swell) lands around their chests */
+  bottom: 37%;
+  width: 290px;
+  aspect-ratio: 340 / 128;
+  opacity: var(--mascot-alpha);
+  transition: opacity 1s ease;
+}
+.ocean--calm .battle { display: none; }
+.battle-kaiju, .battle-cat { position: absolute; bottom: 0; animation: mascot-bob 3.2s ease-in-out infinite alternate; }
+.battle-kaiju { left: 0; width: 35.3%; }
+.battle-cat { right: 0; width: 37.6%; animation-duration: 3.7s; animation-delay: -1.1s; }
+.kaiju, .cat { display: block; width: 100%; height: auto; overflow: visible; }
+
+.kaiju-body { transform-box: view-box; transform-origin: 62px 150px; animation: kaiju-flinch var(--fight) ease-in-out infinite; }
+.kaiju-charge { opacity: 0; animation: kaiju-charge var(--fight) ease-in-out infinite; }
+.cat-paw { transform-box: view-box; transform-origin: 66px 122px; animation: cat-swipe var(--fight) cubic-bezier(0.5, 0, 0.3, 1) infinite; }
+.cat-tail { transform-box: view-box; transform-origin: 136px 124px; animation: tail-wag 1.3s ease-in-out infinite alternate; }
+
+.battle-beam {
+  position: absolute;
+  left: 30%;
+  top: 43%;
+  width: 34%;
+  height: 7%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #38bdf8, #bae6fd 55%, #ffffff);
+  box-shadow: 0 0 10px 2px rgba(125, 211, 252, 0.6);
+  transform-origin: 0 50%;
+  opacity: 0;
+  animation: kaiju-beam var(--fight) ease-out infinite;
+}
+.battle-pow {
+  position: absolute;
+  left: 57%;
+  top: 22%;
+  width: 15%;
+  opacity: 0;
+  animation: battle-pow var(--fight) ease-out infinite;
+}
+.battle-drop {
+  position: absolute;
+  left: 64%;
+  top: 56%;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: #e0f2fe;
+  opacity: 0;
+  animation: battle-drop var(--fight) ease-out infinite;
+}
+
+@keyframes mascot-bob { from { transform: translateY(0); } to { transform: translateY(5px); } }
+@keyframes tail-wag { from { transform: rotate(-6deg); } to { transform: rotate(8deg); } }
+@keyframes kaiju-charge { 0%, 8% { opacity: 0; } 30%, 46% { opacity: 1; } 56%, 100% { opacity: 0; } }
+@keyframes kaiju-beam {
+  0%, 28% { transform: rotate(5deg) scaleX(0); opacity: 0; }
+  34% { opacity: 1; }
+  42%, 50% { transform: rotate(5deg) scaleX(1); opacity: 1; }
+  58%, 100% { transform: rotate(5deg) scaleX(0.15); opacity: 0; }
+}
+@keyframes cat-swipe {
+  0%, 20% { transform: rotate(0deg); }
+  40% { transform: rotate(28deg); }
+  49% { transform: rotate(-38deg); }
+  62%, 100% { transform: rotate(0deg); }
+}
+@keyframes battle-pow {
+  0%, 46% { transform: scale(0) rotate(0deg); opacity: 0; }
+  51% { transform: scale(1.15) rotate(12deg); opacity: 1; }
+  62%, 100% { transform: scale(0.4) rotate(24deg); opacity: 0; }
+}
+@keyframes kaiju-flinch {
+  0%, 50% { transform: translateX(0) rotate(0deg); }
+  56% { transform: translateX(-5px) rotate(-4deg); }
+  68%, 100% { transform: translateX(0) rotate(0deg); }
+}
+@keyframes battle-drop {
+  0%, 48% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+  52% { opacity: 0.9; }
+  66% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@media (max-width: 640px) {
+  .battle { right: 3%; width: 240px; bottom: 37%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle *, .battle-kaiju, .battle-cat { animation: none !important; }
+}
+
+/* --- Hold-to-charge hero photo (components/site/HeroPhoto) ---
+   --charge (0 → 1) is written every frame while the photo is held; everything here reads it,
+   and only transform / opacity / scale change, so charging stays smooth. */
+.hero-photo { -webkit-touch-callout: none; touch-action: manipulation; }
+
+/* Charging: the glow swells and the flame grows with the charge */
+.power-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgb(var(--b300) / 0.55) 55%, rgb(250 204 21 / 0) 72%);
+  opacity: calc(var(--charge) * 0.9);
+  transform: scale(calc(1 + var(--charge) * 0.14));
+}
+.rocket-spin.is-charging .rocket-flame,
+.rocket-spin.is-charging .rocket-core { scale: 1 calc(1 + var(--charge, 0) * 0.9); }
+.rocket-spin.is-charging .rocket { animation: rocket-shake 0.08s linear infinite alternate; }
+
+/* Full: the photo trembles and an aura of sparks flares around it */
+.hero-photo.is-full .hero-photo-body { animation: photo-tremble 0.07s linear infinite alternate; }
+.power-aura {
+  position: absolute;
+  inset: -14px;
+  border-radius: 9999px;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px rgb(var(--b300) / 0.8), 0 0 26px 8px rgb(var(--b400) / 0.55), 0 0 60px 18px rgb(250 204 21 / 0.28);
+  animation: aura-pulse 0.5s ease-in-out infinite alternate;
+}
+.power-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  border-radius: 9999px;
+  background: #fde047;
+  box-shadow: 0 0 6px 2px rgb(250 204 21 / 0.7);
+  transform: rotate(var(--a)) translateY(-150px);
+  animation: spark-fly 0.6s ease-out infinite;
+  animation-delay: var(--d);
+}
+
+/* Release at full: two shockwave rings and a white flash */
+.power-shock {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  border: 3px solid rgb(var(--b300));
+  box-shadow: 0 0 24px 4px rgb(250 204 21 / 0.5);
+  animation: shock-out 0.9s ease-out forwards;
+}
+.power-shock--late { border-color: #fde047; animation-delay: 0.15s; opacity: 0; }
+.power-flash {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #ffffff 0%, rgb(255 255 255 / 0) 70%);
+  pointer-events: none;
+  animation: photo-flash 0.6s ease-out forwards;
+}
+.rocket-spin.is-super .rocket-flame, .rocket-spin.is-super .rocket-core { scale: 1.25 2.4; }
+
+/* Charge meter in the caption */
+.charge-track {
+  display: block;
+  height: 8px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: rgb(var(--g200));
+}
+.charge-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ef4444, #f97316 40%, #facc15 75%, #fffbeb);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--charge));
+}
+.charge-full-text { color: #f59e0b; animation: aura-pulse 0.35s ease-in-out infinite alternate; }
+
+@keyframes rocket-shake { from { translate: -1px 0; } to { translate: 1px 1px; } }
+@keyframes photo-tremble { from { transform: translate(-1.5px, 0.5px); } to { transform: translate(1.5px, -0.5px); } }
+@keyframes aura-pulse { from { opacity: 0.65; } to { opacity: 1; } }
+@keyframes spark-fly {
+  from { transform: rotate(var(--a)) translateY(-138px) scale(1); opacity: 1; }
+  to { transform: rotate(var(--a)) translateY(-176px) scale(0.3); opacity: 0; }
+}
+@keyframes shock-out { from { transform: scale(1); opacity: 1; } to { transform: scale(1.75); opacity: 0; } }
+@keyframes photo-flash { from { opacity: 0.85; } to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo.is-full .hero-photo-body, .rocket-spin.is-charging .rocket, .power-spark, .power-aura, .charge-full-text { animation: none; }
+}
+
+/* --- Sky extras (components/site/OceanBackground) --- */
+/* Dawn and dusk (Thai time, components/site/theme.js): a warm glow on the horizon */
+html[data-sky="dawn"], html[data-sky="dusk"] { --haze: 255 156 112; --haze-alpha: 0.42; }
+.dark[data-sky="dawn"], .dark[data-sky="dusk"] { --haze: 210 112 92; --haze-alpha: 0.3; }
+html[data-sky] .sky-haze { height: 34vh; }
+
+/* Shooting stars: night only (inside .sky-stars), visible for a moment once per cycle */
+.shooting-star {
+  position: absolute;
+  height: 1.5px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.95));
+  opacity: 0;
+  transform-origin: 100% 50%;
+  animation: shooting-star 13s linear infinite;
+}
+@keyframes shooting-star {
+  0% { transform: rotate(152deg) translateX(0); opacity: 0; }
+  1% { opacity: 1; }
+  6% { transform: rotate(152deg) translateX(420px); opacity: 0; }
+  100% { transform: rotate(152deg) translateX(420px); opacity: 0; }
+}
+
+/* Gulls: day only */
+.gulls { position: absolute; inset: 0; opacity: calc(1 - var(--night)); transition: opacity 1s ease; }
+.gull-track { position: absolute; left: 0; will-change: transform; animation: gull-glide 70s linear infinite; }
+.gull { display: block; height: auto; fill: none; stroke: #5f7781; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; animation: gull-flap 0.55s ease-in-out infinite alternate; }
+@keyframes gull-glide { from { transform: translate3d(-60px, 0, 0); } 50% { transform: translate3d(50vw, -14px, 0); } to { transform: translate3d(calc(100vw + 60px), 0, 0); } }
+@keyframes gull-flap { from { transform: scaleY(1); } to { transform: scaleY(0.45); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .shooting-star { display: none; }
+  .gull-track, .gull { animation: none; }
+  .gull-track { transform: translate3d(70vw, 0, 0); }
+}
+
+/* --- Poking the mascots (components/site/SeaBattle) --- */
+html.poke-cursor, html.poke-cursor * { cursor: pointer !important; }
+.battle-cat.is-poked .cat { animation: cat-hop 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.battle-kaiju.is-poked .kaiju { animation: kaiju-sneeze 0.6s ease-out; transform-origin: 50% 100%; }
+.mascot-react { position: absolute; inset: 0; pointer-events: none; }
+.mascot-say {
+  position: absolute;
+  top: -24%;
+  white-space: nowrap;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #1f2937;
+  font: 700 12px/1.3 var(--font-geist-mono), ui-monospace, monospace;
+  box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.45);
+  animation: say-pop 1.5s ease-out forwards;
+}
+.mascot-say--cat { left: 18%; }
+.mascot-say--kaiju { left: 46%; }
+.cat-heart {
+  position: absolute;
+  left: calc(28% + var(--i) * 18%);
+  top: 6%;
+  color: #fb7185;
+  font-size: 14px;
+  opacity: 0;
+  animation: heart-up 1.3s ease-out forwards;
+  animation-delay: calc(var(--i) * 0.12s);
+}
+.sneeze-bubble {
+  position: absolute;
+  left: 84%;
+  top: 44%;
+  width: calc(6px + var(--i) * 1.5px);
+  height: calc(6px + var(--i) * 1.5px);
+  border-radius: 9999px;
+  border: 1.5px solid rgba(186, 230, 253, 0.95);
+  background: rgba(224, 242, 254, 0.25);
+  opacity: 0;
+  animation: bubble-out 1.2s ease-out forwards;
+  animation-delay: calc(var(--i) * 0.06s);
+  --bx: calc(14px + var(--i) * 9px);
+  --by: calc(-10px - var(--i) * 7px);
+}
+@keyframes cat-hop { 0% { transform: translateY(0); } 40% { transform: translateY(-22%); } 100% { transform: translateY(0); } }
+@keyframes kaiju-sneeze { 0% { transform: scale(1); } 25% { transform: scale(1.06, 0.92); } 55% { transform: scale(0.96, 1.05) translateX(-3%); } 100% { transform: scale(1); } }
+@keyframes say-pop { 0% { transform: scale(0.4) translateY(6px); opacity: 0; } 15% { transform: scale(1.08); opacity: 1; } 25% { transform: scale(1); } 80% { opacity: 1; } 100% { transform: translateY(-6px); opacity: 0; } }
+@keyframes heart-up { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-40px) scale(1.2); opacity: 0; } }
+@keyframes bubble-out { 0% { transform: translate(0, 0) scale(0.4); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--bx), var(--by)) scale(1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .battle-cat.is-poked .cat, .battle-kaiju.is-poked .kaiju { animation: none; }
+}
+
+/* Phones and tablets: jumping to a section leaves room for the sticky top bar (h-14) */
+@media (max-width: 1023px) {
+  section[id] { scroll-margin-top: 64px; }
 }

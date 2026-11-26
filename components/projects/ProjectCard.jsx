@@ -7,6 +7,9 @@ import HeroLogo from "../AiGovernance/HeroLogo";
 import { useLang } from "../LanguageProvider";
 import { PROJECT_CATEGORIES, projectHref } from "@/lib/projectMeta";
 
+// Category pastels are made for white; in the dark theme they are mixed down into the card colour (--tint-mix)
+const soften = (color) => `color-mix(in srgb, ${color} var(--tint-mix), rgb(var(--surface)))`;
+
 export function CategoryChip({ category, className = "" }) {
     const { tx } = useLang();
     const meta = PROJECT_CATEGORIES[category];
@@ -14,7 +17,7 @@ export function CategoryChip({ category, className = "" }) {
     return (
         <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${className}`}
-            style={{ color: meta.color, background: meta.soft }}
+            style={{ color: meta.color, background: soften(meta.soft) }}
         >
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: meta.color }} />
             {tx(meta.label)}
@@ -30,7 +33,7 @@ function Preview({ project, size }) {
     const showAgwLogo = project.previewStyle === "agw" && size === "lg";
 
     return (
-        <div className="relative flex items-end overflow-hidden px-5 pt-5 sm:px-7 sm:pt-7" style={{ background: tint }}>
+        <div className="relative flex items-end overflow-hidden px-5 pt-5 sm:px-7 sm:pt-7" style={{ background: soften(tint) }}>
             <div className="w-full overflow-hidden rounded-t-xl border border-b-0 border-black/[0.08] bg-white shadow-[0_-8px_30px_-12px_rgba(16,21,31,0.18)] transition-transform duration-500 ease-out group-hover:-translate-y-1">
                 <div className="flex h-8 items-center gap-2.5 border-b border-gray-100 bg-gray-50/80 px-3">
                     <span className="flex gap-1">

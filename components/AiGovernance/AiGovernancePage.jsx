@@ -30,7 +30,7 @@ export default function AiGovernancePage() {
     );
 
     return (
-        <main className="min-h-screen bg-[#f7f8fa] pb-24">
+        <main className="min-h-screen pb-24">
             <ProjectTopBar nav={sectionNav} action={pdfButton} />
             <ProjectIntro
                 project={project}

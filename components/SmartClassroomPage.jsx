@@ -102,7 +102,7 @@ function Shot({ src, alt, sizes = "(max-width: 768px) 100vw, 580px" }) {
 export default function SmartClassroomPage() {
     const { tx } = useLang();
     return (
-        <main className="min-h-screen bg-[#f7f8fa] pb-24">
+        <main className="min-h-screen pb-24">
             <ProjectTopBar nav={sectionNav} />
             <ProjectIntro
                 project={project}

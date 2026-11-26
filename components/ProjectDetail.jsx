@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FiArrowLeft, FiExternalLink, FiMaximize2 } from "react-icons/fi";
-import { LanguageToggle, useLang } from "./LanguageProvider";
+import { useLang } from "./LanguageProvider";
 
 // Shared building blocks for the /projects/* detail pages (same look as the Live Project cards).
 // Text props may be plain strings or {th, en} objects.
@@ -10,7 +10,7 @@ import { LanguageToggle, useLang } from "./LanguageProvider";
 export function ProjectTopBar({ nav, action }) {
     const { tx } = useLang();
     return (
-        <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur">
+        <header className="bar sticky top-14 z-30 border-b border-gray-200 lg:top-0">
             <div className="container mx-auto flex h-14 items-center gap-2 sm:gap-3">
                 <Link
                     href="/#Live"
@@ -32,7 +32,6 @@ export function ProjectTopBar({ nav, action }) {
                     ))}
                 </nav>
                 {action}
-                <LanguageToggle />
             </div>
         </header>
     );

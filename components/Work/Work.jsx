@@ -139,7 +139,9 @@ export default function Work() {
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   // Public view: "timeline" (default) or "map" (the graph); admins always get the editable grid
-  const [view, setView] = useState("timeline");
+  const [view, setView] = useState("map");
+  // Year the visitor is reading on the right; the graph rings it
+  const [peekYear, setPeekYear] = useState(null);
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -652,12 +654,27 @@ export default function Work() {
             ))}
           </TabsList>
 
-          {view === "map" && !isAdmin && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="mt-6">
-              <ExperienceGraph projects={projects} focusTab={tabValue} onSelectFilter={handleGraphFilter} />
-            </motion.div>
-          )}
-
+          {view === "map" && !isAdmin ? (
+            // Wide screens: graph stays put on the left while the years scroll by on the right
+            <div className="mt-6 grid gap-10 2xl:mt-8 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] 2xl:gap-8">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="min-w-0 2xl:sticky 2xl:top-6 2xl:self-start">
+                <ExperienceGraph
+                  projects={projects}
+                  focusTab={tabValue}
+                  onSelectFilter={handleGraphFilter}
+                  peekYear={peekYear}
+                  className="h-[440px] sm:h-[500px] 2xl:h-[calc(100vh-6rem)] 2xl:max-h-[600px]"
+                />
+              </motion.div>
+              <TabsContent value={tabValue} className="mt-0 w-full min-w-0">
+                {filterWork.length === 0 ? (
+                  <div className="py-10 text-center text-gray-500">{t("work.empty")}</div>
+                ) : (
+                  <ExperienceTimeline items={filterWork} showAll={tabValue !== "all"} split onActiveYear={setPeekYear} />
+                )}
+              </TabsContent>
+            </div>
+          ) : (
           <TabsContent value={tabValue} className="mt-10 w-full">
             {filterWork.length === 0 ? (
               <div className="text-center text-gray-500 py-10">{t("work.empty")}</div>
@@ -695,6 +712,7 @@ export default function Work() {
               </div>
             )}
           </TabsContent>
+          )}
         </Tabs>
 
         {!isAdmin && (

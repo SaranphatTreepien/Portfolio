@@ -178,7 +178,7 @@ function Sidebar() {
 export default function Journey() {
     const { t } = useLang();
     return (
-        <section id="Journey" className="border-t border-gray-200/70 py-24 lg:py-32">
+        <section id="Journey" className="border-t border-gray-900/[0.07] py-20 lg:py-24">
             <div className="container mx-auto">
                 <Reveal className="mb-14 max-w-2xl">
                     <p className="eyebrow">{t("journey.eyebrow")}</p>

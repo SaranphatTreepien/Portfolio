@@ -16,7 +16,7 @@ export default function LiveProject() {
     const [lead, ...rest] = featured;
 
     return (
-        <section id="Live" className="py-24 lg:py-32">
+        <section id="Live" className="scroll-mt-16 py-20 lg:scroll-mt-0 lg:py-24">
             <div className="container mx-auto">
                 <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                     <Reveal>

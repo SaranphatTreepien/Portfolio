@@ -83,7 +83,7 @@ export default function Credentials() {
     ].join(" · ");
 
     return (
-        <section id="Credentials" className="relative border-y border-gray-200/70 bg-white/60 py-14 lg:py-16">
+        <section id="Credentials" className="relative border-t border-gray-200 py-14 lg:py-16">
             <div className="container mx-auto mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <Reveal>
                     <p className="eyebrow">
@@ -98,7 +98,7 @@ export default function Credentials() {
                         href={googleSkillsProfile.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-9 items-center gap-2 rounded-full border border-[#e9d3bd] bg-[#fbf5ee] px-3.5 text-[13px] font-medium text-[#8a5a2b] transition-colors hover:bg-[#f6eadc]"
+                        className="inline-flex h-9 items-center gap-2 rounded-full border border-gray-200 bg-amber-50 px-3.5 text-[13px] font-medium text-amber-700 transition-colors hover:border-gray-300"
                     >
                         <IconGoogle className="h-3.5 w-3.5" />
                         {googleSkillsProfile.league} · {googleSkillsProfile.points.toLocaleString("en-US")} pts

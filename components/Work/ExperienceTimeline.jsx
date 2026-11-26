@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useInView, useScroll, useSpring } from "framer-motion";
 import { FiArrowRight, FiChevronDown, FiStar } from "react-icons/fi";
 import { TOPIC_STYLE, isYearCategory, topicsOf } from "./topics";
 import { useLang } from "../LanguageProvider";
@@ -31,7 +31,7 @@ const FeatureCard = ({ item }) => {
     return (
         <Link
             href={`/work/${item.slug}`}
-            className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-[0_20px_40px_-28px_rgba(16,21,31,0.45)]"
+            className="group flex flex-col overflow-hidden rounded-2xl border border-white/80 bg-white/90 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-[0_20px_40px_-28px_rgba(16,21,31,0.45)]"
         >
             <span className="relative block aspect-[16/9] overflow-hidden bg-gray-100">
                 {item.img && (
@@ -80,31 +80,37 @@ const Row = ({ item }) => {
     );
 };
 
-const YearGroup = ({ year, items }) => {
+// `split`: the list sits in a narrow column beside the graph on wide screens, so the year goes on top instead of in a side column
+const YearGroup = ({ year, items, split, onActive }) => {
     const { t, lang } = useLang();
+    const ref = useRef(null);
+    const inView = useInView(ref, { margin: "-30% 0px -60% 0px" });
+    useEffect(() => {
+        if (inView) onActive?.(year);
+    }, [inView, year, onActive]);
     const best = items.filter((item) => item.isBest);
     const rest = items.filter((item) => !item.isBest);
     const ceYear = isYearCategory(year) ? Number(year) - 543 : null;
 
     return (
-        <div className="relative grid gap-5 pb-14 pl-8 lg:grid-cols-[150px_1fr] lg:gap-10 lg:pl-0">
-            <span aria-hidden="true" className="absolute left-0 top-[14px] h-[11px] w-[11px] rounded-full border-2 border-brand-500 bg-white lg:left-[150px]" />
-            <div className="lg:sticky lg:top-28 lg:self-start lg:pr-8 lg:text-right">
+        <div ref={ref} className={`relative grid gap-5 pb-14 pl-8 lg:grid-cols-[150px_1fr] lg:gap-10 lg:pl-0 ${split ? "2xl:grid-cols-1 2xl:gap-5 2xl:pl-8" : ""}`}>
+            <span aria-hidden="true" className={`absolute left-0 top-[14px] h-[11px] w-[11px] rounded-full border-2 border-brand-500 bg-white lg:left-[150px] ${split ? "2xl:left-0" : ""}`} />
+            <div className={`lg:sticky lg:top-8 lg:self-start lg:pr-8 lg:text-right ${split ? "2xl:static 2xl:pr-0 2xl:text-left" : ""}`}>
                 <p className="text-[34px] font-semibold leading-none tracking-[-0.03em] text-primary">{lang === "en" && ceYear ? ceYear : year}</p>
                 <p className="mt-2 text-[12px] text-gray-400">
                     {ceYear ? (lang === "en" ? `BE ${year}` : `ค.ศ. ${ceYear}`) : ""} · {t("work.items", items.length)}
                 </p>
             </div>
-            <div className="flex min-w-0 flex-col gap-4 lg:pl-6">
+            <div className={`flex min-w-0 flex-col gap-4 lg:pl-6 ${split ? "2xl:pl-0" : ""}`}>
                 {best.length > 0 && (
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className={`grid gap-4 sm:grid-cols-2 ${split ? "" : "2xl:grid-cols-3"}`}>
                         {best.map((item) => (
                             <FeatureCard key={item.slug} item={item} />
                         ))}
                     </div>
                 )}
                 {rest.length > 0 && (
-                    <ul className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200/80 bg-white">
+                    <ul className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-white/80 bg-white/85">
                         {rest.map((item) => (
                             <Row key={item.slug} item={item} />
                         ))}
@@ -115,7 +121,7 @@ const YearGroup = ({ year, items }) => {
     );
 };
 
-export default function ExperienceTimeline({ items, showAll = false }) {
+export default function ExperienceTimeline({ items, showAll = false, split = false, onActiveYear }) {
     const { t, lang } = useLang();
     const [expanded, setExpanded] = useState(false);
     const ref = useRef(null);
@@ -142,19 +148,19 @@ export default function ExperienceTimeline({ items, showAll = false }) {
 
     return (
         <div ref={ref} className="relative">
-            <span aria-hidden="true" className="absolute bottom-0 left-[5px] top-3 w-px bg-gray-200 lg:left-[155px]" />
+            <span aria-hidden="true" className={`absolute bottom-0 left-[5px] top-3 w-px bg-gray-900/10 lg:left-[155px] ${split ? "2xl:left-[5px]" : ""}`} />
             <motion.span
                 aria-hidden="true"
                 style={{ scaleY: lineScale }}
-                className="absolute bottom-0 left-[5px] top-3 w-px origin-top bg-brand-400 lg:left-[155px]"
+                className={`absolute bottom-0 left-[5px] top-3 w-px origin-top bg-brand-400 lg:left-[155px] ${split ? "2xl:left-[5px]" : ""}`}
             />
 
             {open.map(([year, list]) => (
-                <YearGroup key={year} year={year} items={list} />
+                <YearGroup key={year} year={year} items={list} split={split} onActive={onActiveYear} />
             ))}
 
             {hidden.length > 0 && (
-                <div className="relative pl-8 lg:pl-[190px]">
+                <div className={`relative pl-8 lg:pl-[190px] ${split ? "2xl:pl-8" : ""}`}>
                     <button
                         type="button"
                         onClick={() => setExpanded(true)}

@@ -40,7 +40,7 @@ export function PhotoGrid({ images, title, onOpen }) {
                             type="button"
                             onClick={() => onOpen(i)}
                             aria-label={more > 0 ? `${title || "photo"}: +${more}` : `${title || "photo"} ${i + 1}`}
-                            className="group/tile relative block aspect-[4/3] w-full overflow-hidden rounded-md bg-gray-100"
+                            className="group/tile relative block aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-100"
                         >
                             <Image
                                 src={src}
@@ -63,7 +63,7 @@ export function PhotoGrid({ images, title, onOpen }) {
 // Cover in a fixed 16:10 frame: the whole picture is shown, and a blurred copy of it fills the empty sides
 export function CoverFrame({ src, alt, onOpen }) {
     return (
-        <button type="button" onClick={onOpen} className="group/tile relative block aspect-[16/10] w-full overflow-hidden rounded-md bg-gray-900">
+        <button type="button" onClick={onOpen} className="group/tile relative block aspect-[16/10] w-full overflow-hidden rounded-2xl bg-gray-900 shadow-[0_18px_40px_-24px_rgba(16,40,50,0.45)]">
             <Image src={src} alt="" aria-hidden="true" fill sizes="200px" className="scale-110 object-cover opacity-60 blur-2xl" />
             <Image
                 src={src}

@@ -7,8 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiArrowLeft, FiArrowRight, FiEdit2, FiPlus, FiStar, FiTrash2 } from "react-icons/fi";
 import Markdown from "./Markdown";
-import Logo from "../Logo";
-import { LanguageToggle, useLang } from "../LanguageProvider";
+import { useLang } from "../LanguageProvider";
 import { TOPIC_STYLE, isYearCategory, topicsOf } from "./topics";
 import { CoverFrame, ExternalLink, NeighborNav, PhotoGrid, PhotoViewer, hasText, imagesOf } from "./ExperienceView";
 
@@ -29,9 +28,12 @@ const Spinner = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="ht
 
 const ITEMS_PER_PAGE = 10;
 
+// Frosted card that keeps text and photos clear of the sea behind
+const PANEL = "rounded-3xl border border-white/80 bg-white/65 p-5 sm:p-7";
+
 const DetailRow = ({ label, children }) => (
-    <div className="grid grid-cols-[84px_1fr] gap-3 py-3">
-        <dt className="text-gray-500">{label}</dt>
+    <div className="grid gap-0.5 py-3 2xl:grid-cols-[84px_1fr] 2xl:gap-3">
+        <dt className="text-[12px] text-gray-500 2xl:text-[14px]">{label}</dt>
         <dd className="min-w-0 text-primary">{children}</dd>
     </div>
 );
@@ -580,14 +582,7 @@ export default function ExperienceEditor({ slug }) {
 
     return (
         <div className="pb-24 text-gray-800">
-            <header className="border-b border-gray-200/70">
-                <div className="container mx-auto flex h-16 items-center justify-between gap-4">
-                    <Logo />
-                    <LanguageToggle />
-                </div>
-            </header>
-
-            <main className="container mx-auto pt-8 lg:pt-12">
+            <main className="container mx-auto pt-8 lg:pt-14">
                 <button type="button" onClick={goBack} className="group inline-flex items-center gap-1.5 text-[14px] text-gray-500 transition-colors hover:text-primary">
                     <FiArrowLeft className="transition-transform duration-200 group-hover:-translate-x-0.5" /> {t("nav.Experience")}
                 </button>
@@ -617,14 +612,14 @@ export default function ExperienceEditor({ slug }) {
                     )}
                 </div>
 
-                <div className="mt-10 grid gap-12 border-t border-gray-200 pt-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-16">
+                <div className="mt-10 grid gap-10 border-t border-gray-900/[0.08] pt-10 2xl:grid-cols-[minmax(0,1fr)_240px] 2xl:gap-14">
                     <div className="min-w-0">
                         {/* Cover in a fixed frame */}
                         {project.img && <CoverFrame src={project.img} alt={project.title} onOpen={() => setViewer({ images: [project.img], index: 0, title: project.title })} />}
 
                         {/* About */}
                         {showAbout && (
-                            <section className={project.img ? "mt-14" : ""}>
+                            <section className={`${PANEL} ${project.img ? "mt-10" : ""}`}>
                                 <div className="mb-5 flex items-end justify-between gap-4 border-b border-gray-200 pb-3">
                                     <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-primary">{aboutTitle}</h2>
                                     {isAdmin && (
@@ -637,7 +632,7 @@ export default function ExperienceEditor({ slug }) {
                                     <>
                                         <div className={`relative ${isOverviewCollapsed ? "max-h-[520px] overflow-hidden" : ""}`}>
                                             <Markdown>{project.galleryDescription}</Markdown>
-                                            {isOverviewCollapsed && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#f7fafa] to-transparent" />}
+                                            {isOverviewCollapsed && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent" />}
                                         </div>
                                         {isOverviewLong && (
                                             <button type="button" onClick={() => setIsOverviewExpanded((v) => !v)} className="mt-4 text-[14px] font-medium text-brand-700 underline underline-offset-4">
@@ -653,7 +648,7 @@ export default function ExperienceEditor({ slug }) {
 
                         {/* Photos: each group lays itself out by how many photos it has */}
                         {showGallery && (
-                            <section className={project.img || showAbout ? "mt-14" : ""}>
+                            <section className={`${PANEL} ${project.img || showAbout ? "mt-10" : ""}`}>
                                 <div className="mb-6 flex items-end justify-between gap-4 border-b border-gray-200 pb-3">
                                     <h2 className="text-[20px] font-semibold tracking-[-0.01em] text-primary">
                                         {tx({ th: "ภาพบรรยากาศ", en: "Photos" })}
@@ -750,9 +745,9 @@ export default function ExperienceEditor({ slug }) {
                     </div>
 
                     {/* Details */}
-                    <aside className="lg:sticky lg:top-8 lg:self-start">
+                    <aside className="order-first 2xl:order-none 2xl:sticky 2xl:top-8 2xl:self-start">
                         <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-gray-400">{tx({ th: "รายละเอียด", en: "Details" })}</h2>
-                        <dl className="mt-3 divide-y divide-gray-200 border-y border-gray-200 text-[14px]">
+                        <dl className="mt-3 grid grid-cols-2 gap-x-6 rounded-2xl border border-white/80 bg-white/60 px-4 text-[14px] sm:grid-cols-3 2xl:block 2xl:divide-y 2xl:divide-gray-900/[0.08] 2xl:rounded-none 2xl:border-x-0 2xl:border-y 2xl:border-gray-900/[0.08] 2xl:bg-transparent 2xl:px-0">
                             {yearLabel && <DetailRow label={tx({ th: "ปี", en: "Year" })}>{yearLabel}</DetailRow>}
                             {dateLabel && <DetailRow label={tx({ th: "วันที่", en: "Date" })}>{dateLabel}</DetailRow>}
                             {topics.length > 0 && <DetailRow label={tx({ th: "ประเภท", en: "Type" })}>{topics.map((topic) => TOPIC_STYLE[topic].label).join(", ")}</DetailRow>}

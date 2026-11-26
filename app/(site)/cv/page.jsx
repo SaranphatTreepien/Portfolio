@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { SiGmail } from "react-icons/si";
 import {
@@ -27,7 +26,7 @@ import { MdEmail, MdDateRange } from "react-icons/md";
 import Confetti from "react-confetti";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
-import { LanguageToggle, useLang } from "@/components/LanguageProvider";
+import { useLang } from "@/components/LanguageProvider";
 
 // Text for the public part of the page. The admin-only application email form below stays Thai:
 // it writes a Thai email to HR.
@@ -607,28 +606,8 @@ ${form.phone}`;
     }
   };
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f3fbfa] font-sans text-slate-800">
-      {/* Soft mint background */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(126,218,210,0.3),transparent_34%),radial-gradient(circle_at_100%_22%,rgba(174,235,226,0.32),transparent_36%),linear-gradient(145deg,#f8fdfc_0%,#e8f7f4_52%,#f4fbfa_100%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(71,163,153,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(71,163,153,0.07)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:linear-gradient(to_bottom,black,transparent_78%)]" />
-      <div className="pointer-events-none absolute -left-32 top-48 h-80 w-80 rounded-full bg-[#7edad2]/20 blur-[100px]" />
-      <div className="pointer-events-none absolute -right-32 bottom-24 h-96 w-96 rounded-full bg-cyan-500/10 blur-[110px]" />
-
-      {/* Navigation */}
-      <nav className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-4 py-5 md:px-8">
-        <Link href="/">
-          <motion.button
-            whileHover={{ x: -5 }}
-            className="flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm backdrop-blur-md transition-colors hover:bg-white hover:text-[#4fa99f]"
-          >
-            <span>←</span> {L("back")}
-          </motion.button>
-        </Link>
-        <LanguageToggle />
-
-      </nav>
-
-      <div className="relative z-10 mx-auto max-w-6xl px-4 pb-32 md:px-8">
+    <div className="relative font-sans text-slate-800">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 pb-32 pt-10 md:px-8 lg:pt-14">
         <motion.section
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
