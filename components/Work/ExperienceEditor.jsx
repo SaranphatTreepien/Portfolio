@@ -549,7 +549,7 @@ export default function ExperienceEditor({ slug }) {
         return (
             <div className="container mx-auto py-32 text-center">
                 <p className="text-gray-500">{tx({ th: "ไม่พบหน้านี้", en: "This page was not found." })}</p>
-                <Link href="/#Experience" className="mt-4 inline-block text-[14px] text-brand-700 underline underline-offset-4">{t("nav.Experience")}</Link>
+                <Link href="/activities" className="mt-4 inline-block text-[14px] text-brand-700 underline underline-offset-4">{t("nav.Activities")}</Link>
             </div>
         );
 
@@ -577,14 +577,14 @@ export default function ExperienceEditor({ slug }) {
 
     const goBack = () => {
         if (document.referrer.startsWith(window.location.origin) && window.history.length > 1) router.back();
-        else router.push("/#Experience");
+        else router.push("/activities");
     };
 
     return (
         <div className="pb-24 text-gray-800">
             <main className="container mx-auto pt-8 lg:pt-14">
                 <button type="button" onClick={goBack} className="group inline-flex items-center gap-1.5 text-[14px] text-gray-500 transition-colors hover:text-primary">
-                    <FiArrowLeft className="transition-transform duration-200 group-hover:-translate-x-0.5" /> {t("nav.Experience")}
+                    <FiArrowLeft className="transition-transform duration-200 group-hover:-translate-x-0.5" /> {t("nav.Activities")}
                 </button>
 
                 {/* Title */}

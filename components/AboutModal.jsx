@@ -17,21 +17,21 @@ const PHONE = "+66 61 446 1930";
 
 const BIO = {
     en: [
-        <>I&apos;m Max, a computer engineering student in Bangkok who builds <b>software for the cloud and AI</b>.</>,
-        <>Right now I build <b>AI agents</b> as a freelancer for AAppoint, with LangChain, Gemini, Redis and PostgreSQL. For my co-op I built an <b>AI governance gateway</b> that masks personal data before it reaches the model.</>,
+        <>I&apos;m a final-year computer engineering student in Bangkok who builds <b>backend and AI systems</b>.</>,
+        <>Right now I&apos;m an AI engineer intern at Lightster, where I built an <b>AI governance gateway</b> that masks personal data before it reaches the model. Before that I built <b>AI agents</b> as a freelancer for AAppoint (May–Nov 2026), with LangChain, Gemini, Redis and PostgreSQL.</>,
         <>I started out in networking and IoT hardware, so I care about what runs under the app: servers, networks and the devices at the edge. These days most of my learning goes into Google Cloud.</>,
     ],
     th: [
-        <>ผมชื่อแม็กซ์ นักศึกษาวิศวกรรมคอมพิวเตอร์ในกรุงเทพฯ ที่ชอบสร้าง<b>ซอฟต์แวร์บนคลาวด์และระบบ AI</b></>,
-        <>ตอนนี้รับงานฟรีแลนซ์พัฒนา <b>AI agent</b> ให้ AAppoint ด้วย LangChain, Gemini, Redis และ PostgreSQL ส่วนงานสหกิจ ผมสร้าง <b>AI governance gateway</b> ที่ปกปิดข้อมูลส่วนบุคคลก่อนส่งให้โมเดล</>,
+        <>ผมเป็นนักศึกษาวิศวกรรมคอมพิวเตอร์ปีสุดท้ายในกรุงเทพฯ ที่สร้าง<b>ระบบหลังบ้านและระบบ AI</b></>,
+        <>ตอนนี้ฝึกสหกิจเป็น AI engineer ที่ Lightster สร้าง <b>AI governance gateway</b> ที่ปกปิดข้อมูลส่วนบุคคลก่อนส่งให้โมเดล ก่อนหน้านั้นรับงานฟรีแลนซ์พัฒนา <b>AI agent</b> ให้ AAppoint (พ.ค. – พ.ย. 2569) ด้วย LangChain, Gemini, Redis และ PostgreSQL</>,
         <>ผมเริ่มจากสายเครือข่ายและฮาร์ดแวร์ IoT เลยสนใจสิ่งที่อยู่ใต้แอปด้วย ทั้งเซิร์ฟเวอร์ เครือข่าย และอุปกรณ์ปลายทาง ช่วงนี้กำลังเรียนรู้ Google Cloud เป็นหลัก</>,
     ],
 };
 
 const NOW = [
-    { tag: { th: "ฟรีแลนซ์", en: "Freelance" }, text: { th: "AI agent / backend · AAppoint", en: "AI agent / backend · AAppoint" }, live: true },
-    { tag: { th: "สหกิจ", en: "Co-op" }, text: { th: "AI Governance Gateway", en: "AI Governance Gateway" } },
-    { tag: { th: "เรียน", en: "Study" }, text: { th: "วศ.บ. วิศวกรรมคอมพิวเตอร์ · ม.ศรีปทุม", en: "B.Eng. Computer Engineering · Sripatum University" } },
+    { tag: { th: "สหกิจ", en: "Co-op" }, text: { th: "AI Engineer · Lightster (AI Governance Gateway)", en: "AI Engineer Intern · Lightster (AI Governance Gateway)" }, live: true },
+    { tag: { th: "เรียน", en: "Study" }, text: { th: "วศ.บ. วิศวกรรมคอมพิวเตอร์ · ม.ศรีปทุม · จบ พ.ค. 2570", en: "B.Eng. Computer Engineering · Sripatum University · graduating May 2027" } },
+    { tag: { th: "ฟรีแลนซ์", en: "Freelance" }, text: { th: "AI agent / backend · AAppoint (พ.ค. – พ.ย. 2569)", en: "AI agent / backend · AAppoint (May – Nov 2026)" } },
 ];
 
 const STACK = [
@@ -123,7 +123,7 @@ export default function AboutModal() {
                         {/* Header: small photo, name, close */}
                         <div className="flex items-center gap-4 border-b border-gray-200 pb-5">
                             <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-[linear-gradient(165deg,#9be3dc,#26a99e)]">
-                                <Image src="/assets/about/dev3.png" alt="Saranphat (Max) Treepian" fill sizes="64px" className="object-cover object-top" />
+                                <Image src="/assets/about/dev3.png" alt="Saranphat Treepian" fill sizes="64px" className="object-cover object-top" />
                             </span>
                             <div className="min-w-0 flex-1">
                                 <p className="eyebrow">{t("about.eyebrow")}</p>
@@ -131,7 +131,7 @@ export default function AboutModal() {
                                     {t("about.name")}
                                 </h2>
                                 <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[13px] text-gray-500">
-                                    Saranphat Treepian <span className="text-gray-300">·</span> <FiMapPin className="text-brand-600" /> {t("menu.locationValue")}
+                                    {t("about.degree")} <span className="text-gray-300">·</span> <FiMapPin className="text-brand-600" /> {t("menu.locationValue")}
                                 </p>
                             </div>
                             <button

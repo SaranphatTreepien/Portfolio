@@ -169,7 +169,7 @@ export default function SmartClassroomPage() {
                         <ul className="flex flex-col gap-2">
                             {scripts.map((s) => (
                                 <li key={s.name} className="flex flex-col gap-0.5 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm sm:flex-row sm:items-baseline sm:gap-3">
-                                    <code className="shrink-0 font-mono text-sm font-semibold text-[#a21caf]">{s.name}</code>
+                                    <code className="shrink-0 font-mono text-sm font-semibold text-brand-700">{s.name}</code>
                                     <span className="text-sm text-gray-500">{tx(s.text)}</span>
                                 </li>
                             ))}
@@ -193,7 +193,7 @@ export default function SmartClassroomPage() {
                 />
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                        <div className="bg-gradient-to-r from-[#a855f7] to-[#ec4899] bg-clip-text text-3xl font-extrabold text-transparent">345 / 345</div>
+                        <div className="text-3xl font-semibold tabular-nums text-primary">345 / 345</div>
                         <p className="mt-1 text-sm font-semibold text-primary">{tx({ th: "เช็กอัตโนมัติผ่านหมด", en: "automated checks passing" })}</p>
                         <p className="mt-2 text-sm leading-6 text-gray-500">
                             {tx({
@@ -203,7 +203,7 @@ export default function SmartClassroomPage() {
                         </p>
                     </div>
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                        <div className="bg-gradient-to-r from-[#a855f7] to-[#ec4899] bg-clip-text text-3xl font-extrabold text-transparent">T1–T18</div>
+                        <div className="text-3xl font-semibold tabular-nums text-primary">T1–T18</div>
                         <p className="mt-1 text-sm font-semibold text-primary">{tx({ th: "เคสบนจอจำลอง ผ่านทุกเคส", en: "simulator cases, all passing" })}</p>
                         <p className="mt-2 text-sm leading-6 text-gray-500">
                             {tx({
@@ -215,7 +215,7 @@ export default function SmartClassroomPage() {
                 </div>
                 <div className="mt-16 flex justify-center">
                     <a
-                        href="/#Live"
+                        href="/#Experience"
                         className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
                     >
                         ← {tx({ th: "กลับ Portfolio", en: "Back to portfolio" })}

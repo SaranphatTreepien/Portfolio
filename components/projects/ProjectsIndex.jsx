@@ -29,7 +29,7 @@ export default function ProjectsIndex() {
     return (
         <MotionConfig reducedMotion="user">
             <main className="container mx-auto pb-28 pt-10 lg:pt-14">
-                <Link href="/#Live" className="group inline-flex items-center gap-2 text-[14px] font-medium text-gray-500 transition-colors hover:text-primary">
+                <Link href="/" className="group inline-flex items-center gap-2 text-[14px] font-medium text-gray-500 transition-colors hover:text-primary">
                     <FiArrowLeft className="transition-transform duration-200 group-hover:-translate-x-0.5" /> Portfolio
                 </Link>
 

@@ -16,7 +16,7 @@ export default function LiveProject() {
     const [lead, ...rest] = featured;
 
     return (
-        <section id="Live" className="scroll-mt-16 py-20 lg:scroll-mt-0 lg:py-24">
+        <section id="Experience" className="scroll-mt-16 py-20 lg:scroll-mt-0 lg:py-24">
             <div className="container mx-auto">
                 <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                     <Reveal>
@@ -73,7 +73,7 @@ export default function LiveProject() {
 function AllProjectsLink({ label }) {
     return (
         <Link
-            href="/projects"
+            href="/experience"
             className="group inline-flex h-11 items-center gap-2 rounded-full border border-gray-300 bg-white px-5 text-[14px] font-medium text-primary transition-colors hover:border-primary"
         >
             {label}

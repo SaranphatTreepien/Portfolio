@@ -4,6 +4,39 @@
 // Paid work, newest first. `current` shows the live "Present" dot.
 export const work = [
     {
+        company: "Lightster Inc.",
+        role: { th: "AI Engineer · สหกิจศึกษา", en: "AI Engineer Intern · Co-op" },
+        period: { th: "2569 – เม.ย. 2570", en: "2026 – Apr 2027" },
+        current: true,
+        summary: {
+            th: "สร้าง AI Governance Gateway คนเดียวตามโจทย์ของ CTO: ปกปิดข้อมูลส่วนบุคคลและ secret ก่อนส่ง prompt ไปยัง LLM ภายนอก แล้วถอดค่าจริงคืนให้ผู้ส่ง",
+            en: "Built the AI Governance Gateway alone from the CTO's brief: it masks personal data and secrets before prompts reach external LLMs, then restores them for the sender.",
+        },
+        points: [
+            {
+                label: "Detection",
+                th: "ตัวตรวจจับข้อมูลภาษาไทย (ชื่อ เลขบัตรประชาชน เบอร์โทร บัญชีธนาคาร ที่อยู่) และ secret; API key กับรหัสผ่านถูกบล็อกเสมอ และระบบ fail closed (HTTP 503)",
+                en: "Thai-specific detectors (names, national IDs, phone numbers, bank accounts, addresses) plus secrets; API keys and passwords are always blocked and the system fails closed (HTTP 503).",
+            },
+            {
+                label: "Accuracy",
+                th: "บนชุดทดสอบสังเคราะห์ 290 รายการ หาชื่อคนไทยเจอ 89% เทียบกับ 26% ของ Presidio แบบไม่ปรับแต่ง (F1 0.99 เทียบ 0.45)",
+                en: "On a 290-item synthetic test set: found 89% of Thai names vs 26% for out-of-the-box Presidio (F1 0.99 vs 0.45).",
+            },
+            {
+                label: "Evasion",
+                th: "จับการเลี่ยงได้ 41 จาก 41 แบบ (เลขไทย, zero-width, base64, แยกค่า) และไม่ปกปิดเกินใน 8 ประโยคปกติ",
+                en: "Caught 41 of 41 evasion attempts (Thai numerals, zero-width characters, base64, split values) with 0 of 8 benign sentences over-masked.",
+            },
+            {
+                label: "Tests",
+                th: "test อัตโนมัติ 354 เคส",
+                en: "354 automated tests.",
+            },
+        ],
+        tech: ["FastAPI", "PostgreSQL", "Redis", "Presidio", "PyThaiNLP", "LiteLLM", "Next.js", "Docker"],
+    },
+    {
         company: "AAppoint",
         role: { th: "AI Agent / Backend Engineer · ฟรีแลนซ์", en: "AI Agent / Backend Engineer · Freelance" },
         period: { th: "พ.ค. – พ.ย. 2569", en: "May – Nov 2026" },
@@ -144,8 +177,8 @@ export const projects = [
 export const education = [
     {
         school: { th: "มหาวิทยาลัยศรีปทุม", en: "Sripatum University" },
-        degree: { th: "ปริญญาตรี (กำลังศึกษา)", en: "Bachelor’s degree (in progress)" },
-        period: { th: "2566 – คาดว่าจบ 2569", en: "2023 – expected 2026" },
+        degree: { th: "วศ.บ. วิศวกรรมคอมพิวเตอร์ · เกรดเฉลี่ย 3.71", en: "B.Eng. Computer Engineering · CGPA 3.71" },
+        period: { th: "มี.ค. 2566 – พ.ค. 2570 (คาดว่าจบ)", en: "Mar 2023 – May 2027 (expected)" },
         current: true,
     },
     {
@@ -155,19 +188,17 @@ export const education = [
     },
 ];
 
+// Same groups as the CV
 export const skills = [
-    { group: { th: "AI Agent", en: "AI agents" }, items: ["LangChain", "Google Gemini", "Redis / PostgreSQL memory", "LINE OA API"] },
-    { group: { th: "ระบบเครือข่าย", en: "Networking" }, items: ["OSI", "TCP/IP", "IPv4 / IPv6", "Routing", "Switching", "Troubleshooting"] },
-    { group: "Cisco", items: ["VLAN", "Trunk / Tagging", "SSH / Telnet", "Spanning Tree"] },
-    { group: { th: "ภาษาโปรแกรม", en: "Programming" }, items: ["C", "C++", "Python"] },
-    { group: { th: "ฐานข้อมูล", en: "Databases" }, items: ["SQL", "NoSQL", "ER diagrams", "Queries"] },
+    { group: { th: "ภาษาและเฟรมเวิร์ก", en: "Languages & frameworks" }, items: ["Python (FastAPI)", "TypeScript", "Node.js", "Next.js"] },
+    { group: { th: "ข้อมูลและ AI", en: "Data & AI" }, items: ["PostgreSQL / PostGIS", "Redis", "LangChain", "LiteLLM", "Gemini", "Presidio", "PyThaiNLP", "YOLOv8"] },
+    { group: { th: "DevOps และความปลอดภัย", en: "DevOps & security" }, items: ["Docker", "Kubernetes", "Terraform", "GitHub Actions", "Gitleaks", "Trivy", "CodeQL", "AWS", "Google Cloud"] },
+    { group: { th: "ระบบเครือข่าย", en: "Networking" }, items: ["TCP/IP", "Routing & switching", "VLAN", "Cisco"] },
     {
-        group: "Soft skills",
+        group: { th: "ภาษา", en: "Spoken languages" },
         items: [
-            { th: "การแก้ปัญหา", en: "Problem solving" },
-            { th: "การทำงานเป็นทีม", en: "Teamwork" },
-            { th: "การสื่อสาร", en: "Communication" },
-            { th: "การปรับตัว", en: "Adaptability" },
+            { th: "ไทย (ภาษาแม่)", en: "Thai (native)" },
+            { th: "อังกฤษ (ใช้ทำงานได้)", en: "English (working)" },
         ],
     },
 ];

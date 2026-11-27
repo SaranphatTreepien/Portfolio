@@ -35,26 +35,24 @@ const T = {
   eyebrow: { th: "โปรไฟล์ส่วนตัว", en: "Personal profile" },
   title: { th: "CV", en: "CV" },
   lead: {
-    th: "ทำความรู้จักประสบการณ์ ทักษะ และเส้นทางการทำงานของ Saranphat พร้อมดาวน์โหลดเอกสารสำหรับโอกาสใหม่ๆ",
-    en: "Get to know Saranphat's experience, skills and career path, and download the document for new opportunities.",
+    th: "วศ.บ. วิศวกรรมคอมพิวเตอร์ จบ พ.ค. 2570 ดูตัวอย่าง ดาวน์โหลด หรือแชร์ไฟล์ PDF ได้ด้านล่าง",
+    en: "B.Eng. Computer Engineering, graduating May 2027. Preview, download or share the PDF below.",
   },
-  available: { th: "พร้อมรับโอกาสใหม่", en: "Available for opportunities" },
-  openTo: { th: "เปิดรับงานที่มีความหมาย", en: "Open to meaningful work" },
   preview: { th: "ตัวอย่างเอกสาร", en: "Document preview" },
   download: { th: "ดาวน์โหลด CV (PDF)", en: "Download CV PDF" },
   share: { th: "แชร์ CV (PDF)", en: "Share CV PDF" },
   hint: { th: "PDF · คลิกเพื่อขยาย", en: "PDF · Click to expand" },
-  zoom: { th: "🔍 คลิกเพื่อขยาย", en: "🔍 Click to expand" },
+  zoom: { th: "คลิกเพื่อขยาย", en: "Click to expand" },
   loading: { th: "⏳ กำลังโหลด CV...", en: "⏳ Loading CV..." },
   preparing: { th: "⏳ กำลังเตรียมไฟล์...", en: "⏳ Preparing the file..." },
-  downloaded: { th: (f) => `✅ ดาวน์โหลด: ${f} เรียบร้อย`, en: (f) => `✅ Downloaded: ${f}` },
-  downloadFailed: { th: "❌ ไม่สามารถดาวน์โหลดไฟล์ได้", en: "❌ Couldn't download the file" },
-  sharedLink: { th: "🔗 แชร์ Link แทน (อุปกรณ์ไม่รองรับแชร์ไฟล์)", en: "🔗 Shared a link instead (this device can't share files)" },
-  copied: { th: "📋 คัดลอกลิงก์แล้ว!", en: "📋 Link copied!" },
-  shareFailed: { th: "❌ แชร์ไม่สำเร็จ", en: "❌ Couldn't share" },
+  downloaded: { th: (f) => `ดาวน์โหลด ${f} แล้ว`, en: (f) => `Downloaded ${f}` },
+  downloadFailed: { th: "ดาวน์โหลดไฟล์ไม่สำเร็จ", en: "Couldn't download the file" },
+  sharedLink: { th: "แชร์ลิงก์แทน (อุปกรณ์ไม่รองรับการแชร์ไฟล์)", en: "Shared a link instead (this device can't share files)" },
+  copied: { th: "คัดลอกลิงก์แล้ว", en: "Link copied" },
+  shareFailed: { th: "แชร์ไม่สำเร็จ", en: "Couldn't share" },
   shareMessage: {
-    th: "สวัสดีครับ ผมศรัณย์ภัทร ตรีเพียร\nขออนุญาตส่ง CV เพื่อพิจารณาครับผม 🙇‍♂️📄",
-    en: "Hello, I'm Saranphat Treepian.\nPlease find my CV attached for your consideration. 📄",
+    th: "สวัสดีครับ ผมศรัณย์ภัทร ตรีเพียร\nขออนุญาตส่ง CV เพื่อประกอบการพิจารณาครับ",
+    en: "Hello, I'm Saranphat Treepian.\nPlease find my CV attached for your consideration.",
   },
   nameTitle: { th: "ตั้งชื่อไฟล์", en: "Name the file" },
   nameLead: {
@@ -608,37 +606,9 @@ ${form.phone}`;
   return (
     <div className="relative font-sans text-slate-800">
       <div className="relative z-10 mx-auto max-w-5xl px-4 pb-32 pt-10 md:px-8 lg:pt-14">
-        <motion.section
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex flex-col items-center text-center"
-        >
-          <div className="flex flex-col items-center">
-            <div className="mb-3 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#4fa99f]">
-              <span className="h-px w-10 bg-[#7edad2]" />
-              {L("eyebrow")}
-            </div>
-            <motion.h1 className="max-w-3xl text-4xl font-black tracking-tight text-slate-800 sm:text-5xl md:text-6xl">
-              {tx({ th: "", en: "My " })}
-              <span className="bg-gradient-to-r from-[#4fa99f] via-[#7edad2] to-[#8acfc7] bg-clip-text text-transparent">
-                {L("title")}
-              </span>
-              {tx({ th: " ของผม", en: "" })}
-            </motion.h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500 md:text-base">
-              {L("lead")}
-            </p>
-          </div>
-          <div className="mt-4 flex items-center gap-2 rounded-full border border-[#bce9e3] bg-white/70 px-4 py-2 text-xs text-[#4fa99f] shadow-sm backdrop-blur-md">
-            <span className="h-2 w-2 rounded-full bg-[#7edad2] shadow-[0_0_10px_#7edad2]" />
-            <span className="font-semibold uppercase tracking-wider">
-              {L("available")}
-            </span>
-            <span className="hidden text-slate-400 sm:inline">·</span>
-            <span className="hidden text-slate-500 sm:inline">
-              {L("openTo")}
-            </span>
-          </div>
+        <motion.section initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.035em] text-primary sm:text-[52px]">{L("title")}</h1>
+          <p className="mt-3 max-w-xl text-[17px] text-gray-500">{L("lead")}</p>
         </motion.section>
 
         {/* 📧 Email Form */}
@@ -1373,12 +1343,7 @@ ${form.phone}`;
           <div className="w-full max-w-6xl">
             <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-white/80 bg-white/45 px-4 py-3 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between">
               <div className="text-center sm:text-left">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#4fa99f]">
-                  {L("preview")}
-                </p>
-                <h2 className="mt-0.5 text-lg font-bold text-slate-800 md:text-xl">
-                  CV / Saranphat Treepian
-                </h2>
+                <h2 className="text-base font-semibold text-primary">{L("preview")}</h2>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
                 <div className="flex items-center gap-2 rounded-2xl border border-white/90 bg-white/75 p-1.5 shadow-lg shadow-[#398f87]/15 backdrop-blur-xl">

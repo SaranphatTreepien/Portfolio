@@ -23,7 +23,7 @@ const TIMELINE = [
         years: { th: "2566–ปัจจุบัน", en: "2023–now" },
         lead: { th: "วิศวกรรมคอมพิวเตอร์", en: "Computer Engineering" },
         text: { th: " มหาวิทยาลัยศรีปทุม เก็บ badge ด้าน cloud และ network ไปพร้อมกับเรียน", en: " at Sripatum University, collecting cloud and network badges along the way." },
-        link: "/#Journey",
+        link: "/journey",
     },
     {
         years: { th: "2567–2568", en: "2024–2025" },
@@ -68,13 +68,10 @@ const Hero = () => {
                         animate="animate"
                         className="text-[40px] font-semibold leading-[1.05] tracking-[-0.035em] text-primary sm:text-[52px]"
                     >
-                        {lang === "th" ? "สวัสดีครับ ผมแม็กซ์!" : "Hey, I'm Max!"}
+                        {lang === "th" ? "ศรัณย์ภัทร ตรีเพียร" : "Saranphat Treepian"}
                     </motion.h1>
                     <motion.p variants={rise} initial="initial" animate="animate" custom={1} className="mt-3 text-[18px] text-gray-600 sm:text-[20px]">
-                        {/* Full name right under the nickname: the line people quote and search for */}
-                        <span className="font-semibold text-primary">Saranphat Treepian</span>
-                        <span aria-hidden="true" className="mx-2 text-gray-400">·</span>
-                        {tx({ th: "วิศวกรคอมพิวเตอร์ สาย cloud, network และระบบ AI", en: "Computer engineer, cloud & network tinkerer, AI systems builder." })}
+                        {tx({ th: "วิศวกรคอมพิวเตอร์ · กรุงเทพฯ", en: "Computer engineer · Bangkok" })}
                     </motion.p>
 
                     <motion.h2 variants={rise} initial="initial" animate="animate" custom={2} className="mt-10 text-[17px] font-semibold text-primary">
@@ -106,18 +103,18 @@ const Hero = () => {
                     </ol>
 
                     <motion.p variants={rise} initial="initial" animate="animate" custom={8} className="mt-7 text-[16px] leading-[1.6] text-gray-700">
-                        <Link href="/#Experience" className="ink-link">
+                        <Link href="/activities" className="ink-link">
                             {tx({ th: "นอกจากนี้", en: "Also" })}
                         </Link>
                         {tx({
-                            th: ": นักสะสม badge สาย cloud, ขาประจำงาน tech event ในกรุงเทพฯ และเป็นคนที่ชอบอ่าน log จนจบ",
-                            en: ": cloud badge collector, regular at Bangkok tech events, and the person who actually reads the whole log file.",
+                            th: ": เก็บ badge สาย cloud และไปงาน tech event ในกรุงเทพฯ เป็นประจำ",
+                            en: ": I collect cloud badges and go to tech events in Bangkok regularly.",
                         })}
                     </motion.p>
 
                     <motion.div variants={rise} initial="initial" animate="animate" custom={9} className="mt-9 flex flex-wrap items-center gap-3">
                         <Link
-                            href="/#Live"
+                            href="/#Experience"
                             className="group inline-flex h-11 items-center gap-2 rounded-full bg-brand-700 px-5 text-[15px] font-semibold text-white transition-colors hover:bg-brand-800"
                         >
                             {t("hero.viewWork")}

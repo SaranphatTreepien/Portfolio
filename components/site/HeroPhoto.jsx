@@ -114,7 +114,7 @@ export default function HeroPhoto() {
                 role="button"
                 tabIndex={0}
                 aria-label={tx({ th: "กดค้างเพื่อชาร์จจรวด แล้วปล่อย", en: "Press and hold to charge the rocket, then let go" })}
-                title={tx({ th: "กดค้างไว้เพื่อชาร์จ 🚀", en: "Press and hold to charge 🚀" })}
+                title={tx({ th: "กดค้างไว้เพื่อชาร์จ", en: "Press and hold to charge" })}
                 onPointerDown={(e) => {
                     if (e.button !== 0) return;
                     begin();
@@ -174,7 +174,7 @@ export default function HeroPhoto() {
                     <span className="flex flex-col gap-1.5" aria-live="polite">
                         <span className="flex items-center justify-between font-mono text-[12px] font-bold uppercase tracking-wider">
                             <span className={phase === "full" ? "charge-full-text" : "text-brand-700"}>
-                                {phase === "full" ? tx({ th: "⚡ เต็มแล้ว! ปล่อยเลย", en: "⚡ Full power! Let go" }) : tx({ th: "กำลังชาร์จ…", en: "Charging…" })}
+                                {phase === "full" ? tx({ th: "เต็มแล้ว ปล่อยได้", en: "Full power, let go" }) : tx({ th: "กำลังชาร์จ…", en: "Charging…" })}
                             </span>
                             <span ref={percentRef} className="tabular-nums text-gray-500">
                                 0%
@@ -186,18 +186,12 @@ export default function HeroPhoto() {
                     </span>
                 ) : phase === "launch" && power === "super" ? (
                     <span className="block py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-brand-700">
-                        {tx({ th: "🚀 ทะยาน!", en: "🚀 Liftoff!" })}
+                        {tx({ th: "ทะยาน", en: "Liftoff" })}
                     </span>
                 ) : lang === "th" ? (
-                    <>
-                        ชื่อยาวจำยาก? เรียก <span className="font-mono font-semibold text-brand-700">แม็กซ์</span> ก็พอครับ
-                        <span className="mt-0.5 block text-[11.5px] text-gray-500">กดค้างที่รูปเพื่อชาร์จจรวด</span>
-                    </>
+                    <span className="block py-1.5">กดค้างที่รูปเพื่อชาร์จจรวด</span>
                 ) : (
-                    <>
-                        Saranphat is a mouthful. Just call me <span className="font-mono font-semibold text-brand-700">Max</span>!
-                        <span className="mt-0.5 block text-[11.5px] text-gray-500">Press and hold the photo to charge the rocket</span>
-                    </>
+                    <span className="block py-1.5">Press and hold the photo to charge the rocket</span>
                 )}
             </figcaption>
         </>

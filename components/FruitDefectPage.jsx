@@ -69,11 +69,11 @@ const clips = [
 ];
 
 const flow = [
-    { icon: "🎥", who: "CiRA CORE", text: { th: "ตรวจผลไม้ นับเมื่อข้ามเส้น ส่ง event + heartbeat", en: "Inspects fruit, counts it at the line, sends events + heartbeats" } },
-    { icon: "📡", who: "Mosquitto", text: { th: "MQTT broker รับ cira/fruit/events และ status", en: "MQTT broker for cira/fruit/events and status" } },
-    { icon: "🧹", who: "mqtt_to_db.py", text: { th: "ตรวจ payload กันซ้ำ batch insert ack หลัง commit", en: "Validates, de-duplicates, batch-inserts, acks after commit" } },
-    { icon: "🗄️", who: "PostgreSQL", text: { th: "เก็บ event สถานะเครื่อง รอบการทำงาน และ alert", en: "Stores events, machine state, runs and alerts" } },
-    { icon: "📊", who: { th: "Dashboard + Telegram", en: "Dashboard + Telegram" }, text: { th: "เว็บอ่านจาก DB อย่างเดียว ส่วน watcher แจ้งเตือน", en: "The web only reads the DB; a watcher sends alerts" } },
+    { who: "CiRA CORE", text: { th: "ตรวจผลไม้ นับเมื่อข้ามเส้น ส่ง event + heartbeat", en: "Inspects fruit, counts it at the line, sends events + heartbeats" } },
+    { who: "Mosquitto", text: { th: "MQTT broker รับ cira/fruit/events และ status", en: "MQTT broker for cira/fruit/events and status" } },
+    { who: "mqtt_to_db.py", text: { th: "ตรวจ payload กันซ้ำ batch insert ack หลัง commit", en: "Validates, de-duplicates, batch-inserts, acks after commit" } },
+    { who: "PostgreSQL", text: { th: "เก็บ event สถานะเครื่อง รอบการทำงาน และ alert", en: "Stores events, machine state, runs and alerts" } },
+    { who: { th: "Dashboard + Telegram", en: "Dashboard + Telegram" }, text: { th: "เว็บอ่านจาก DB อย่างเดียว ส่วน watcher แจ้งเตือน", en: "The web only reads the DB; a watcher sends alerts" } },
 ];
 
 const myPart = [
@@ -121,7 +121,7 @@ export default function FruitDefectPage() {
                             href={project.repoUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-4 py-2 text-sm font-semibold text-white shadow-md hover:opacity-90 transition-opacity"
+                            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                         >
                             <FiGithub /> {tx({ th: "ดูโค้ดบน GitHub ↗", en: "View the code on GitHub ↗" })}
                         </a>
@@ -211,7 +211,6 @@ export default function FruitDefectPage() {
                     {flow.map((step, i) => (
                         <li key={i} className="flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                             <span className="flex items-center gap-2">
-                                <span className="text-2xl">{step.icon}</span>
                                 <span className="rounded-md bg-primary px-2 py-0.5 font-mono text-xs font-bold text-white">{i + 1}</span>
                             </span>
                             <b className="text-sm text-primary">{tx(step.who)}</b>
@@ -230,14 +229,14 @@ export default function FruitDefectPage() {
                 <ul className="grid gap-3 md:grid-cols-2">
                     {myPart.map((item) => (
                         <li key={item.en} className="flex gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-sm leading-6 text-gray-600 shadow-sm">
-                            <span className="text-[#a855f7]">▸</span>
+                            <span className="text-gray-400">–</span>
                             <span>{tx(item)}</span>
                         </li>
                     ))}
                 </ul>
                 <div className="mt-16 flex flex-wrap items-center justify-center gap-3">
                     <a
-                        href="/#Live"
+                        href="/#Experience"
                         className="inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
                     >
                         ← {tx({ th: "กลับ Portfolio", en: "Back to portfolio" })}
@@ -246,7 +245,7 @@ export default function FruitDefectPage() {
                         href={project.repoUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-90 transition-opacity"
+                        className="inline-flex items-center gap-2 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                     >
                         <FiGithub /> {tx({ th: "ดูโค้ดบน GitHub ↗", en: "View the code on GitHub ↗" })}
                     </a>

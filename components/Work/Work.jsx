@@ -39,11 +39,11 @@ const defaultFormData = {
 };
 
 const specialTopicOptions = [
-  { value: "Cloud", label: "☁️ Cloud" },
-  { value: "Network", label: "🌐 Network" },
-  { value: "DevSecOps", label: "🛡️ DevSecOps" },
-  { value: "Certificate", label: "📜 Certificate" },
-  { value: "Event", label: "🎪 Event" },
+  { value: "Cloud", label: "Cloud" },
+  { value: "Network", label: "Network" },
+  { value: "DevSecOps", label: "DevSecOps" },
+  { value: "Certificate", label: "Certificate" },
+  { value: "Event", label: "Event" },
 ];
 
 const WorkCard = memo(function WorkCard({
@@ -134,6 +134,11 @@ export default function Work() {
   const [visibleItems, setVisibleItems] = useState(6);
 
   const [isAdmin, setIsAdmin] = useState(false);
+  // The admin button is hidden from visitors; open the page with ?admin to see it
+  const [showAdminLink, setShowAdminLink] = useState(false);
+  useEffect(() => {
+    setShowAdminLink(new URLSearchParams(window.location.search).has("admin"));
+  }, []);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
@@ -715,7 +720,7 @@ export default function Work() {
           )}
         </Tabs>
 
-        {!isAdmin && (
+        {!isAdmin && showAdminLink && (
           <div className="mt-6 flex justify-end">
             <button onClick={() => setIsAuthModalOpen(true)} className="text-[11px] text-gray-300 transition-colors hover:text-gray-500">
               {t("work.adminAccess")}
@@ -942,7 +947,7 @@ export default function Work() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.563.045.797.777.385 1.178l-4.154 4.045a.563.563 0 00-.153.518l1.268 5.443c.129.554-.474.975-.92.68l-4.665-2.923a.563.563 0 00-.606 0L6.92 21.24c-.445.295-1.05-.126-.92-.68l1.268-5.443a.563.563 0 00-.153-.518L2.96 10.575c-.412-.401-.178-1.133.386-1.178l5.518-.442a.563.563 0 00.474-.345L11.48 3.5z" />
                             </svg>
                           )}
-                          <span className="font-medium text-sm">⭐ Best Project</span>
+                          <span className="font-medium text-sm">Best Project</span>
                         </button>
                       </div>
                     </div>

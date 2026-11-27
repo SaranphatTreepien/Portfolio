@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 const WorkItem = ({ slug, category, specialTopic, specialTopics, img, title, createdAt, link, isCertificate, isBest, isCloud, isNetwork, isEvent, isCommunity, isDevSecOps }) => {
   const displayCategory = category || (Array.isArray(specialTopics) && (specialTopics[0] === "Community" ? "Event" : specialTopics[0])) || (specialTopic === "Community" ? "Event" : specialTopic);
   const tagLabelMap = {
-    Cloud: "☁️ Cloud",
-    Network: "🌐 Network",
-    DevSecOps: "🛡️ DevSecOps",
-    Certificate: "📜 Certificate",
-    Event: "🎪 Event",
+    Cloud: "Cloud",
+    Network: "Network",
+    DevSecOps: "DevSecOps",
+    Certificate: "Certificate",
+    Event: "Event",
   };
 
   const topicValues = new Set(
@@ -125,7 +125,7 @@ const WorkItem = ({ slug, category, specialTopic, specialTopics, img, title, cre
           {/* ฝั่งขวา: Certificate Badge */}
           {isCertificate && (
             <div className="flex items-center gap-1 text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md text-xs font-bold border border-teal-200 shadow-sm">
-              📜 Certificate
+              Certificate
             </div>
           )}
 

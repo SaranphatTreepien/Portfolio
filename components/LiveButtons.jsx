@@ -12,11 +12,11 @@ export default function LiveButtons({ url }) {
     const { t } = useLang();
     return (
         <>
-            <Link href="/#Live" className={`${floatingButton} left-4 bg-black/75 hover:bg-black`} aria-label={t("live.back")}>
+            <Link href="/#Experience" className={`${floatingButton} left-4 bg-black/75 hover:bg-black`} aria-label={t("live.back")}>
                 <FiArrowLeft className="h-4 w-4" />
                 <span className="hidden sm:inline">Portfolio</span>
             </Link>
-            <a href={url} className={`${floatingButton} right-4 bg-gradient-to-r from-[#a855f7] to-[#ec4899] hover:opacity-90`} aria-label={t("live.visit")}>
+            <a href={url} className={`${floatingButton} right-4 bg-brand-600 hover:bg-brand-700`} aria-label={t("live.visit")}>
                 <FiExternalLink className="h-4 w-4" />
                 <span className="hidden sm:inline">{t("live.visit")}</span>
             </a>

@@ -2,7 +2,11 @@
 const nextConfig = {
   // The CV page used to live at /resume
   async redirects() {
-    return [{ source: '/resume', destination: '/cv', permanent: false }]
+    return [
+      { source: '/resume', destination: '/cv', permanent: false },
+      // Work and Projects were merged into one Experience page
+      { source: '/projects', destination: '/experience', permanent: true },
+    ]
   },
   images: {
     // รูปแบบไฟล์ที่รองรับ (ของเดิม)

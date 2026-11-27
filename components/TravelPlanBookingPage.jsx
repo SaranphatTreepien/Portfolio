@@ -55,11 +55,11 @@ const b2bDemo = {
 };
 
 const flow = [
-    { icon: "💬", who: { th: "ลูกค้า", en: "Customer" }, text: { th: "พิมพ์หรือกดปุ่มในแชต Web / LINE / WhatsApp / Telegram", en: "Types or taps buttons in Web / LINE / WhatsApp / Telegram" } },
-    { icon: "🤖", who: "Agent (B2C)", text: { th: "วางแผน หาร้าน เช็กรอบว่าง แล้วเก็บข้อมูลการจอง", en: "Plans, finds a place, checks free slots and collects the booking" } },
-    { icon: "🔔", who: "Merchant Manager", text: { th: "ส่งการจองใหม่เข้าแชตของร้าน พร้อมปุ่มยืนยัน / ปฏิเสธ", en: "Sends the new booking to the shop's chat with confirm / decline buttons" } },
-    { icon: "✅", who: { th: "ร้าน (B2B)", en: "Shop (B2B)" }, text: { th: "ยืนยันในแชตหรือแดชบอร์ด รอบเวลาและยอดอัปเดตทันที", en: "Confirms in chat or the dashboard; slots and totals update at once" } },
-    { icon: "📩", who: { th: "ลูกค้า", en: "Customer" }, text: { th: "ได้เลขที่การจองและข้อความยืนยันกลับในแชตเดิม", en: "Gets a booking number and confirmation back in the same chat" } },
+    { who: { th: "ลูกค้า", en: "Customer" }, text: { th: "พิมพ์หรือกดปุ่มในแชต Web / LINE / WhatsApp / Telegram", en: "Types or taps buttons in Web / LINE / WhatsApp / Telegram" } },
+    { who: "Agent (B2C)", text: { th: "วางแผน หาร้าน เช็กรอบว่าง แล้วเก็บข้อมูลการจอง", en: "Plans, finds a place, checks free slots and collects the booking" } },
+    { who: "Merchant Manager", text: { th: "ส่งการจองใหม่เข้าแชตของร้าน พร้อมปุ่มยืนยัน / ปฏิเสธ", en: "Sends the new booking to the shop's chat with confirm / decline buttons" } },
+    { who: { th: "ร้าน (B2B)", en: "Shop (B2B)" }, text: { th: "ยืนยันในแชตหรือแดชบอร์ด รอบเวลาและยอดอัปเดตทันที", en: "Confirms in chat or the dashboard; slots and totals update at once" } },
+    { who: { th: "ลูกค้า", en: "Customer" }, text: { th: "ได้เลขที่การจองและข้อความยืนยันกลับในแชตเดิม", en: "Gets a booking number and confirmation back in the same chat" } },
 ];
 
 function Tries({ demo }) {
@@ -70,7 +70,7 @@ function Tries({ demo }) {
             <ul className="flex flex-col gap-1 text-sm leading-6 text-gray-600">
                 {demo.tries.map((item) => (
                     <li key={item.en} className="flex gap-2">
-                        <span className="text-[#a855f7]">▸</span>
+                        <span className="text-gray-400">–</span>
                         <span>{tx(item)}</span>
                     </li>
                 ))}
@@ -127,7 +127,6 @@ export default function TravelPlanBookingPage() {
                     {flow.map((step, i) => (
                         <li key={i} className="relative flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                             <span className="flex items-center gap-2">
-                                <span className="text-2xl">{step.icon}</span>
                                 <span className="rounded-md bg-primary px-2 py-0.5 font-mono text-xs font-bold text-white">{i + 1}</span>
                             </span>
                             <b className="text-sm text-primary">{tx(step.who)}</b>

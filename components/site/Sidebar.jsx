@@ -18,15 +18,14 @@ import { credlyProfileUrl, googleSkillsProfile } from "@/data/credentials";
 // Desktop: sticky beside the page. Phones: a slim bar with a drop-down sheet.
 
 const LINKS = [
-    { id: "Home", href: "/", icon: "🏠", label: { th: "หน้าแรก", en: "Home" } },
-    { id: "Live", href: "/#Live", icon: "🧰", label: { th: "ผลงาน", en: "Work" } },
-    { id: "Experience", href: "/#Experience", icon: "🗺️", label: { th: "ประสบการณ์", en: "Experience" } },
-    { id: "Journey", href: "/#Journey", icon: "🧭", label: { th: "เส้นทาง", en: "Journey" } },
-    { id: "projects", href: "/projects", icon: "📂", label: { th: "โปรเจกต์ทั้งหมด", en: "Projects" } },
-    { id: "cv", href: "/cv", icon: "📄", label: { th: "CV", en: "CV" } },
-    { id: "Contact", href: "/#Contact", icon: "💌", label: { th: "ติดต่อ", en: "Contact" } },
+    { id: "Home", href: "/", label: { th: "หน้าแรก", en: "Home" } },
+    { id: "Experience", href: "/experience", label: { th: "ประสบการณ์", en: "Experience" } },
+    { id: "Activities", href: "/activities", label: { th: "กิจกรรมและใบรับรอง", en: "Activities" } },
+    { id: "Journey", href: "/journey", label: { th: "เส้นทาง", en: "Journey" } },
+    { id: "cv", href: "/cv", label: { th: "CV", en: "CV" } },
+    { id: "Contact", href: "/#Contact", label: { th: "ติดต่อ", en: "Contact" } },
 ];
-const HOME_SECTIONS = ["Home", "Live", "Experience", "Journey", "Contact"];
+const HOME_SECTIONS = ["Home", "Experience", "Contact"];
 
 // Each in its own brand colour (GitHub's mark is black or white, so it follows the text colour)
 const SOCIALS = [
@@ -71,8 +70,9 @@ function useActiveId() {
     const onHome = pathname === "/";
     const section = useHomeSection(onHome);
     if (onHome) return section;
-    if (pathname.startsWith("/work")) return "Experience";
-    if (pathname.startsWith("/projects")) return "projects";
+    if (pathname.startsWith("/work") || pathname.startsWith("/activities")) return "Activities";
+    if (pathname.startsWith("/journey")) return "Journey";
+    if (pathname.startsWith("/experience") || pathname.startsWith("/projects") || pathname.startsWith("/live")) return "Experience";
     if (pathname.startsWith("/cv")) return "cv";
     return null;
 }
@@ -82,7 +82,7 @@ function NavList({ onNavigate }) {
     const activeId = useActiveId();
     return (
         <ul className="flex flex-col gap-0.5">
-            {LINKS.map(({ id, href, icon, label }) => {
+            {LINKS.map(({ id, href, label }) => {
                 const active = activeId === id;
                 return (
                     <li key={id}>
@@ -90,13 +90,10 @@ function NavList({ onNavigate }) {
                             href={href}
                             onClick={onNavigate}
                             aria-current={active ? "page" : undefined}
-                            className={`group flex items-center gap-3 rounded-md px-2 py-[7px] text-[16px] transition-colors ${
+                            className={`flex items-center gap-3 rounded-md px-2.5 py-[7px] text-[16px] transition-colors ${
                                 active ? "bg-gray-100 font-medium text-primary" : "text-gray-700 hover:bg-gray-100/60 hover:text-primary"
                             }`}
                         >
-                            <span aria-hidden="true" className="w-6 text-center text-[18px] leading-none transition-transform duration-200 group-hover:-rotate-6">
-                                {icon}
-                            </span>
                             {tx(label)}
                             {active && <span aria-hidden="true" className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-400" />}
                         </Link>
@@ -110,21 +107,9 @@ function NavList({ onNavigate }) {
 function Intro() {
     const { lang } = useLang();
     return lang === "th" ? (
-        <p className="text-[15px] leading-[1.65] text-gray-700">
-            ผม
-            <Link href="/#Journey" className="ink-link">
-                แม็กซ์
-            </Link>{" "}
-            วิศวกรคอมพิวเตอร์สาย cloud และ network ที่นี่คือท่าเรือเล็ก ๆ ที่เก็บงานของผมไว้ ⚓
-        </p>
+        <p className="text-[15px] leading-[1.65] text-gray-700">วิศวกรคอมพิวเตอร์ ที่นี่รวบรวมงานและประสบการณ์ของผม</p>
     ) : (
-        <p className="text-[15px] leading-[1.65] text-gray-700">
-            I&apos;m{" "}
-            <Link href="/#Journey" className="ink-link">
-                Max
-            </Link>
-            , computer engineer and cloud &amp; network tinkerer. This is my little harbor. ⚓
-        </p>
+        <p className="text-[15px] leading-[1.65] text-gray-700">Computer engineer. This is where I keep my work.</p>
     );
 }
 
@@ -153,7 +138,7 @@ function FootLinks() {
     const { tx } = useLang();
     const items = [
         { label: "CV", href: "/cv" },
-        { label: tx({ th: "โปรเจกต์", en: "Projects" }), href: "/projects" },
+        { label: tx({ th: "ประสบการณ์", en: "Experience" }), href: "/experience" },
         { label: "Skills", href: googleSkillsProfile.url, external: true },
     ];
     return (
@@ -179,7 +164,9 @@ function FootLinks() {
 const Brand = ({ onNavigate }) => (
     <Link href="/" onClick={onNavigate} className="group flex min-w-0 items-center gap-2.5" aria-label="Saranphat Treepian, home">
         <DayAvatar className="h-8 w-8 rounded-[9px] transition-transform duration-300 group-hover:-rotate-6" />
-        <span className="truncate font-mono text-[16px] font-bold tracking-tight text-primary">saranphat</span>
+        <span className="truncate font-mono text-[16px] font-bold tracking-tight text-primary">
+            saranphat<span className="text-[14px] font-medium text-gray-500"> : Max</span>
+        </span>
     </Link>
 );
 
@@ -206,7 +193,7 @@ const Rule = () => <div className="border-t border-gray-200" />;
 export function DesktopSidebar() {
     const { tx } = useLang();
     return (
-        <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-gray-200 px-6 lg:flex">
+        <aside className="sticky top-0 hidden h-screen w-[308px] shrink-0 flex-col border-r border-gray-200 px-6 lg:flex">
             <div className="flex items-center justify-between gap-2 py-5">
                 <Brand />
                 <span className="flex shrink-0 items-center gap-0.5">

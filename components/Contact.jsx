@@ -209,14 +209,14 @@ export default function Contact() {
                         <div className="sm:col-span-2">
                             <Field id="contact-phone" label={t("contact.phone")} note={t("contact.optional")}>
                                 <div className="flex gap-4">
-                                    <select name="countryCode" value={form.countryCode} onChange={onChange} aria-label="Country code" className={`${fieldClass} w-[88px] shrink-0 cursor-pointer`}>
+                                    <select name="countryCode" value={form.countryCode} onChange={onChange} aria-label="Country code" className={`${fieldClass.replace("w-full ", "")} w-[88px] shrink-0 cursor-pointer`}>
                                         <option value="+66">+66</option>
                                         <option value="+1">+1</option>
                                         <option value="+44">+44</option>
                                         <option value="+81">+81</option>
                                         <option value="+65">+65</option>
                                     </select>
-                                    <input id="contact-phone" name="phone" type="tel" value={form.phone} onChange={onChange} autoComplete="tel-national" placeholder="81 234 5678" className={`${fieldClass} flex-1`} />
+                                    <input id="contact-phone" name="phone" type="tel" value={form.phone} onChange={onChange} autoComplete="tel-national" placeholder="81 234 5678" className={`${fieldClass} min-w-0 flex-1`} />
                                 </div>
                             </Field>
                         </div>
